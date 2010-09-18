@@ -8,18 +8,40 @@
   <packaging>jar</packaging>
 
   <name>gardener</name>
-  <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <scm>
+  	<developerConnection>github</developerConnection>
+  	<url>git@github.com:leomurta/gardener.git</url>
+  </scm>
+  <organization>
+  	<name>IC-UFF</name>
+  	<url>www.ic.uff.br</url>
+  </organization>
+  <repositories>
+  	<repository>
+  		<id>java.net</id>
+  		<name>java.net</name>
+  		<url>http://download.java.net/maven/1</url>
+  		<layout>legacy</layout>
+  	</repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>args4j</groupId>
+      <artifactId>args4j</artifactId>
+      <version>2.0.12</version>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
+
 </project>
