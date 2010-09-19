@@ -1,3 +1,7 @@
+/*
+ * Autor: Evaldo de Oliveira da Silva
+ * Descrição: Protótipo para modelo de versionamento do sistema Gardener
+ */
 package versionamento;
 
 import java.io.*;
