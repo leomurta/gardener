@@ -7,6 +7,8 @@ package versionamento;
 import java.io.*;
 import java.io.FileInputStream.*;
 import java.io.DataInputStream.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -20,16 +22,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.apache.cassandra.thrift.*;
-import org.apache.cassandra.thrift.TimedOutException;
-import org.apache.cassandra.thrift.ColumnPath;
-import org.apache.cassandra.thrift.Cassandra;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.TException;
-import org.apache.cassandra.thrift.ConsistencyLevel;
+import com.mongodb.Mongo;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.DBCursor;
+import com.mongodb.gridfs.GridFS;
+
 
 public class Principal extends JPanel implements ActionListener
 {
@@ -101,39 +101,32 @@ public class Principal extends JPanel implements ActionListener
         dataLabel = new JLabel("Data: ");
         consultaLabel = new JLabel("Consulta por revisao: ");
 
-        comentarioField = new JTextField(50);
+        comentarioField = new JTextField(30);
         usuarioField = new JTextField(25);
         dataField = new JTextField(10);
-        consultaField = new JTextField(5);
+        consultaField = new JTextField(3);
         origemField = new JTextField(10);
-        destinoField = new JTextField(10);
-
-        //Paineis
-        JPanel consultaPanel = new JPanel();
-        consultaPanel.add(consultaLabel);
-        consultaPanel.add(consultaField);
-        consultaPanel.add(consultaButton);       
+        destinoField = new JTextField(10);         
 
         JPanel camposPanel = new JPanel();
+        camposPanel.add(consultaLabel);
+        camposPanel.add(consultaField);
         camposPanel.add(comentarioLabel);
         camposPanel.add(comentarioField);
         camposPanel.add(usuarioLabel);
         camposPanel.add(usuarioField);
         camposPanel.add(dataLabel);
-        camposPanel.add(dataField);
+        camposPanel.add(dataField);        
 
 	JPanel buttonPanel = new JPanel();
         buttonPanel.add(sendButton);
-        buttonPanel.add(openButton);
-	buttonPanel.add(cancelButton);
-        buttonPanel.add(origemButton);
-        buttonPanel.add(destinoButton);
+        buttonPanel.add(consultaButton);
+	buttonPanel.add(cancelButton);       
 
-	//Adicionando os recursos no painel.
+	//Adicionando os recursos no painel.                
         add(logScrollPane, BorderLayout.CENTER);
-        add(consultaPanel, BorderLayout.BEFORE_LINE_BEGINS);
         add(buttonPanel, BorderLayout.PAGE_END);
-        add(camposPanel, BorderLayout.PAGE_START);
+        add(camposPanel, BorderLayout.PAGE_START);        
     }
 
     public void actionPerformed(ActionEvent e)
@@ -143,20 +136,24 @@ public class Principal extends JPanel implements ActionListener
 	{
 
            FileInputStream arqOrigem;
-           FileOutputStream arqDestino;
+           FileInputStream arqDestino;
 
 	   try
 		{
 
-                  arqOrigem = new FileInputStream(origemField.getText());
-                  arqDestino = new FileOutputStream(destinoField.getText());
+                    Mongo connect = new Mongo( "localhost" , 27017 );
+                    DB conn = connect.getDB( "gardener" );
+                    GridFS arqRevisao = new GridFS(conn);
 
-                  fcOrigem  = arqOrigem.getChannel();
-                  fcDestino = arqDestino.getChannel();
+                    arqOrigem = new FileInputStream(arqRevisao.findOne(consultaField.getText()).getFilename());
+                    arqDestino = new FileInputStream("c:/"+consultaField.getText());
 
-                  fcOrigem.transferTo(0, fcOrigem.size(), fcDestino);
+                    fcOrigem  = arqOrigem.getChannel();
+                    fcDestino = arqDestino.getChannel();
 
-                  log.append("Realizando chekout do arquivo:" + origemField.getText() +  newline);
+                    fcOrigem.transferTo(0, fcOrigem.size(), fcDestino);
+
+                    log.append("Realizando chekout do arquivo:" + origemField.getText() +  newline);
 		}
 		catch(Exception e1)
         	{
@@ -183,11 +180,10 @@ public class Principal extends JPanel implements ActionListener
                         log.append("Realizando ckeckin do arquivo:" + file.getName() +  newline);
                         log.append("Tamanho do arquivo: " + fileSize + "bytes" + newline);                       
 
-                        TTransport tr = new TSocket("localhost", 9160);
-                        TProtocol proto = new TBinaryProtocol(tr);
-                        Cassandra.Client client = new Cassandra.Client(proto);
-                        tr.open();
-
+                        Mongo connect = new Mongo( "localhost" , 27017 );
+                        DB conn = connect.getDB( "gardener" );
+                        DBCollection collection = conn.getCollection("gardener");
+                        
                         FileReader fr = new FileReader("c:/projeto_gardener/arquivo_controle.conf");              
                         BufferedReader buff = new BufferedReader(fr);
 
@@ -217,71 +213,16 @@ public class Principal extends JPanel implements ActionListener
 
                         log.append("A revisão anterior deste arquivo é: " + (valorRevisao-1) + " . A próxima revisão será: " + valorRevisao+ newline);
 
-                        ColumnPath pathRevisao = new ColumnPath().setColumn_family("versao").setColumn("revisao".getBytes());
+                        GridFS arqRevisao = new GridFS(conn);
+                        arqRevisao.createFile(arqOrigem, valorRevisaoS).save();
 
-                        long timestamp = System.currentTimeMillis();
+                        BasicDBObject revisao = new BasicDBObject();
+                        revisao.put("revisao", valorRevisaoS);
+                        revisao.put("data", dataField.getText().toString());
+                        revisao.put("comentario", comentarioField.getText().toString());
+                        revisao.put("usuario", usuarioField.getText().toString());                        
 
-                        client.insert("gardener",
-                                        valorRevisaoS.toString(),
-                                        pathRevisao,
-                                        valorRevisaoS.toString().getBytes("UTF-8"),
-                                        timestamp,
-                                        ConsistencyLevel.ONE);
-                        
-                        tr.close();
-
-                        tr.open();
-
-                        String arquivoVersao = "c:/projeto/gardener/"+ valorRevisaoS + "/" + file.getName().toString();
-
-                        ColumnPath pathDocumento = new ColumnPath().setColumn_family("versao").setColumn("documento".getBytes());
-
-                        client.insert("gardener",
-                                        valorRevisaoS.toString(),
-                                        pathDocumento,
-                                        arquivoVersao.getBytes("UTF-8"),
-                                        timestamp,
-                                        ConsistencyLevel.ONE);
-
-                        tr.close();
-
-                        tr.open();
-                        ColumnPath pathData = new ColumnPath().setColumn_family("versao").setColumn("data".getBytes());
-                        
-                        client.insert("gardener",
-                                        valorRevisaoS.toString(),
-                                        pathData,
-                                        dataField.getText().toString().getBytes("UTF-8"),
-                                        timestamp,
-                                        ConsistencyLevel.ONE);
-
-                        tr.close();
-
-                        tr.open();
-
-                        ColumnPath pathComentario = new ColumnPath().setColumn_family("versao").setColumn("comentario".getBytes());
-                        
-                        client.insert("gardener",
-                                        valorRevisaoS.toString(),
-                                        pathComentario,
-                                        comentarioField.getText().toString().getBytes("UTF-8"),
-                                        timestamp,
-                                        ConsistencyLevel.ONE);
-
-                        tr.close();
-
-                        tr.open();
-
-                        ColumnPath pathUsuario = new ColumnPath().setColumn_family("versao").setColumn("usuario".getBytes());
-
-                        client.insert("gardener",
-                                        valorRevisaoS.toString(),
-                                        pathUsuario,
-                                        usuarioField.getText().toString().getBytes("UTF-8"),
-                                        timestamp,
-                                        ConsistencyLevel.ONE);
-
-                        tr.close();
+                        collection.insert(revisao);
                         
                         fcOrigem.transferTo(0, fcOrigem.size(), fcDestino);
 
@@ -361,30 +302,25 @@ public class Principal extends JPanel implements ActionListener
                    try
                     {                        
 
-                        TTransport tr = new TSocket("localhost", 9160);
-                        TProtocol proto = new TBinaryProtocol(tr);
-                        Cassandra.Client client = new Cassandra.Client(proto);
-                        tr.open();
+                        Mongo connect = new Mongo( "localhost" , 27017 );
+                        DB conn = connect.getDB( "gardener" );
+                        DBCollection collection = conn.getCollection("gardener");
 
                         log.setText("");
 
-                        ColumnPath comentario = new ColumnPath().setColumn_family("versao").setColumn("comentario".getBytes());
-                        ColumnOrSuperColumn colComentario = client.get("gardener", consultaField.getText().toString(), comentario,  ConsistencyLevel.ONE);
+                        BasicDBObject revisao = new BasicDBObject();
+                        revisao.put("revisao", consultaField.getText());
+
+                        DBCursor resultadoCons = collection.find();
+                        resultadoCons = collection.find(revisao);
+
+                        while(resultadoCons.hasNext()) {
+                            log.append(resultadoCons.next() + "" + newline);
+                        }
                         
-                        log.append(new String(colComentario.getColumn().getName(), "UTF-8") + " -> " + new String(colComentario.getColumn().getValue(), "UTF-8") + newline);
-
-                        ColumnPath data = new ColumnPath().setColumn_family("versao").setColumn("data".getBytes());
-                        ColumnOrSuperColumn colData = client.get("gardener", consultaField.getText().toString(), data,  ConsistencyLevel.ONE);
-
-                        log.append(new String(colData.getColumn().getName(), "UTF-8") + " -> " + new String(colData.getColumn().getValue(), "UTF-8") + newline);
-
-                        ColumnPath usuario = new ColumnPath().setColumn_family("versao").setColumn("usuario".getBytes());
-                        ColumnOrSuperColumn colUsuario = client.get("gardener", consultaField.getText().toString(), usuario,  ConsistencyLevel.ONE);
-
-                        log.append(new String(colUsuario.getColumn().getName(), "UTF-8") + " -> " + new String(colUsuario.getColumn().getValue(), "UTF-8") + newline);
-
-                        tr.close();
-
+                         GridFS arqRevisao = new GridFS(conn);
+                         log.append(arqRevisao.findOne(consultaField.getText()).toString());
+                         
 
                    }
                   catch(Exception e1)
@@ -411,7 +347,7 @@ public class Principal extends JPanel implements ActionListener
 	}
 
         public static void main(String[] args)
-                throws TException, TimedOutException, InvalidRequestException, UnavailableException, UnsupportedEncodingException, NotFoundException, NullPointerException
+                //throws TException, TimedOutException, InvalidRequestException, UnavailableException, UnsupportedEncodingException, NotFoundException, NullPointerException
         {
             javax.swing.SwingUtilities.invokeLater(new Runnable()
 		{public void run() {
