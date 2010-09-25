@@ -11,7 +11,6 @@ public class StubAPIClient implements APIClient {
 	@Override
 	public void checkout(Map<String, InputStream> items, RevisionID revision)
 			throws TransationException {
-		
 
 	}
 
@@ -23,8 +22,8 @@ public class StubAPIClient implements APIClient {
 
 	@Override
 	public RevisionID getLastRevision() {
-		
-		return  RevisionID.ZERO_REVISION;
+
+		return RevisionID.ZERO_REVISION;
 	}
 
 }

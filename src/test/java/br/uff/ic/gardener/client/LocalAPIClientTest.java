@@ -1,6 +1,6 @@
 package br.uff.ic.gardener.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -9,8 +9,8 @@ import br.uff.ic.gardener.TestWithTemporaryPath;
 
 public class LocalAPIClientTest extends TestWithTemporaryPath {
 
-	LocalAPIClient client; 
-	
+	LocalAPIClient client;
+
 	@Before
 	public void setUp() throws Exception {
 	}
@@ -26,18 +26,18 @@ public class LocalAPIClientTest extends TestWithTemporaryPath {
 	}
 
 	public final void testCheckout() {
-		
-		//TODO: implements
+
+		// TODO: implements
 	}
 
 	@Test
 	public final void testCommit() {
-		//TODO: implements
+		// TODO: implements
 	}
 
 	@Test
 	public final void testGetLastRevision() {
-		//TODO: implements
+		// TODO: implements
 	}
 
 }

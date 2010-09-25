@@ -1,14 +1,12 @@
 package br.uff.ic.gardener.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
 import br.uff.ic.gardener.TestWithTemporaryPath;
 
 public class ClientFactoryTest extends TestWithTemporaryPath {
-
-
 
 	@Test
 	public final void testCreateAPIClient() {

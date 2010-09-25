@@ -3,14 +3,15 @@
  */
 package br.uff.ic.gardener.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
+
 import org.junit.Test;
 
 /**
  * @author Marcos
- *
+ * 
  */
 public class CLITest {
 
@@ -19,31 +20,30 @@ public class CLITest {
 	 */
 	@Test
 	public void testMe() {
-		if(CLI.me() == null) 
+		if (CLI.me() == null)
 			fail("Cannot get CLI singletons");
 	}
 
 	/**
-	 * Test method for {@link br.uff.ic.gardener.cli.CLI#main(java.lang.String[])}.
+	 * Test method for
+	 * {@link br.uff.ic.gardener.cli.CLI#main(java.lang.String[])}.
 	 */
 	@Test
 	public void testDoMain() {
-		//TODO Marcos
-		//fail("Not yet implemented");
+		// TODO Marcos
+		// fail("Not yet implemented");
 	}
+
 	@Test
-	public void testGetActualPath()
-	{
-		try
-		{
+	public void testGetActualPath() {
+		try {
 			File file = CLI.getActualPath();
-			
-			if(!file.isDirectory())
+
+			if (!file.isDirectory())
 				fail("does not generate a valid directory");
-		}catch(Exception e)
-		{
+		} catch (Exception e) {
 			fail("generate exception");
 		}
-	
+
 	}
 }

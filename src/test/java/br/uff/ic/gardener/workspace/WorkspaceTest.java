@@ -3,7 +3,7 @@
  */
 package br.uff.ic.gardener.workspace;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -15,11 +15,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.StubAPIClient;
 
 /**
  * @author Marcos Côrtes
- *
+ * 
  */
 public class WorkspaceTest {
 
@@ -28,9 +29,9 @@ public class WorkspaceTest {
 	 */
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
-	
+
 	File pathWS = null;
-	
+
 	Workspace workspace = null;
 
 	/**
@@ -48,11 +49,13 @@ public class WorkspaceTest {
 	}
 
 	/**
-	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#Workspace(java.io.File, br.uff.ic.gardener.client.APIClient)}.
+	 * Test method for
+	 * {@link br.uff.ic.gardener.workspace.Workspace#Workspace(java.io.File, br.uff.ic.gardener.client.APIClient)}
+	 * .
 	 */
 	@Test
 	public final void testWorkspace() {
-		//	folder
+		// folder
 		workspace = new Workspace(pathWS, new StubAPIClient());
 	}
 
@@ -69,16 +72,14 @@ public class WorkspaceTest {
 			fail(e.getMessage());
 		}
 	}
-	
-	private static void fillFile(File file, String... strVec)
-	{
+
+	private static void fillFile(File file, String... strVec) {
 		FileWriter fw;
 		try {
 			fw = new FileWriter(file);
 			PrintWriter pw = new PrintWriter(fw);
-			
-			for(String str: strVec)
-			{
+
+			for (String str : strVec) {
 				pw.append(str + "\n");
 			}
 			pw.close();
@@ -89,12 +90,13 @@ public class WorkspaceTest {
 	}
 
 	/**
-	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#checkout()}.
+	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#checkout()}
+	 * .
 	 */
 	@Test
 	public final void testCheckout() {
 		try {
-			workspace.checkout();
+			workspace.checkout(RevisionID.LAST_REVISION);
 		} catch (WorkspaceException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

@@ -4,8 +4,9 @@ import java.io.File;
 
 /**
  * Uma exceção do workspace
+ * 
  * @author Marcos
- *
+ * 
  */
 public class WorkspaceException extends Exception {
 
@@ -17,17 +18,20 @@ public class WorkspaceException extends Exception {
 	 * File especificado como fonte do workspace
 	 */
 	File sourceFile = null;
-	
+
 	/**
 	 * COnstrutor
-	 * @param file Determined file for workspace
-	 * @param msg The message error
-	 * @param parent the throwable partent
+	 * 
+	 * @param file
+	 *            Determined file for workspace
+	 * @param msg
+	 *            The message error
+	 * @param parent
+	 *            the throwable partent
 	 */
-	public WorkspaceException(File file, String msg, Throwable parent)
-	{
+	public WorkspaceException(File file, String msg, Throwable parent) {
 		super(msg, parent);
 		sourceFile = file;
-		
+
 	}
 }
