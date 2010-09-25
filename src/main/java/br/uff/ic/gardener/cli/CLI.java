@@ -15,8 +15,14 @@ import org.kohsuke.args4j.ExampleMode;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.Argument;
 
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
+
+import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.ClientFactory;
+import br.uff.ic.gardener.client.CreationAPIClientException;
+import br.uff.ic.gardener.workspace.Workspace;
+import br.uff.ic.gardener.workspace.WorkspaceException;
 
 /**
  * CLI class. Implements CLI interface with a singletons
@@ -27,19 +33,31 @@ import br.uff.ic.gardener.client.ClientFactory;
 public class CLI {
 
 	
-	@Option(name="-ch",aliases="-checkout", metaVar="CHECKOUT", usage="Checkout a Configuration Item in repository")
+	@Option(name="-co",aliases="--checkout", metaVar="CHECKOUT", usage="Checkout a Configuration Item in repository")
 	private boolean bCheckout = false;
 	
-	@Option(name="-commit", aliases="-commit", metaVar="COMMIT", usage="Commit a Configuration Item in repository")
+	@Option(name="-ci", aliases="--commit", metaVar="COMMIT", usage="Commit a Configuration Item in repository")
 	private boolean bCommit = false;
 	
 	// Other arguments
-    @Argument
+    @SuppressWarnings("unused")
+	@Argument
     private List<String> listArguments = new ArrayList<String>();
 
-    @Option(name="-ws", aliases="-workspace", metaVar="WORKSPACE", usage="Specify the source of ICs (URI or file")
+    @Option(name="-w", aliases="--workspace", metaVar="WORKSPACE", usage="Specify the source of ICs (URI or path)")
     private URI uriWorkspace = null;
     
+    @Option(name="-s", aliases="--serv", metaVar="SERV", usage="Specify the serv")
+    private URI uriServ = null;
+    
+    @SuppressWarnings("unused")
+	@Option(name="-r", aliases="--revision", metaVar="REVISION", usage="Specify the revision in checkout")
+    private void setRevision(String strRevision)
+    {
+    	revision = RevisionID.fromString(strRevision);
+    }
+    
+    private RevisionID revision = RevisionID.LAST_REVISION;
    
     /**
      * Define possible operations to CLI
@@ -72,15 +90,49 @@ public class CLI {
     }
     
     private static APIClient apiClient = null; 
-    public static APIClient getClient()
+    public APIClient getClient()
     {
     	if(apiClient == null)
-    		apiClient = ClientFactory.createAPIClient();
+    	{
+			try {
+				File file = (new File(uriServ));
+				apiClient = ClientFactory.createAPIClient(file.toString());
+			} catch (CreationAPIClientException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+    	}
     	return apiClient;
+    }
+    
+    private  Workspace workspace = null;
+    
+    /**
+     * Cria um workspace
+     * @param path O caminho do workspace
+     * @return o workspace criado
+     */
+    private  Workspace createWorkspace(File path)
+    {
+    	if(workspace != null)
+    		workspace.close();
+    	
+    	workspace = new Workspace(path, getClient());
+    	return workspace;
+    }
+    
+    
+    private Workspace getWorkspace()
+    {
+    	return workspace;
     }
     
 	
 	static private CLI cliSingletons = null;
+	
+	private CLI()
+	{
+	}
 	
 	synchronized static public CLI me()
 	{
@@ -112,13 +164,14 @@ public class CLI {
 			
 	/**
 	 * Realize main application. It is needed to create the singletons.
-	 * @param args Parâmetros da aplicação
+	 * @param args Application params
 	 */
 	private void internalDoMain(String[] args){
 		CmdLineParser parser = new CmdLineParser(this);
 		 
 		//default destiny
-		 me().uriWorkspace = CLI.getActualPath().toURI();
+		 me().uriWorkspace 	= CLI.getActualPath().toURI();
+		// me().uriServ		= CLI.getActualPath().toURI();
 	    
 		//default length of execution line
 	    parser.setUsageWidth(80);
@@ -127,12 +180,29 @@ public class CLI {
 	        // parse the arguments.
 	        parser.parseArgument(args);
 	        
-	        // after parsing arguments, you should check
-            // if enough arguments are given.
-         //   if( listArguments.isEmpty() )
-           //     throw new CmdLineException("No argument is given");
+	        {
+	        	//trata URI sem file://
+	        	if(uriWorkspace.getHost() == null ||uriWorkspace.getHost() == "")
+	        	{
+	        		uriWorkspace = (new File(uriWorkspace.toString())).toURI();
+	        	}
+	        	
+	        	if(uriServ != null)
+	        	{
+		        	//trata URI sem file://
+		        	if(uriServ.getHost() == null ||uriServ.getHost() == "")
+		        	{
+		        		uriServ = (new File(uriServ.toString())).toURI();
+		        	}
+	        	}else
+	        	{ 
+	        		uriServ = uriWorkspace;
+	        	}
+	        	
+	        }
 	        
-	        
+	        createWorkspace(new File(uriWorkspace));
+	       
 	        switch(getOperation())
 	        {
 	        	case CHECKOUT:
@@ -162,22 +232,28 @@ public class CLI {
 	        System.err.println("  Exemplo: gardener"+parser.printExample(ExampleMode.ALL));
 	
 	        return;
-	    }
+	    } catch (WorkspaceException e) {
+			e.printStackTrace();
+			return;
+		}
 	}
 	    
 	    
 	/**
 	 * Commit event
+	 * @throws WorkspaceException
 	 */
-    private void onCommit()
+    private void onCommit() throws WorkspaceException
     {
-    	
+    	getWorkspace().commit();
     }
     
     /**
      * Checkout event
+     * @throws WorkspaceException 
      */
-    private void onCheckout()
-    {    	
+    private void onCheckout() throws WorkspaceException
+    {    
+    	getWorkspace().checkout(revision);
     }   
 }

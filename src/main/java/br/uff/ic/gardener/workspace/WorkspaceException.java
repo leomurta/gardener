@@ -2,12 +2,17 @@ package br.uff.ic.gardener.workspace;
 
 import java.io.File;
 
-public class WorkspaceError extends Error {
-	
+/**
+ * Uma exceção do workspace
+ * @author Marcos
+ *
+ */
+public class WorkspaceException extends Exception {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 8725518662190069928L;
+	private static final long serialVersionUID = 2251516287838447597L;
 	/**
 	 * File especificado como fonte do workspace
 	 */
@@ -19,7 +24,7 @@ public class WorkspaceError extends Error {
 	 * @param msg The message error
 	 * @param parent the throwable partent
 	 */
-	public WorkspaceError(File file, String msg, Throwable parent)
+	public WorkspaceException(File file, String msg, Throwable parent)
 	{
 		super(msg, parent);
 		sourceFile = file;

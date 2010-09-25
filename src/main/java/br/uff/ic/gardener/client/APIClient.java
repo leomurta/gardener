@@ -1,39 +1,38 @@
 package br.uff.ic.gardener.client;
 
-import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
 import java.util.Map;
 
+import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 
+/**
+ * API Client Interface
+ * @author Marcos Côrtes
+ */
 public interface APIClient 
 {
 	/**
-	 * Commit the modifications in repository.
-	 * @param eraseSubItems SubItems removed.
-	 * @param includeSubItems SubItems Included.
-	 * @param modifyItems SubItems modified
-	 * @throws TransationException Throw the exception in error in the middle of transation.
-	 */
-	void commit(Collection<String> eraseSubItems, Map<String, OutputStream> includeSubItems, Map<String, InputStream> modifyItems) throws TransationException;
-	
-	/**
-	 * CheckOut a revision from the serv.
-	 * @param eraseSubItems SubItems removed.
-	 * @param includeSubItems SubItems Included.
-	 * @param modifyItems SubItems modified
-	 * @param actualRevision Actual revision.
-	 * @param requestRevision the revision requested to checkout.
-	 * @throws TransationException
-	 */	 
-	void checkout(Collection<String> eraseSubItems, Map<String, InputStream> includeSubItems, Map<String, InputStream>  modifySubItems, long actualRevision, long requestRevision) throws TransationException;
-	
-	/**
-	 * CheckOut a revision from the serv.
+	 * CheckOut a revision from the serv. It  is the simple way.
 	 * @param items the items of revision.
 	 * @param revision the revision number.
+	 * @throw TransationException it throws when the system cannot checkout data. It will have a message of the exception
 	 */
-	void checkout(Map<String, InputStream> items, long revision);
+	void checkout(Map<String, InputStream> items, RevisionID revision) throws TransationException;
+	
+
+	/**
+	 * Commit a new revision to the serv. it is the simple way.
+	 * @param items
+	 * @return the new revision generate
+	 * @throws TransationException
+	 */
+	RevisionID commit(Map<String, InputStream> items) throws TransationException;
+
+	/**
+	 * Return the last revision in the repository
+	 * @return the last revision in the repository
+	 */
+	RevisionID getLastRevision();
+	
 }

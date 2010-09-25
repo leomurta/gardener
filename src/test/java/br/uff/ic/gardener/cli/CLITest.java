@@ -6,9 +6,6 @@ package br.uff.ic.gardener.cli;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.net.URI;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
