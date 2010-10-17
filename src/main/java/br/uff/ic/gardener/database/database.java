@@ -29,7 +29,7 @@ import java.util.*;
  * @author Alessandreia Marta de Oliveira
  *
  */
-public class database {
+public class Database {
 
     //Atributos para conexao
     public String stgServer;
@@ -193,7 +193,7 @@ public class database {
         revision.put("usuario", this.stgUsuario);
         revision.put("caminho", Gardener_Root() + this.stgProject + "/" + this.stgRevisao);
 
-        collection.insert(revision);
+        collection.insert(revision, WriteConcern.NONE);
 
     }
 
