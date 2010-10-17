@@ -1,6 +1,6 @@
-package Versioning;
+package br.uff.ic.gardener.versioning;
 
-import Database.Database;
+import br.uff.ic.gardener.database.Database;
 import java.io.File;
 import java.util.*;
 
