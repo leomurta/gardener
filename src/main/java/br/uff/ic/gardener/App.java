@@ -1,11 +1,19 @@
 package br.uff.ic.gardener;
 
-/**
- * Hello world!
- * 
- */
+//teste
+import br.uff.ic.gardener.cli.CLI;
+
+
+
 public class App {
+	/**
+	 * call the CLI interface
+	 * 
+	 * @param args
+	 *            the parameters of aplication
+	 */
 	public static void main(String[] args) {
-		System.out.println("Hello World!");
+		CLI.doMain(args);
+		// System.out.println( "Hello World!" );
 	}
 }
