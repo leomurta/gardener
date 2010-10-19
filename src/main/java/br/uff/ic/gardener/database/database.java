@@ -1,5 +1,6 @@
 package br.uff.ic.gardener.database;
 
+
 import com.mongodb.*;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -49,7 +50,7 @@ public class Database {
      *
      * @return      retorna a raiz do projeto, de acordo com o sistema operacional
      */
-    private String Gardener_Root()
+    private String getRoot()
     {
            String os = System.getProperty("os.name");
            if (os.contains("Windows")) {
@@ -88,23 +89,23 @@ public class Database {
      */
     public void createDirRepository(String stgProject)
     {
-       File root =  new File(Gardener_Root());
+       File root =  new File(getRoot());
        if (!root.exists()) root.mkdir();
 
-       File dir = new File(Gardener_Root() + stgProject);
+       File dir = new File(getRoot() + stgProject);
        dir.mkdir();
 
        try{
 
-            FileOutputStream newFile = new FileOutputStream(Gardener_Root() + stgProject + "/configVersion.conf");
+            FileOutputStream newFile = new FileOutputStream(getRoot() + stgProject + "/configVersion.conf");
             newFile.close();
 
-            FileReader fr = new FileReader(Gardener_Root() + stgProject + "/configVersion.conf");
+            FileReader fr = new FileReader(getRoot() + stgProject + "/configVersion.conf");
             BufferedReader buff = new BufferedReader(fr);
 
             buff.close();
 
-            FileWriter fw = new FileWriter(Gardener_Root() + stgProject + "/configVersion.conf", false);
+            FileWriter fw = new FileWriter(getRoot() + stgProject + "/configVersion.conf", false);
             fw.write("0");//First Revision
             fw.close();
 
@@ -127,7 +128,7 @@ public class Database {
         try
         {
 
-            boolean dir = new File(Gardener_Root() + stgProject + "/" + intRevision).mkdir();
+            boolean dir = new File(getRoot() + stgProject + "/" + intRevision).mkdir();
             if (dir == true) {
 
                 this.storeMetadata();
@@ -162,7 +163,7 @@ public class Database {
         try
         {
             source = new FileInputStream(stgFileSource);
-            target = new FileOutputStream(Gardener_Root() + stgProject + "/" + intRevision + "/" + fileName);
+            target = new FileOutputStream(getRoot() + stgProject + "/" + intRevision + "/" + fileName);
 
             fcSource  = source.getChannel();
             fcTarget = target.getChannel();
@@ -191,7 +192,7 @@ public class Database {
         revision.put("data", this.stgData);
         revision.put("comentario", this.stgComentario);
         revision.put("usuario", this.stgUsuario);
-        revision.put("caminho", Gardener_Root() + this.stgProject + "/" + this.stgRevisao);
+        revision.put("caminho", getRoot() + this.stgProject + "/" + this.stgRevisao);
 
         collection.insert(revision, WriteConcern.NONE);
 
@@ -247,7 +248,7 @@ public class Database {
     {
         try
         {
-            FileWriter fw = new FileWriter(Gardener_Root() + stgProject + "/configVersion.conf", false);
+            FileWriter fw = new FileWriter(getRoot() + stgProject + "/configVersion.conf", false);
             fw.write(Integer.toString(intRevision));
 
             fw.close();
@@ -272,7 +273,7 @@ public class Database {
         {
 
             int tempRevision;
-            FileReader fr = new FileReader(Gardener_Root() + stgProject + "/configVersion.conf");
+            FileReader fr = new FileReader(getRoot() + stgProject + "/configVersion.conf");
             BufferedReader buff = new BufferedReader(fr);
 
             tempRevision = Integer.parseInt(buff.readLine());
@@ -298,7 +299,7 @@ public class Database {
      */
     public File[] listFiles(String stgProject, int intRevision)
     {
-            File dir = new File(Gardener_Root() + stgProject + "/" + intRevision);
+            File dir = new File(getRoot() + stgProject + "/" + intRevision);
             File[] listFile = dir.listFiles();
 
             return listFile;
