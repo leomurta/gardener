@@ -1,7 +1,7 @@
 package br.uff.ic.gardener.database;
 
-import br.uff.ic.gardener.server.Server;
-import br.uff.ic.gardener.versioning.Versioning;
+import br.uff.ic.gardener.server.*;
+import br.uff.ic.gardener.versioning.*;
 
 import com.mongodb.*;
 import com.mongodb.DB;
@@ -34,7 +34,8 @@ import java.util.*;
  */
 public class Database {
     
-    public DB conn;    
+    private DB conn;    
+
     /**
      * Verifica sistema operacional para definir raiz do projeto
      *
@@ -53,21 +54,16 @@ public class Database {
     /**
      * cria a conexao com o BD
      *
+     * @param serv
      * @return      retorna a conexao com o BD
      */
-    public DB Connection(String project)
+    public DB Connection(ConfigurationServer serv, Project proj)
     {
             try
-		{
-
-                    Server serv = new Server();
-
-                    serv.setPort(27017);
-                    serv.setServer("localhost");
-                    serv.setProject(project);
+		{                    
 
                     Mongo connect = new Mongo(serv.getServer(), serv.getPort());
-                    conn = connect.getDB(serv.getProject());
+                    conn = connect.getDB(proj.getProject());
                     return conn;
 
 		}
@@ -81,27 +77,27 @@ public class Database {
     /**
      * Cria o diretorio do Repositorio
      *
-     * @param project    nome do projeto
+     * @param serv
      */
-    public void createDirRepository(String project)
+    public void createDirRepository(Project proj)
     {
        File root =  new File(getRoot());
        if (!root.exists()) root.mkdir();
 
-       File dir = new File(getRoot() + project);
+       File dir = new File(getRoot() + proj.getProject());
        dir.mkdir();
 
        try{
 
-            FileOutputStream newFile = new FileOutputStream(getRoot() + project + "/configVersion.conf");
+            FileOutputStream newFile = new FileOutputStream(getRoot() + proj.getProject() + "/configVersion.conf");
             newFile.close();
 
-            FileReader fr = new FileReader(getRoot() + project + "/configVersion.conf");
+            FileReader fr = new FileReader(getRoot() + proj.getProject() + "/configVersion.conf");
             BufferedReader buff = new BufferedReader(fr);
 
             buff.close();
 
-            FileWriter fw = new FileWriter(getRoot() + project + "/configVersion.conf", false);
+            FileWriter fw = new FileWriter(getRoot() + proj.getProject() + "/configVersion.conf", false);
             fw.write("0");//First Revision
             fw.close();
 
@@ -115,19 +111,19 @@ public class Database {
     /**
      * Cria o diretorio da revisao e armazena os metadados no Diretorio do Repositorio de uma determinada versao
      *
-     * @param project    nome do projeto
-     * @param intRevision   numero da revisao do projeto
+     * @param serv 
+     * @param vers
      */
-    public void storeDirRepository(String project, int intRevision)
+    public void storeDirRepository(ConfigurationServer serv, Project proj, Revision vers)
     {
 
         try
         {
 
-            boolean dir = new File(getRoot() + project + "/" + intRevision).mkdir();
-            if (dir == true) {
+            boolean dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber()).mkdir();
+            if (dir == true) {                
 
-                this.storeMetadata(project);
+                this.storeMetadata(serv, vers, proj);
 
             }
 
@@ -141,12 +137,15 @@ public class Database {
     /**
      * Armazena um arquivo de revisao em uma determinada versao de um projeto
      *
-     * @param project    nome do projeto
-     * @param intRevision   numero da revisao
+     * @param serv
+     * @param vers
      * @param stgFileSource arquivo a ser armazenado
      * @param fileName      nome do arquivo armazenado
      */
-    public void storeFileRepository(String project, int intRevision, String stgFileSource, String fileName)
+    public void storeFileRepository(Revision vers
+                                  , Project proj
+                                  , String stgFileSource
+                                  , String fileName)
     {
         //streams
         FileInputStream source;
@@ -158,7 +157,7 @@ public class Database {
         try
         {
             source = new FileInputStream(stgFileSource);
-            target = new FileOutputStream(getRoot() + project + "/" + intRevision + "/" + fileName);
+            target = new FileOutputStream(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber() + "/" + fileName);
 
             fcSource  = source.getChannel();
             fcTarget = target.getChannel();
@@ -175,14 +174,11 @@ public class Database {
     /**
      * Armazena o metadado no BD
      */
-    private void storeMetadata(String project)
+    private void storeMetadata(ConfigurationServer serv, Revision vers, Project proj)
     {
-
-        Server serv = new Server();
-        Versioning vers = new Versioning();
-
-        conn =  Connection(project);
-        DBCollection collection = conn.getCollection(serv.getProject());
+        
+        this.conn =  Connection(serv, proj);
+        DBCollection collection = this.conn.getCollection(proj.getProject());
 
         BasicDBObject revision = new BasicDBObject();
 
@@ -190,7 +186,7 @@ public class Database {
         revision.put("date", vers.getDate());
         revision.put("messagelog", vers.getMessageLog());
         revision.put("user", vers.getUser());
-        revision.put("path", getRoot() + serv.getProject() + "/" + vers.getRevisionNumber());
+        revision.put("path", getRoot() + proj.getProject() + "/" + vers.getRevisionNumber());
 
         collection.insert(revision);
 
@@ -199,16 +195,15 @@ public class Database {
     /**
      * Consulta o metadado
      *
+     * @param serv
+     * @param vers
      * @return  retorna o metadado do projeto
      */
-    public ArrayList queryMetadata(String project)
-    {
+    public ArrayList queryMetadata(ConfigurationServer serv, Project proj, Revision vers)
+    {       
 
-        Server serv = new Server();
-        Versioning vers = new Versioning();
-
-        conn =  Connection(project);
-        DBCollection collection = conn.getCollection(serv.getProject());
+        this.conn =  Connection(serv, proj);
+        DBCollection collection = this.conn.getCollection(proj.getProject());
 
         BasicDBObject revision = new BasicDBObject();
         revision.put("revision", vers.getRevisionNumber());
@@ -242,15 +237,15 @@ public class Database {
     /**
      * Atualiza revisao de uma revisao de um projeto
      *
-     * @param project    nome do projeto
-     * @param intRevision   numero da revisao
+     * @param serv
+     * @param vers
      */
-    public void updateRevision(String project, int intRevision)
+    public void updateRevision(Project proj, Revision vers)
     {
         try
         {
-            FileWriter fw = new FileWriter(getRoot() + project + "/configVersion.conf", false);
-            fw.write(Integer.toString(intRevision));
+            FileWriter fw = new FileWriter(getRoot() + proj.getProject() + "/configVersion.conf", false);
+            fw.write(vers.getRevisionNumber());
 
             fw.close();
 
@@ -265,16 +260,16 @@ public class Database {
     /**
      * retorna a ultima revisao de um projeto
      *
-     * @param project    nome do projeto
+     * @param serv
      * @return              numero da revisao
      */
-    public int lastRevision(String project)
+    public int lastRevision(Project proj)
     {
         try
         {
 
             int tempRevision;
-            FileReader fr = new FileReader(getRoot() + project + "/configVersion.conf");
+            FileReader fr = new FileReader(getRoot() + proj.getProject() + "/configVersion.conf");
             BufferedReader buff = new BufferedReader(fr);
 
             tempRevision = Integer.parseInt(buff.readLine());
@@ -294,13 +289,13 @@ public class Database {
     /**
      * Lista arquivos de uma revisao de um projeto
      *
-     * @param project    nome do projeto
-     * @param intRevision   numero da revisao
+     * @param pServ
+     * @param pVers
      * @return              lista de arquivos
      */
-    public File[] listFiles(String project, int intRevision)
+    public File[] listFiles(Project proj, Revision vers)
     {
-            File dir = new File(getRoot() + project + "/" + intRevision);
+            File dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber());
             File[] listFile = dir.listFiles();
 
             return listFile;

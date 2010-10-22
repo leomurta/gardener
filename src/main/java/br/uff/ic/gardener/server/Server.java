@@ -1,111 +1,89 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.versioning.Versioning;
+import br.uff.ic.gardener.versioning.*;
 
 import java.util.*;
+import java.io.File;
 
 /**
  *
  * @author Evaldo de Oliveira
  */
+public class Server {
 
-/*
- * Esta classe permite fornecer métodos para o Servidor
- * do Sistema de Controle de Versão Gardener.
- * O Gardener é resultado de um trabalho da disciplina de Laboratório de
- * Gerencia de Configuração.
- * Esta disciplina está sendo cursada no Instituto de Computação da UFF,
- * e faz parte do conjunto de disciplinas a serem cursadas no Doutorado em Computação.
- * O professor da disciplina é o Leonardo Murta.
- *
- * Criação em 11 de Outubro de 2010.
- *
- *
- */
-
-
-public class Server {  
-
-    private int port;
-    private String server;
-    private String project;
-
-   public void createProject(String project, String server, int port)
-   {
-        Versioning revision = new Versioning();
-
-        this.setPort(port);
-        this.setServer(server);
-        this.setProject(project);
-
-        revision.createRevisionProject(project);
-   }
-
-   public void ckeckinRevision(String project
-                              , int port
-                              , String server
-                              , String messageLog
-                              , String date
-                              , String user
-                              , String fileSource
-                              , String fileName)
+    /**
+    *
+    * @param serv
+    * @param vers
+    * @param fileSource
+    * @param fileName
+    */
+   public void ckeckin(ConfigurationServer serv
+                     , Revision vers
+                     , Project proj
+                     , String fileSource
+                     , String fileName)
     {
-        this.setProject(project);
-        this.setPort(port);
-        this.setServer(server);
 
-        Versioning revision = new Versioning();
-        
-        revision.setMessageLog(messageLog);
-        revision.setDate(date);
-        revision.setUser(user);
+        Transaction transact = new Transaction();
+        ConfigurationItem ci = new ConfigurationItem();
 
-        revision.createRevision(project);
-        revision.createFileRevision(project, fileSource, fileName);
+        transact.createRevision(serv, proj, vers);
+        ci.createFileRevision(serv, proj, vers, fileSource, fileName);
     }
 
-   public ArrayList ckeckoutRevision(int port, String server, String project, String revisionNumber)
-   {      
+   /**
+    *
+    * @param serv
+    * @param revisionNumber
+    * @return
+    */
+   public ArrayList ckeckout(ConfigurationServer serv, Project proj, String revisionNumber)
+   {
 
-       this.setPort(port);
-       this.setProject(project);
-       this.setServer(server);
+       Transaction trans = new Transaction();
+       Revision revision = new Revision();
 
-       Versioning revision = new Versioning();
        revision.setRevisionNumber(revisionNumber);
 
-       return revision.metadataRevision(project);
+       return trans.metadataRevision(serv, proj, revision);
 
    }
-   
-   public void setPort(int port)
+
+   /**
+    *
+    * @param serv
+    * @param revisionNumber
+    * @return
+    */
+   public File[] ckeckoutFile(Project proj, String revisionNumber)
    {
-       this.port = port;
+
+       Revision revision = new Revision();
+       ConfigurationItem ci = new ConfigurationItem();
+
+       revision.setRevisionNumber(revisionNumber);
+
+       return ci.listRevisionFiles(proj, revision);
+
    }
 
-   public int getPort()
+   /**
+    *
+    * @param serv
+    * @return
+    */
+   public int nextNumberRevision(Project proj)
    {
-       return port;
-   }
 
-   public void setServer(String server)
-   {
-       this.server = server;
-   }
+       Transaction trans = new Transaction();
+       return trans.nextRevision(proj);
 
-   public String getServer()
-   {
-       return server;
-   }
-
-   public void setProject(String project)
-   {
-       this.project = project;
-   }
-
-   public String getProject()
-   {
-       return project;
    }
 
 }
