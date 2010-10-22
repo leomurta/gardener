@@ -1,72 +1,89 @@
-package br.uff.ic.gardener.versioning;
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
-import br.uff.ic.gardener.database.Database;
-import br.uff.ic.gardener.versioning.Versioning;
+package br.uff.ic.gardener.server;
+
+import br.uff.ic.gardener.versioning.*;
 
 import java.util.*;
+import java.io.File;
 
 /**
  *
  * @author Evaldo de Oliveira
  */
+public class Server {
 
-/*
- * Esta classe permite fornecer métodos para o Servidor
- * do Sistema de Controle de Versão Gardener.
- * O Gardener é resultado de um trabalho da disciplina de Laboratório de
- * Gerencia de Configuração.
- * Esta disciplina está sendo cursada no Instituto de Computação da UFF,
- * e faz parte do conjunto de disciplinas a serem cursadas no Doutorado em Computação.
- * O professor da disciplina é o Leonardo Murta.
- *
- * Criação em 11 de Outubro de 2010.
- *
- *
- */
+    /**
+    *
+    * @param serv
+    * @param vers
+    * @param fileSource
+    * @param fileName
+    */
+   public void ckeckin(ConfigurationServer serv
+                     , Revision vers
+                     , Project proj
+                     , String fileSource
+                     , String fileName)
+    {
 
+        Transaction transact = new Transaction();
+        ConfigurationItem ci = new ConfigurationItem();
 
-public class Server {  
+        transact.createRevision(serv, proj, vers);
+        ci.createFileRevision(serv, proj, vers, fileSource, fileName);
+    }
 
-    int intPort = 27017;
-    String stgServer = "localhost";
-
-   public void createProject(String stgProject)
+   /**
+    *
+    * @param serv
+    * @param revisionNumber
+    * @return
+    */
+   public ArrayList ckeckout(ConfigurationServer serv, Project proj, String revisionNumber)
    {
-        Versioning revision = new Versioning();
-        revision.createRevisionProject(stgProject);
+
+       Transaction trans = new Transaction();
+       Revision revision = new Revision();
+
+       revision.setRevisionNumber(revisionNumber);
+
+       return trans.metadataRevision(serv, proj, revision);
+
    }
 
-   public void ckeckinRevision(String stgProject                              
-                              , String stgComentario
-                              , String stgData
-                              , String stgUsuario
-                              , String stgFileSource
-                              , String stgFileName)
-    {
-        Versioning revision = new Versioning();
+   /**
+    *
+    * @param serv
+    * @param revisionNumber
+    * @return
+    */
+   public File[] ckeckoutFile(Project proj, String revisionNumber)
+   {
 
-        revision.intPort = this.intPort;
-        revision.stgServer = this.stgServer;
-        revision.stgProject = stgProject;
-        
-        revision.stgComentario = stgComentario;
-        revision.stgData = stgData;
-        revision.stgUsuario = stgUsuario;
+       Revision revision = new Revision();
+       ConfigurationItem ci = new ConfigurationItem();
 
-        revision.createRevision(stgProject);
-        revision.createFileRevision(stgProject, stgFileSource, stgFileName);
-    }
+       revision.setRevisionNumber(revisionNumber);
 
-   public ArrayList ckeckoutRevision(String stgProject, String stgRevisao, String stgCaminhoDestino)
-    {
-       Versioning revision = new Versioning();
+       return ci.listRevisionFiles(proj, revision);
 
-       revision.intPort = this.intPort;
-       revision.stgServer = this.stgServer;
-       revision.stgProject = stgProject;
-       revision.stgRevisao = stgRevisao;
+   }
 
-       return revision.metadataRevision();
+   /**
+    *
+    * @param serv
+    * @return
+    */
+   public int nextNumberRevision(Project proj)
+   {
 
-    }
+       Transaction trans = new Transaction();
+       return trans.nextRevision(proj);
+
+   }
+
 }

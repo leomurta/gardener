@@ -15,8 +15,16 @@ import java.nio.channels.FileChannel;
 import java.io.File;
 import java.util.*;
 
-import br.uff.ic.gardener.versioning.Versioning;
+import br.uff.ic.gardener.server.Server;
+import br.uff.ic.gardener.server.ConfigurationServer;
+import br.uff.ic.gardener.server.Project;
 
+import br.uff.ic.gardener.versioning.*;
+
+/**
+ *
+ * @author Evaldo de Oliveira
+ */
 public class Main extends JPanel implements ActionListener
 {
 
@@ -56,6 +64,9 @@ public class Main extends JPanel implements ActionListener
     JTextArea log;
     JFileChooser fc;
 
+    /**
+     *
+     */
     public Main()
     {
 	super(new BorderLayout());
@@ -132,6 +143,7 @@ public class Main extends JPanel implements ActionListener
         add(camposPanel, BorderLayout.PAGE_START);
     }
 
+    @Override
     public void actionPerformed(ActionEvent e)
     {
 	//AcÃ£o nos botÃµes.
@@ -144,20 +156,23 @@ public class Main extends JPanel implements ActionListener
                     File file = fc.getSelectedFile();
 
                     try
-                    {
+                    {                        
+                        ConfigurationServer cs  = new ConfigurationServer(27017, "localhost");
+                        Server serv = new Server();
+                        Project proj = new Project(projetoField.getText());
 
-                        Versioning revision = new Versioning();
+                        Revision vers = new Revision();                        
+                        
+                        vers.setDate(dataField.getText());
+                        vers.setMessageLog(comentarioField.getText());
+                        vers.setUser(usuarioField.getText());
 
-                        revision.intPort = 27017;
-                        revision.stgServer = "localhost";
-
-                        revision.stgComentario = comentarioField.getText();
-                        revision.stgData = dataField.getText();
-                        revision.stgProject = projetoField.getText();
-                        revision.stgUsuario = usuarioField.getText();
-
-                        revision.createRevision(revision.stgProject);
-                        revision.createFileRevision(revision.stgProject, file.getAbsolutePath(), file.getName());
+                        serv.ckeckin(cs,
+                                     vers,
+                                     proj,
+                                     file.getAbsolutePath(),
+                                     file.getName());
+                        
 
                         comentarioField.setText("");
                         usuarioField.setText("");
@@ -176,7 +191,7 @@ public class Main extends JPanel implements ActionListener
 
 
                 } else{
-                    log.append("UsuÃ¡rio desistiu de realizar o ckeckin do arquivo." + newline);
+                    log.append("Usuário desistiu de realizar o ckeckin do arquivo." + newline);
                 }
 
                 log.setCaretPosition(log.getDocument().getLength());
@@ -199,12 +214,12 @@ public class Main extends JPanel implements ActionListener
                             origemField.setText(file.getAbsolutePath());
 
                         } else{
-                            log.append("UsuÃ¡rio desistiu de realizar a escolha do arquivo." + newline);
+                            log.append("Usuário desistiu de realizar a escolha do arquivo." + newline);
                         }
                     }
                   catch(Exception e1)
                     {
-                        log.append("Erro ao realizar a escolha do diretÃ³rio de origem: " + e1.getMessage() + newline);
+                        log.append("Erro ao realizar a escolha do diretório de origem: " + e1.getMessage() + newline);
                         log.invalidate();
                         return;
                     }
@@ -222,12 +237,12 @@ public class Main extends JPanel implements ActionListener
                             destinoField.setText(file.getAbsolutePath());
 
                         } else{
-                            log.append("UsuÃ¡rio desistiu de realizar a escolha do arquivo." + newline);
+                            log.append("Usuário desistiu de realizar a escolha do arquivo." + newline);
                         }
                     }
                   catch(Exception e1)
                     {
-                        log.append("Erro ao realizar a escolha do diretÃ³rio de origem: " + e1.getMessage() + newline);
+                        log.append("Erro ao realizar a escolha do diretorio de origem: " + e1.getMessage() + newline);
                         log.invalidate();
                         return;
                     }
@@ -239,27 +254,28 @@ public class Main extends JPanel implements ActionListener
 
                         if (projetoField.getText().isEmpty() || consultaField.getText().isEmpty())
                         {
-                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versÃ£o podem estar vazios!", "ProtÃ³tipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
-                        }
-
-                        Versioning revision = new Versioning();
+                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versÃ£o podem estar vazios!", "Protótipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
+                        }                       
 
                         File[] listFile;
 
                         log.setText("");
+                        
+                        Server serv = new Server();
+                        ConfigurationServer cs  = new ConfigurationServer(27017, "localhost");
+                        Project proj = new Project(projetoField.getText());
 
-                        revision.intPort = 27017;
-                        revision.stgServer = "localhost";
-                        revision.stgProject = projetoField.getText();
-                        revision.stgRevisao = consultaField.getText();
-
-                        ArrayList listRevision = revision.metadataRevision();
+                        log.append("Metadados:" + newline);
+                        log.append("============================================" + newline);
+                        ArrayList listRevision = serv.ckeckout(cs, proj, consultaField.getText());
 
                         for (int i = 0; i < listRevision.size(); i++) {
                             log.append(listRevision.get(i) + "" + newline);
                         }
 
-                        listFile = revision.listRevisionFiles(revision.stgProject, Integer.parseInt(revision.stgRevisao));
+                        log.append(newline + newline + "Itens Versionados:" + newline);
+                        log.append("============================================" + newline);
+                        listFile = serv.ckeckoutFile(proj, consultaField.getText());
 
                         for (int i = 0; i < listFile.length; i++) {
                             log.append(listFile[i].getName() + "" + newline);
@@ -283,12 +299,13 @@ public class Main extends JPanel implements ActionListener
          else if(e.getSource() == criaProjetoButton)
             {
                    try
-                    {
+                    {                       
+                       
+                       Project proj = new Project(projetoField.getText());
 
-                       Versioning revision = new Versioning();
-                       revision.createRevisionProject(projetoField.getText());
+                       proj.createProject(proj);
 
-                       JOptionPane.showMessageDialog(null, "Projeto criado com sucesso!", "ProtÃ³tipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
+                       JOptionPane.showMessageDialog(null, "Projeto criado com sucesso!", "Prototipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
 
                        log.setText("");
                        projetoField.setText("");
@@ -305,17 +322,19 @@ public class Main extends JPanel implements ActionListener
                    try
                     {
 
-                       Versioning revision = new Versioning();
-                       int nextRevision = revision.nextRevision(projetoField.getText());
+                       Server serv = new Server();
+                       Project proj = new Project(projetoField.getText());
+                       
+                       int nextRevision = serv.nextNumberRevision(proj);
 
                        if (projetoField.getText().isEmpty())
                         {
-                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versÃ£o podem estar vazios!", "ProtÃ³tipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versÃ£o podem estar vazios!", "Protótipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
                         } else {
-                            JOptionPane.showMessageDialog(null, "A proxima versÃ£o do projeto: "
+                            JOptionPane.showMessageDialog(null, "A proxima versão do projeto: "
                                     + projetoField.getText() +
-                                    " Ã© " + nextRevision,
-                                    "ProtÃ³tipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
+                                    " é " + nextRevision,
+                                    "Prototipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
                         }
 
                        log.setText("");
@@ -335,7 +354,7 @@ public class Main extends JPanel implements ActionListener
 	private static void createAndShowGUI()
 	{
 
-                JFrame frame = new JFrame("ProtÃ³tipo do Sistema Gardener");
+                JFrame frame = new JFrame("Prototipo do Sistema Gardener - Acesso as APIs Server e Versionamento");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JComponent newContentPane = new Main();
 		newContentPane.setOpaque(true);
@@ -346,11 +365,16 @@ public class Main extends JPanel implements ActionListener
 		frame.setVisible(true);
 	}
 
+        /**
+         * 
+         * @param args
+         */
         public static void main(String[] args)
                 //throws TException, TimedOutException, InvalidRequestException, UnavailableException, UnsupportedEncodingException, NotFoundException, NullPointerException
         {
             javax.swing.SwingUtilities.invokeLater(new Runnable()
-		{public void run() {
+		{@Override
+public void run() {
 			createAndShowGUI();
 			}
 		});
