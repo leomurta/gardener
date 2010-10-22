@@ -1,5 +1,6 @@
+
 /* UFF - Universidade Federal Fluminense
- *  IC - Instituto de Computação  
+ *  IC - Instituto de Computaï¿½ï¿½o
  */
 
 package br.uff.ic.gardener.cli;
@@ -24,12 +25,12 @@ import br.uff.ic.gardener.workspace.WorkspaceException;
 
 /**
  * CLI class. Implements CLI interface with a singletons
- * 
- * @author Marcos Côrtes
- * @seealso 
+ *
+ * @author Marcos Cï¿½rtes
+ * @seealso
  *          https://args4j.dev.java.net/source/browse/args4j/args4j/examples/SampleMain
  *          .java?view=markup
- * 
+ *
  */
 public class CLI {
 
@@ -60,9 +61,9 @@ public class CLI {
 
 	/**
 	 * Define possible operations to CLI
-	 * 
+	 *
 	 * @author Marcos
-	 * 
+	 *
 	 */
 	private enum OPERATION {
 		CHECKOUT, COMMIT, NULL
@@ -104,7 +105,7 @@ public class CLI {
 
 	/**
 	 * Cria um workspace
-	 * 
+	 *
 	 * @param path
 	 *            O caminho do workspace
 	 * @return o workspace criado
@@ -135,7 +136,7 @@ public class CLI {
 
 	/**
 	 * Interpret and execute cli operations in the args array
-	 * 
+	 *
 	 * @param args
 	 *            Array of strings containing the parameters
 	 */
@@ -145,7 +146,7 @@ public class CLI {
 
 	/**
 	 * Return actual path
-	 * 
+	 *
 	 * @return
 	 */
 	static File getActualPath() {
@@ -158,7 +159,7 @@ public class CLI {
 
 	/**
 	 * Realize main application. It is needed to create the singletons.
-	 * 
+	 *
 	 * @param args
 	 *            Application params
 	 */
@@ -233,7 +234,7 @@ public class CLI {
 
 	/**
 	 * Commit event
-	 * 
+	 *
 	 * @throws WorkspaceException
 	 */
 	private void onCommit() throws WorkspaceException {
@@ -242,7 +243,7 @@ public class CLI {
 
 	/**
 	 * Checkout event
-	 * 
+	 *
 	 * @throws WorkspaceException
 	 */
 	private void onCheckout() throws WorkspaceException {

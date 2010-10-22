@@ -1,6 +1,5 @@
-package br.uff.ic.gardener.versioning;
+package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.Versioning;
 
 import java.util.*;
@@ -27,46 +26,86 @@ import java.util.*;
 
 public class Server {  
 
-    int intPort = 27017;
-    String stgServer = "localhost";
+    private int port;
+    private String server;
+    private String project;
 
-   public void createProject(String stgProject)
+   public void createProject(String project, String server, int port)
    {
         Versioning revision = new Versioning();
-        revision.createRevisionProject(stgProject);
+
+        this.setPort(port);
+        this.setServer(server);
+        this.setProject(project);
+
+        revision.createRevisionProject(project);
    }
 
-   public void ckeckinRevision(String stgProject                              
-                              , String stgComentario
-                              , String stgData
-                              , String stgUsuario
-                              , String stgFileSource
-                              , String stgFileName)
+   public void ckeckinRevision(String project
+                              , int port
+                              , String server
+                              , String messageLog
+                              , String date
+                              , String user
+                              , String fileSource
+                              , String fileName)
     {
+        this.setProject(project);
+        this.setPort(port);
+        this.setServer(server);
+
         Versioning revision = new Versioning();
-
-        revision.intPort = this.intPort;
-        revision.stgServer = this.stgServer;
-        revision.stgProject = stgProject;
         
-        revision.stgComentario = stgComentario;
-        revision.stgData = stgData;
-        revision.stgUsuario = stgUsuario;
+        revision.setMessageLog(messageLog);
+        revision.setDate(date);
+        revision.setUser(user);
 
-        revision.createRevision(stgProject);
-        revision.createFileRevision(stgProject, stgFileSource, stgFileName);
+        revision.createRevision(project);
+        revision.createFileRevision(project, fileSource, fileName);
     }
 
-   public ArrayList ckeckoutRevision(String stgProject, String stgRevisao, String stgCaminhoDestino)
-    {
+   public ArrayList ckeckoutRevision(int port, String server, String project, String revisionNumber)
+   {      
+
+       this.setPort(port);
+       this.setProject(project);
+       this.setServer(server);
+
        Versioning revision = new Versioning();
+       revision.setRevisionNumber(revisionNumber);
 
-       revision.intPort = this.intPort;
-       revision.stgServer = this.stgServer;
-       revision.stgProject = stgProject;
-       revision.stgRevisao = stgRevisao;
+       return revision.metadataRevision(project);
 
-       return revision.metadataRevision();
+   }
+   
+   public void setPort(int port)
+   {
+       this.port = port;
+   }
 
-    }
+   public int getPort()
+   {
+       return port;
+   }
+
+   public void setServer(String server)
+   {
+       this.server = server;
+   }
+
+   public String getServer()
+   {
+       return server;
+   }
+
+   public void setProject(String project)
+   {
+       this.project = project;
+   }
+
+   public String getProject()
+   {
+       return project;
+   }
+
 }

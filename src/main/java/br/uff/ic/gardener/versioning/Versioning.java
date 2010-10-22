@@ -25,106 +25,92 @@ import java.util.*;
 
 public class Versioning {
    
-   public String stgRevisao;
-   public String stgData;
-   public String stgComentario;
-   public String stgUsuario;
-   public String stgCaminho;
-
-   public String stgServer;
-   public int intPort;
-   public String stgProject;
+   private String revisionNumber;
+   private String date;
+   private String messageLog;
+   private String user;   
    
    /**
     *
-    * @param stgProject
+    * @param project
     */
-   public void createRevisionProject(String stgProject)
+   public void createRevisionProject(String project)
    {
 
        Database db = new Database();
-       db.createDirRepository(stgProject);
+       db.createDirRepository(project);
 
    }
     
    /**
     *
-    * @param stgProject
+    * @param project
     */
-   public void createRevision(String stgProject)
+   public void createRevision(String project)
     {
 
-       Database db = new Database();                    
+       Database db = new Database();
 
-       int intRevision = db.lastRevision(stgProject);
-
-       intRevision = intRevision + 1;
-
-       db.intPort = this.intPort;
-       db.stgServer = this.stgServer;
-       db.stgProject = this.stgProject;
-
-       db.stgRevisao = Integer.toString(intRevision);       
-       db.stgComentario = this.stgComentario;
-       db.stgData = this.stgData;
-       db.stgUsuario = this.stgUsuario;
-
-       db.storeDirRepository(stgProject,  intRevision);
-       db.updateRevision(stgProject, intRevision);
+       int revision = db.lastRevision(project);
+       revision = revision + 1;       
+       this.setRevisionNumber(Integer.toString(revision));
+       
+       db.storeDirRepository(project,  revision);
+       db.updateRevision(project, revision);
      }          
 
    /**
     *
-    * @param stgProject
-    * @param stgFileSource
-    * @param stgfileName
+    * @param project
+    * @param fileSource
+    * @param fileName
     */
-   public void createFileRevision(String stgProject, String stgFileSource, String stgfileName)
+   public void createFileRevision(String project, String fileSource, String fileName)
    {
        Database db = new Database();
-       int intRevision = db.lastRevision(stgProject);
+       int revision = db.lastRevision(project);
 
-       db.storeFileRepository(stgProject,  intRevision, stgFileSource, stgfileName);
+       db.storeFileRepository(project,  revision, fileSource, fileName);
 
    }
 
    /**
     *
-    * @param stgProject
-    * @param intRevision
+    * @param project
+    * @param revisionNumber
     * @return
     */
-   public File[] listRevisionFiles(String stgProject, int intRevision)
+   public File[] listRevisionFiles(String project, int revision)
    {
 
        Database db = new Database();
-       return db.listFiles(stgProject, intRevision);
+       return db.listFiles(project, revision);
 
    }
 
    /**
     *
-    * @param stgProject
+    * @param project
     * @return
     */
-   public int lastRevision(String stgProject)
+   public int lastRevision(String project)
    {
 
        Database db = new Database();
-       return db.lastRevision(stgProject);
+       return db.lastRevision(project);
 
    }
 
    /**
     *
-    * @param stgProject
+    * @param project
     * @return
     */
-   public int nextRevision(String stgProject)
+   public int nextRevision(String project)
    {
 
        Database db = new Database();
-       return db.lastRevision(stgProject) + 1;
+       return db.lastRevision(project) + 1;
 
    }
 
@@ -132,18 +118,57 @@ public class Versioning {
     *
     * @return
     */
-   public ArrayList metadataRevision()
+   public ArrayList metadataRevision(String project)
    {
 
        Database db = new Database();
-
-       db.intPort = this.intPort;
-       db.stgServer = this.stgServer;
-       db.stgProject = this.stgProject;
-       db.stgRevisao = this.stgRevisao;
-
-       return db.queryMetadata();
+       return db.queryMetadata(project);
 
    }
+
+   public void setRevisionNumber(String revisionNumber)
+   {
+       this.revisionNumber = revisionNumber;
+   }
+
+   public String getRevisionNumber()
+   {
+        return this.revisionNumber;
+   }
+
+   public void setDate(String date)
+   {
+       this.date = date;
+   }
+
+   public String getDate()
+   {
+       return this.date;
+   }
+
+   public void setMessageLog(String messageLog)
+   {
+       this.messageLog = messageLog;
+   }
+
+   public String getMessageLog()
+   {
+       return this.messageLog;
+   }
+
+   public void setUser(String user)
+   {
+       this.user = user;
+   }
+
+   public String getUser()
+   {
+       return this.user;
+   }
+
 
 }
+
+
+
+

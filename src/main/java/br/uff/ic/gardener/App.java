@@ -8,7 +8,7 @@ import br.uff.ic.gardener.cli.CLI;
 public class App {
 	/**
 	 * call the CLI interface
-	 * 
+	 *
 	 * @param args
 	 *            the parameters of aplication
 	 */
