@@ -35,6 +35,5 @@ public class Diff {
         File file1 = new File("../lao.txt");
         File file2 = new File("../tzu.txt");
 
-
     }
 }

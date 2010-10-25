@@ -8,7 +8,10 @@ package br.uff.ic.gardener.cli;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -17,6 +20,7 @@ import org.kohsuke.args4j.ExampleMode;
 import org.kohsuke.args4j.Option;
 
 import br.uff.ic.gardener.RevisionID;
+import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.ClientFactory;
 import br.uff.ic.gardener.client.CreationAPIClientException;
@@ -54,7 +58,34 @@ public class CLI {
 	private void setRevision(String strRevision) {
 		revision = RevisionID.fromString(strRevision);
 	}
+	
+	/**
+	 * Indica que a operação é de diff
+	 */
+	@Option(name = "-diff", aliases = "--difference", metaVar = "DIFF", usage = "Diff two files at the form: diff [-E|-B|-i|-c [l|n]|-u ] fileA fileB")
+	private boolean bDiff = false;
 
+	/*
+	*	
+	*	•Formato Unificado
+	*	diff -u arquivo_1 arquivo_2
+	 */
+	
+	@Option(name = "-E", aliases="--IgnoreWhiteSpaces", metaVar="DIFF_IGNORE_WHITE_SPACES", usage = "Ignore White Spaces and tabs on Diff operation")
+	private boolean bDiffIgnoreWhiteSpaces = false;
+	
+	@Option(name = "-B", aliases="--IgnoreWhiteLines", metaVar="DIFF_IGNORE_WHITE_LINES", usage = "Ignore White Lines on Diff operation")
+	private boolean bDiffIgnoreWhiteLines = false;
+	
+	@Option(name = "-i", aliases="--IgnoreCaseSensitive", metaVar="DIFF_IGNORE_CASE_SENSITIVE", usage = "Ignore Case Sensitive")
+	private boolean bDiffIgnoreCaseSensitive = false;
+	 
+	@Option(name = "-c", aliases="--ContextFormat", metaVar="DIFF_CONTEXT_FORMAT", usage = "Select Context Format")
+	private char charDiffContextFormat = ' ';
+	
+	@Option(name = "-u", aliases="--UnifiedFormat", metaVar="DIFF_UNIFIED_FORMAT", usage = "Use Unified Format")
+	private boolean bDiffUnifiedFormat = false;
+	
 	private RevisionID revision = RevisionID.LAST_REVISION;
 
 	/**
@@ -64,7 +95,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		CHECKOUT, COMMIT, NULL
+		CHECKOUT, COMMIT, DIFF, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -79,7 +110,10 @@ public class CLI {
 			return OPERATION.CHECKOUT;
 		} else if (bCommit) {
 			return OPERATION.COMMIT;
-		} else
+		} else if(bDiff)
+		{
+			return OPERATION.DIFF;
+		}else
 			return OPERATION.NULL;
 
 	}
@@ -131,7 +165,57 @@ public class CLI {
 
 		return cliSingletons;
 	}
+	
+	/**
+	 * Realiza um per-parsing para tratar dos casos fora do padrão javac.
+	 * É uma gambiarra para eu não ter de mexer no args4j ou então trocá-lo por outra biblioteca.
+	 * @param args os argumentos da aplicação
+	 */
+	static private String[] preParser(String[] args)
+	{
+		if(! args[0].startsWith("-"))
+		{
+			args[0] = "-" + args[0]; 			
+		}
+		
+		LinkedList<String> list = new LinkedList<String>();
+		for(int i = 0; i < args.length; i++)
+		{
+			String s = args[i];
+			list.add(s);
+			//trata do caso do -c com parâmetro default
+			if(s.equals("-c"))
+			{
+				if(i+1 < args.length)
+				{
+					String nextS = args[i+1];
+					if(!nextS.equals("l"))
+						list.add("n");
+				}else
+				{
+					list.add("n");
+				}
+			}
+		}
+		
+		return list.toArray(new String[list.size()]);
+	}
 
+	/**
+	 * Interpret and execute cli operations in the args array
+	 * @param args
+	 * 				String with comands (it will be tokenize)
+	 */
+	static public void doMain(String args)
+	{
+		StringTokenizer  tokens = new StringTokenizer(args);
+		LinkedList<String> list = new LinkedList<String>();
+		while(tokens.hasMoreTokens())
+		{
+			list.add(tokens.nextToken());
+		}
+		doMain(list.toArray(new String[list.size()]));
+	}
 	/**
 	 * Interpret and execute cli operations in the args array
 	 *
@@ -172,10 +256,21 @@ public class CLI {
 		parser.setUsageWidth(80);
 
 		try {
+			
+			args = preParser(args);
 			// parse the arguments.
 			parser.parseArgument(args);
-
-			{
+			
+			switch (getOperation()) {
+			
+			case DIFF:
+				LinkedList<File> list = new LinkedList<File>();
+				for(String s: this.listArguments)
+					list.add(new File(s));
+				onDiff(list);
+			break;
+			case CHECKOUT:
+			case COMMIT:
 				// trata URI sem file://
 				if (uriWorkspace.getHost() == null
 						|| uriWorkspace.getHost() == "") {
@@ -191,18 +286,12 @@ public class CLI {
 					uriServ = uriWorkspace;
 				}
 
-			}
-
-			createWorkspace(new File(uriWorkspace));
-
-			switch (getOperation()) {
-			case CHECKOUT:
-				onCheckout();
-				break;
-
-			case COMMIT:
-				onCommit();
-				break;
+				createWorkspace(new File(uriWorkspace));
+				if(getOperation() == OPERATION.CHECKOUT)
+					onCheckout();
+				else
+					onCommit();
+			break;
 			default:
 				// this will redirect the output to the specified output
 				parser.printUsage(System.out);
@@ -228,6 +317,10 @@ public class CLI {
 			e.printStackTrace();
 			return;
 		}
+		 catch (TransationException e) {
+				e.printStackTrace();
+				return;
+		}
 	}
 
 	/**
@@ -246,5 +339,61 @@ public class CLI {
 	 */
 	private void onCheckout() throws WorkspaceException {
 		getWorkspace().checkout(revision);
+	}
+	
+	
+	/**
+	* O diff tem 4 formatos diferentes e umas configurações.
+	*
+	*	Segue os comandos...
+	*
+	*	•Ignorar Espaços em branco e “Tabs”
+	* 	diff -E arquivo_1 arquivo_2
+	*	
+	*	•Ignorando Linhas em branco
+	*	diff -B arquivo_1 arquivo_2
+	*	
+	*	•Ignorando diferenças letras maiúsculas e minúsculas (Case Sensitive)
+	*	diff -i arquivo_1 arquivo_2
+	*	
+	*	•Formato Contexto
+	*	diff -c arquivo_1 arquivo_2
+	*	
+	*	•Formato Menor Contexto
+	*	diff -c l arquivo_1 arquivo_2
+	*	
+	*	•Formato Unificado
+	*	diff -u arquivo_1 arquivo_2
+	*	
+	*	•Formato Normal
+	*	diff arquivo_1 arquivo_2
+	*/
+	private void onDiff(Collection<File> collFiles ) throws TransationException
+	{
+		if(collFiles.size() != 2)
+		{
+			StringBuilder str = new StringBuilder();
+			str.append("Não é possível comparar menos ou mais de dois arquivos: Foram especificados ");
+			str.append(Integer.toString(collFiles.size()));
+			str.append(" com os nomes:\n");
+			for(File f: collFiles)
+			{
+				str.append(f.toString());
+				str.append("\n");
+			}
+			
+			throw new TransationException(str.toString());
+		}
+		
+		//usem estas variáveis
+		bDiffIgnoreWhiteSpaces = false;
+			
+		bDiffIgnoreWhiteLines = false;
+			
+		bDiffIgnoreCaseSensitive = false;
+			 
+		charDiffContextFormat = ' ';
+			
+		bDiffUnifiedFormat = false;
 	}
 }
