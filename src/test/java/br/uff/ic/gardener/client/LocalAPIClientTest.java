@@ -5,7 +5,7 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 
-import br.uff.ic.gardener.TestWithTemporaryPath;
+import br.uff.ic.gardener.util.TestWithTemporaryPath;
 
 public class LocalAPIClientTest extends TestWithTemporaryPath {
 

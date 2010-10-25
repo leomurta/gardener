@@ -10,6 +10,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -24,11 +29,38 @@ public class Workspace {
 	 * Path of the workspace
 	 */
 	private File path = null;
-
+	
 	/**
 	 * reference to the client aplication
 	 */
 	private APIClient client = null;
+	
+	/**
+	 * Lista que irÃ¡ conter as transaÃ§Ãµes especificadas no workspace. Ela nunca altera de tamanho 
+	 */
+	private ArrayList<WorkspaceOperation> listOperations = new ArrayList<WorkspaceOperation>();
+	
+	/**
+	 * Lista que receberÃ¡ as novas operaÃ§Ãµes do workspace para serem gravadas em um commit
+	 */
+	private LinkedList<WorkspaceOperation> listNewOperations = new LinkedList<WorkspaceOperation>();
+	
+	/**
+	 * The current revisionID of workspace
+	 */
+	private RevisionID currentRevision = RevisionID.ZERO_REVISION;
+	
+	private Date checkoutTime = new Date();
+	
+	private URI servSource = null;
+
+	public File getPath() {
+		return path;
+	}
+
+	public void setPath(File path) {
+		this.path = path;
+	}
 
 	/**
 	 * get APIClient of application
@@ -38,10 +70,14 @@ public class Workspace {
 		return client;
 	}
 
-	/**
-	 * The rurrent revisionID of workspace
-	 */
-	private RevisionID currentRevision = null;
+
+	public Date getCheckoutTime() {
+		return checkoutTime;
+	}
+
+	public void setCheckoutTime(Date checkoutTime) {
+		this.checkoutTime = checkoutTime;
+	}
 
 	public RevisionID getCurrentRevision() {
 		return currentRevision;
@@ -49,6 +85,18 @@ public class Workspace {
 
 	public void setCurrentRevision(RevisionID revision) {
 		currentRevision = revision;
+	}
+	
+	public final List<WorkspaceOperation> getOperationList()
+	{
+		//carrega a lista de algum lugar
+		
+		return listOperations;
+	}
+	
+	public List<WorkspaceOperation> getNewOperations()
+	{
+		return listNewOperations;
 	}
 
 	/**
@@ -84,8 +132,8 @@ public class Workspace {
 	}
 
 	/**
-	 * Commita as alterações Para isto ele pega os arquivos e diretórios do
-	 * diretório corrente, ignorando os .diretórios
+	 * Commita as alteraÃ§Ãµes Para isto ele pega os arquivos e diretï¿½rios do
+	 * diretï¿½rio corrente, ignorando os .diretï¿½rios
 	 * 
 	 * @throws WorkspaceException
 	 */
@@ -107,7 +155,7 @@ public class Workspace {
 
 				} catch (IOException e) {
 					throw new WorkspaceException(f,
-							"Erro ao gravar arquivo no buffer em memória", e);
+							"Erro ao gravar arquivo no buffer em memï¿½ria", e);
 				}
 
 				InputStream inputStream = new ByteArrayInputStream(
@@ -115,14 +163,14 @@ public class Workspace {
 				map.put(f.getName(), inputStream);
 			}
 		} catch (FileNotFoundException e) {
-			throw new WorkspaceException(path, "Arquivo não encontrado", e);
+			throw new WorkspaceException(path, "Arquivo nï¿½o encontrado", e);
 		}
 
 		try {
 			getClient().commit(map);
 		} catch (TransationException e) {
 			throw new WorkspaceException(this.path,
-					"não foi possível enviar as alterações para o servidor.", e);
+					"nÃ£o foi possï¿½vel enviar as alteraÃ§Ãµes para o servidor.", e);
 		}
 	}
 
@@ -138,7 +186,7 @@ public class Workspace {
 			getClient().checkout(map, revision);
 		} catch (TransationException e) {
 			throw new WorkspaceException(this.path,
-					"não foi possível resgatar as alterações do o servidor.", e);
+					"nï¿½o foi possï¿½vel resgatar as alteraï¿½ï¿½es do o servidor.", e);
 		}
 
 		// erase content
@@ -174,6 +222,14 @@ public class Workspace {
 	 * Close the things
 	 */
 	public void close() {
-		// fecha o que venha a ser necessário fechar
+		// fecha o que venha a ser necessï¿½rio fechar
+	}
+
+	public void setServSource(URI servSource) {
+		this.servSource = servSource;
+	}
+
+	public URI getServSource() {
+		return servSource;
 	}
 }

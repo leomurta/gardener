@@ -1,4 +1,4 @@
-package br.uff.ic.gardener;
+package br.uff.ic.gardener.util;
 
 import java.io.File;
 

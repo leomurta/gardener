@@ -3,8 +3,6 @@
  */
 package br.uff.ic.gardener.workspace;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +17,7 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.StubAPIClient;
 
 /**
- * @author Marcos Côrtes
+ * @author Marcos Cï¿½rtes
  * 
  */
 public class WorkspaceTest {
@@ -48,29 +46,20 @@ public class WorkspaceTest {
 		fillFile(fileC, "ccccc", "cccccc", "ccccccc");
 	}
 
-	/**
-	 * Test method for
-	 * {@link br.uff.ic.gardener.workspace.Workspace#Workspace(java.io.File, br.uff.ic.gardener.client.APIClient)}
-	 * .
-	 */
-	@Test
-	public final void testWorkspace() {
+	public final void createWorkspace() {
 		// folder
 		workspace = new Workspace(pathWS, new StubAPIClient());
 	}
 
 	/**
 	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#commit()}.
+	 * @throws WorkspaceException 
 	 */
 	@Test
-	public final void testCommit() {
-		//
-		try {
-			workspace.commit();
-		} catch (WorkspaceException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
+	public final void testCommit() throws WorkspaceException {
+		createWorkspace();
+		workspace.commit();
+		workspace.close();
 	}
 
 	private static void fillFile(File file, String... strVec) {
@@ -92,22 +81,12 @@ public class WorkspaceTest {
 	/**
 	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#checkout()}
 	 * .
+	 * @throws WorkspaceException 
 	 */
 	@Test
-	public final void testCheckout() {
-		try {
-			workspace.checkout(RevisionID.LAST_REVISION);
-		} catch (WorkspaceException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-	}
-
-	/**
-	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#close()}.
-	 */
-	@Test
-	public final void testClose() {
+	public final void testCheckout() throws WorkspaceException {
+		createWorkspace();
+		workspace.checkout(RevisionID.LAST_REVISION);
 		workspace.close();
 	}
 }

@@ -4,7 +4,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import br.uff.ic.gardener.TestWithTemporaryPath;
+import br.uff.ic.gardener.util.TestWithTemporaryPath;
 
 public class ClientFactoryTest extends TestWithTemporaryPath {
 
@@ -13,7 +13,7 @@ public class ClientFactoryTest extends TestWithTemporaryPath {
 		try {
 			ClientFactory.createAPIClient(getPath().toString());
 		} catch (CreationAPIClientException e) {
-			fail("Não conseguiu criar a API Client");
+			fail("Nï¿½o conseguiu criar a API Client");
 		}
 	}
 
