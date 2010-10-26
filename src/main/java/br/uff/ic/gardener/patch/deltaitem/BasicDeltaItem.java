@@ -15,44 +15,80 @@ import java.util.LinkedList;
  */
 public class BasicDeltaItem {
     private LinkedList<Chunk> chunks;
-    private Info              info1;
-    private Info              info2;
+    private DeltaItemInfo     newFileInfo;
+    private DeltaItemInfo     originalFileInfo;
 
-    protected BasicDeltaItem(Info info1, Info info2, LinkedList<Chunk> chunks) {
+    /**
+     *
+     * @param info1
+     * @param info2
+     * @param chunks
+     */
+    protected BasicDeltaItem(DeltaItemInfo info1, DeltaItemInfo info2, LinkedList<Chunk> chunks) {
         setChunks(chunks);
-        setInfo1(info1);
-        setInfo2(info2);
+        setOriginalFileInfo(info1);
+        setNewFileInfo(info2);
     }
 
-    public Info getInfo1() {
-        return this.info1;
+    /**
+     *
+     * @return
+     */
+    public DeltaItemInfo getOriginalFileInfo() {
+        return this.originalFileInfo;
     }
 
-    public final void setInfo1(Info info) {
-        this.info1 = info;
+    /**
+     *
+     * @param info
+     */
+    public final void setOriginalFileInfo(DeltaItemInfo info) {
+        this.originalFileInfo = info;
     }
 
-    public Info getInfo2() {
-        return this.info2;
+    /**
+     *
+     * @return
+     */
+    public DeltaItemInfo getNewFileInfo() {
+        return this.newFileInfo;
     }
 
-    public final void setInfo2(Info info) {
-        this.info2 = info;
+    /**
+     *
+     * @param info
+     */
+    public final void setNewFileInfo(DeltaItemInfo info) {
+        this.newFileInfo = info;
     }
 
+    /**
+     *
+     * @return
+     */
     public final LinkedList<Chunk> getChunks() {
         return chunks;
     }
 
+    /**
+     *
+     * @param chunks
+     */
     public final void setChunks(LinkedList<Chunk> chunks) {
-        for (Chunk aChunk : chunks) {
-            this.chunks.add((Chunk) aChunk.clone());
+        this.chunks = chunks;
+    }
+
+    public final void addChunk(Chunk chunk) {
+        if (getChunks() == null) {
+            setChunks(new LinkedList<Chunk>());
         }
+
+        getChunks().add(chunk);
     }
 
     @Override
     public Object clone() {
-        return new BasicDeltaItem(this.getInfo1(), this.getInfo2(), this.getChunks());
+        return new BasicDeltaItem(this.getOriginalFileInfo(), this.getNewFileInfo(), this.getChunks());
     }
 }
 

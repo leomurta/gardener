@@ -13,7 +13,13 @@ import java.util.LinkedList;
  * @author Daniel
  */
 public class NormalDeltaItem extends BasicDeltaItem implements DeltaItem {
-    public NormalDeltaItem(Info info1, Info info2, LinkedList<Chunk> chunks) {
+    /**
+     *
+     * @param info1
+     * @param info2
+     * @param chunks
+     */
+    public NormalDeltaItem(DeltaItemInfo info1, DeltaItemInfo info2, LinkedList<Chunk> chunks) {
         super(info1, info2, chunks);
     }
 
@@ -22,9 +28,9 @@ public class NormalDeltaItem extends BasicDeltaItem implements DeltaItem {
         StringBuilder text = new StringBuilder();
 
         text.append("@@");
-        text.append(summaryToString(" -", this.getInfo1()));
+        text.append(summaryToString(" -", this.getOriginalFileInfo()));
         text.append(" ");
-        text.append(summaryToString(" +", this.getInfo2()));
+        text.append(summaryToString(" +", this.getNewFileInfo()));
         text.append(" @@");
         text.append("\n");
 
@@ -37,7 +43,7 @@ public class NormalDeltaItem extends BasicDeltaItem implements DeltaItem {
      * @param info
      * @return
      */
-    protected String summaryToString(String sHeader, Info info) {
+    protected String summaryToString(String sHeader, DeltaItemInfo info) {
         StringBuilder text = new StringBuilder();
 
         text.append(sHeader);

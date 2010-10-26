@@ -7,6 +7,8 @@ package br.uff.ic.gardener.patch.patcher;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import br.uff.ic.gardener.patch.Patch.Match;
+import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.parser.Result;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -22,6 +24,7 @@ import java.util.LinkedList;
  * @author Daniel
  */
 public class BinaryPatcher extends BasicPatcher implements Patcher {
+
     /**
      *
      * @param input
@@ -29,7 +32,17 @@ public class BinaryPatcher extends BasicPatcher implements Patcher {
      * @return
      */
     @Override
-    public OutputStream patch(InputStream input, LinkedList<Result> results) {
+    public OutputStream patch(InputStream input, LinkedList<Result> results) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public OutputStream patch(InputStream input, InputStream patch, Match match) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public OutputStream patch(InputStream input, Delta delta, Match match) throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -1,25 +1,19 @@
 package br.uff.ic.gardener.patch.deltaitem;
 
-//~--- non-JDK imports --------------------------------------------------------
-
-import br.uff.ic.gardener.patch.delta.*;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.util.Date;
-
 /**
  *
  * @author Daniel
  */
-public class Info {
+public class DeltaItemInfo {
     private int lenght = -1;    // lenght of differences
     private int start  = -1;    // first difference line
 
     /**
      *
+     * @param start
+     * @param lenght
      */
-    public Info(int start, int lenght) {
+    public DeltaItemInfo(int start, int lenght) {
         this.lenght = lenght;
         this.start  = start;
     }

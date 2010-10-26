@@ -15,9 +15,9 @@ public class BinaryDelta extends BasicDelta implements Delta {
     public String toString() {
         StringBuilder text = new StringBuilder();
 
-        text.append(infoToString("---", this.getInfo1()));
+        text.append(infoToString("---", this.getOriginalFileInfo()));
         text.append("\n");
-        text.append(infoToString("+++", this.getInfo2()));
+        text.append(infoToString("+++", this.getNewFileInfo()));
         text.append("\n");
 
         return text.toString();
@@ -29,7 +29,7 @@ public class BinaryDelta extends BasicDelta implements Delta {
      * @param info
      * @return
      */
-    protected String infoToString(String ident, Info info) {
+    protected String infoToString(String ident, FileInfo info) {
         StringBuilder text = new StringBuilder();
 
         text.append(ident);

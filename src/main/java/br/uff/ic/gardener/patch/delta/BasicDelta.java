@@ -15,35 +15,35 @@ import java.util.LinkedList;
  */
 public class BasicDelta {
     LinkedList<DeltaItem> deltaItens;
-    private Info          info1;
-    private Info          info2;
+    private FileInfo      newFile;
+    private FileInfo      originalFile;
 
     /**
      * @return the info1
      */
-    public Info getInfo1() {
-        return info1;
+    public FileInfo getOriginalFileInfo() {
+        return originalFile;
     }
 
     /**
      * @param info1 the info1 to set
      */
-    public void setInfo1(Info info1) {
-        this.info1 = info1;
+    public void setOriginalFileInfo(FileInfo info1) {
+        this.originalFile = info1;
     }
 
     /**
      * @return the info2
      */
-    public Info getInfo2() {
-        return info2;
+    public FileInfo getNewFileInfo() {
+        return newFile;
     }
 
     /**
      * @param info2 the info2 to set
      */
-    public void setInfo2(Info info2) {
-        this.info2 = info2;
+    public void setNewFileInfo(FileInfo info2) {
+        this.newFile = info2;
     }
 
     /**
@@ -54,14 +54,24 @@ public class BasicDelta {
     }
 
     /**
-     * @param chunks
+     * @param deltaItens
      */
     public void setDeltaItens(LinkedList<DeltaItem> deltaItens) {
-        for (DeltaItem aDeltaItem : deltaItens) {
-            this.deltaItens.add((DeltaItem) aDeltaItem.clone());
-        }
+        this.deltaItens = deltaItens;
     }
 
+    public final void addDeltaItens(DeltaItem deltaItem) {
+        if (getDeltaItens() == null) {
+            setDeltaItens(new LinkedList<DeltaItem>());
+        }
+
+        getDeltaItens().add(deltaItem);
+    }
+
+    /**
+     *
+     * @return
+     */
     protected String deltaItensToString() {
         return TextHelper.toString(deltaItens);
     }
