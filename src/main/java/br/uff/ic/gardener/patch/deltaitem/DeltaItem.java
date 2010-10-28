@@ -14,13 +14,25 @@ import java.util.LinkedList;
  * @author Daniel
  */
 public interface DeltaItem extends Cloneable {
-    public Info getInfo1();
+    public DeltaItemInfo getOriginalFileInfo();
 
-    public void setInfo1(Info info);
+    /**
+     *
+     * @param info
+     */
+    public void setOriginalFileInfo(DeltaItemInfo info);
 
-    public Info getInfo2();
+    /**
+     *
+     * @return
+     */
+    public DeltaItemInfo getNewFileInfo();
 
-    public void setInfo2(Info info);
+    /**
+     *
+     * @param info
+     */
+    public void setNewFileInfo(DeltaItemInfo info);
 
     /**
      * @return the deltas

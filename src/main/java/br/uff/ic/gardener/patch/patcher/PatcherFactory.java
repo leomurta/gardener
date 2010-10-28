@@ -1,7 +1,8 @@
-package br.uff.ic.gardener.patch;
+package br.uff.ic.gardener.patch.patcher;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import br.uff.ic.gardener.patch.Patch;
 import br.uff.ic.gardener.patch.Patch;
 import br.uff.ic.gardener.patch.patcher.BinaryPatcher;
 import br.uff.ic.gardener.patch.patcher.ContextPatcher;
@@ -14,6 +15,12 @@ import br.uff.ic.gardener.patch.patcher.UnifiedPatcher;
  * @author Daniel
  */
 public class PatcherFactory {
+    /**
+     *
+     * @param format
+     * @return
+     * @throws Exception
+     */
     public static Patcher get(Patch.Format format) throws Exception {
         if (format == Patch.Format.Binary) {
             return new BinaryPatcher();
