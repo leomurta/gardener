@@ -13,7 +13,6 @@ import br.uff.ic.gardener.util.UtilStream;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -21,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -58,18 +55,32 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
     public OutputStream patch( InputStream input, Delta delta, Match match ) throws Exception {
         setup( input, delta, match );
 
+        // Convert input to text
         String             sText = UtilStream.toString( input );
         LinkedList<String> text  = new LinkedList<String>();
 
         text.addAll( Arrays.asList( TextHelper.toArray( sText ) ) );
 
-        List<ApplyDeltaItemResult> results      = new ArrayList<ApplyDeltaItemResult>();
-        int                        displacement = 0;    // difference resulting from applying chunks
+        // Results of delta aplications
+        List<ApplyDeltaItemResult> results = new ArrayList<ApplyDeltaItemResult>();
 
+        // difference resulting from applying chunks
+        int displacement = 0;
+
+        // Applying delta items
         for (DeltaItem item : delta.getDeltaItens()) {
             ApplyDeltaItemResult result = new ApplyDeltaItemResult( item );
 
-            displacement = apply( item, text, result, displacement );
+            // Choosing matching algoritm
+            if (isNoMatch()) {
+                displacement = applyNoMatch( item, text, result, displacement );
+            } else if (isCompleteMatch()) {
+                displacement = applyCompleteMatch( item, text, result, displacement );
+            } else {
+                throw new Exception( "Unsupported matching type" );
+            }
+
+            // adding result info
             results.add( result );
         }
 
@@ -106,28 +117,87 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      *
      * @throws Exception
      */
-    private int apply( DeltaItem item, LinkedList<String> text, ApplyDeltaItemResult result, int displacement )
+    private int applyNoMatch( DeltaItem item, LinkedList<String> text, ApplyDeltaItemResult result, int displacement )
             throws Exception {
 
         // Index is 0 based
-        int index = 0;
+        int index = displacement + item.getOriginalFileInfo().getStart() - 1;
 
-        if (isNoMatch()) {
-
-            // Original start is 1 based
-            index = displacement + item.getOriginalFileInfo().getStart() - 1;
-        } else if (isCompleteMatch()) {
-            index = getCompleteMatchLine( item.getChunks(), text, index );
-        } else {
-            throw new Exception( "Unsupported matching type" );
+        // Chunk start position incorrect
+        if (index < 0) {
+            throw new Exception( "Patching error: invalid line index" );
         }
 
-        // Chunk start position not found
+        // Applying chunks
+        for (Chunk chunk : item.getChunks()) {
+            if (!(chunk instanceof UnifiedChunk)) {
+                throw new Exception( "Patching error: invalid instance" );
+            }
+
+            UnifiedChunk uChunk = (UnifiedChunk) chunk;
+
+            // Apply
+            if (uChunk.isContext()) {
+
+                // Confirms match
+                if (!isMatchingLine( text.get( index ), uChunk.getText() )) {
+                    throw new Exception( "Patching error: invalid test" );
+                }
+
+                index++;
+            } else if (uChunk.isDelete()) {
+
+                // Confirms match
+                if (!isMatchingLine( text.get( index ), uChunk.getText() )) {
+                    throw new Exception( "Patching error: invalid test" );
+                }
+
+                text.remove( index );
+                displacement--;
+            } else if (uChunk.isInsert()) {
+                text.add( index, uChunk.getText() );
+                index++;
+                displacement++;
+            } else {
+                throw new Exception( "Patching error: Unsupported chunk action" );
+            }
+        }
+
+        // Chunks applied successfully
+        result.setResult( true );
+
+        return displacement;
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param item
+     * @param text
+     * @param result
+     * @param displacement
+     *
+     * @return
+     *
+     * @throws Exception
+     */
+    private int applyCompleteMatch( DeltaItem item, LinkedList<String> text, ApplyDeltaItemResult result,
+                                    int displacement )
+            throws Exception {
+
+        // Index is 0 based
+        int index = getCompleteMatchLine( item, text, displacement );
+
+        // Chunk start position not found, do not apply
         if (index < 0) {
             result.setResult( false );
 
             return displacement;
         }
+
+        // remove contexto do inicio e fim, pular linha nos demais
+        boolean bIgnoreContext = true;
 
         // Applying chunks
         for (Chunk chunk : item.getChunks()) {
@@ -140,13 +210,15 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
             // Apply
             if (uChunk.isContext()) {
 
-                // Confirms match
-                if (!isMatchingLine( text.get( index ), uChunk.getText() )) {
-                    throw new Exception( "Matching error" );
+                // Ignore inicial and final context
+                if (bIgnoreContext) {
+                    continue;
                 }
 
+                // Jump lines on other
                 index++;
             } else if (uChunk.isDelete()) {
+                bIgnoreContext = false;    // next context won´t be ignored
 
                 // Confirms match
                 if (!isMatchingLine( text.get( index ), uChunk.getText() )) {
@@ -154,11 +226,14 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
                 }
 
                 text.remove( index );
-                displacement--;
+
+                // displacement--;
             } else if (uChunk.isInsert()) {
+                bIgnoreContext = false;    // next context won´t be ignored
                 text.add( index, uChunk.getText() );
                 index++;
-                displacement++;
+
+                // displacement++;
             } else {
                 throw new Exception( "Unsupported chunk action" );
             }
@@ -174,20 +249,30 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * Method description
      *
      *
-     * @param chunks
+     *
+     * @param item
      * @param text
-     * @param startLine
+     * @param displacement
      *
      * @return
      *
      * @throws Exception
      */
-    private int getCompleteMatchLine( LinkedList<Chunk> chunks, LinkedList<String> text, int startLine )
-            throws Exception {
+    private int getCompleteMatchLine( DeltaItem item, LinkedList<String> text, int displacement ) throws Exception {
+
+        // Add displacement from previous alterations, corrects for 0 based
+        int startLine = item.getOriginalFileInfo().getStart() - 1    /* + displacement */
+        ;
+
+        if (startLine < 0) {
+            throw new Exception( "Matching error" );
+        }
+
+        // context of alterations
         LinkedList<String> context = new LinkedList<String>();
 
         // Getter context lines
-        for (Chunk chunk : chunks) {
+        for (Chunk chunk : item.getChunks()) {
             if (!(chunk instanceof UnifiedChunk)) {
                 throw new Exception( "Patching error" );
             }
@@ -203,12 +288,9 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
 
         // No context, so no match to find
         if (context.isEmpty()) {
-            return -1;
-        }
 
-        // No previous match
-        if (startLine == -1) {
-            startLine = 0;
+            // Beginning of file
+            return startLine;
         }
 
         // Matching down first
@@ -241,11 +323,11 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      */
     private boolean isMatchingBlock( int index, LinkedList<String> context, LinkedList<String> text ) {
         for (int i = 0; i < context.size(); i++) {
-            String contextLine = text.get( i );
+            String contextLine = context.get( i );
             String textLine    = text.get( index + i );
 
             // difference found
-            if (!textLine.equals( contextLine )) {
+            if (!isMatchingLine( contextLine, textLine )) {
                 return false;
             }
         }

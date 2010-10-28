@@ -10,6 +10,7 @@ package br.uff.ic.gardener.patch;
 import br.uff.ic.gardener.patch.Patch.Format;
 import br.uff.ic.gardener.patch.Patch.Match;
 import br.uff.ic.gardener.patch.Patch.Type;
+import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
 import com.mongodb.io.StreamUtil;
@@ -25,6 +26,7 @@ import static org.junit.Assert.*;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,6 +40,15 @@ import java.util.logging.Logger;
  * @author Daniel
  */
 public class PatchTest {
+
+    /** Field description */
+    private InputStream inputLao = getResourceFile( "lao.txt" );
+
+    /** Field description */
+    private InputStream inputTzu = getResourceFile( "tzu.txt" );
+
+    /** Field description */
+    private InputStream patchUnified = getResourceFile( "unifiedFormat.txt" );
 
     /**
      * Constructs ...
@@ -83,37 +94,32 @@ public class PatchTest {
      * @throws Exception
      */
     @Test
-    public void testApplyPatchToFile() throws Exception {
-        System.out.println( "applyPatchToFile" );
+    public void testApplyPatchToFile1() throws Exception {
+        System.out.println( "applyPatchToFile: lao.txt->tzu.txt using unified, complete match and oo." );
 
-        InputStream  inputLao  = getResourceFile( "lao.txt" );
-        InputStream  patch     = getResourceFile( "unifiedFormat.txt" );
-        OutputStream outputTzu = getFileOutputStream( "tzu.txt" );
+        Format       format = Format.Unified;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.Complete;
+        OutputStream result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
 
-        /*
-         * lao.txt->tzu.txt using unified, complete match and oo.
-         *
-         */
-        {
+        assertResult( inputTzu, result );
+    }
 
-            // Format       format = Format.Unified;
-            // Type         type   = Type.ObjectOriented;
-            // Match        match  = Match.Complete;
-            // OutputStream result = Patch.applyPatchToFile( inputLao, patch, format, match, type );
-            // assertEquals( "lao.txt->tzu.txt using unified, complete match and oo.", outputTzu, result );
-        }
+    /**
+     * Test of applyPatchToFile method, of class Patch.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile2() throws Exception {
+        System.out.println( "applyPatchToFile: lao.txt->tzu.txt using unified, no match and oo." );
 
-        /*
-         * lao.txt->tzu.txt using unified, complete match and oo.
-         */
-        {
-            Format       format = Format.Unified;
-            Type         type   = Type.ObjectOriented;
-            Match        match  = Match.None;
-            OutputStream result = Patch.applyPatchToFile( inputLao, patch, format, match, type );
+        Format       format = Format.Unified;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.None;
+        OutputStream result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
 
-            assertEquals( "lao.txt->tzu.txt using unified, no match and oo.", outputTzu, result );
-        }
+        assertResult( inputTzu, result );
     }
 
     /**
@@ -148,6 +154,28 @@ public class PatchTest {
         InputStream in = getResourceFile( file );
 
         return UtilStream.toOutputStream( UtilStream.toString( in ) );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param input
+     * @param result
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws UnsupportedEncodingException
+     */
+    private void assertResult( InputStream input, OutputStream result )
+            throws UnsupportedEncodingException, IOException, InterruptedException {
+        String sText   = UtilStream.toString( input );
+        String sResult = UtilStream.toString( (ByteArrayOutputStream) result );
+
+        // normalize breaks
+        sText   = TextHelper.normalizeBreakLine( sText );
+        sResult = TextHelper.normalizeBreakLine( sResult );
+        assertTrue( sText.compareTo( sResult ) == 0 );
     }
 }
 
