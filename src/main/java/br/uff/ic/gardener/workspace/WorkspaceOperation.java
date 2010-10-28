@@ -1,5 +1,7 @@
 package br.uff.ic.gardener.workspace;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,6 +92,19 @@ public class WorkspaceOperation {
 		}
 	}
 	
+	/*public URI getRealURI(URI uriBase) throws URISyntaxException 
+	{
+		return getRealURI(uriBase, 0);
+	}
+	
+	public URI getRealURI(URI uriBase, int paramPos) throws URISyntaxException 
+	{
+		
+		URI temp = new URI(String.format("file:///%s/%s", uriBase.toString(), this.getParamAt(paramPos)));
+		
+		return temp;
+	}*/
+	
 	public boolean equals(Object o)
 	{
 		WorkspaceOperation op = (WorkspaceOperation)o;
@@ -103,8 +118,6 @@ public class WorkspaceOperation {
 			if(!op.getParamAt(i).equals(this.getParamAt(i)))
 				return false;
 		}
-		return true;
-		
-		
+		return true;	
 	}
 }

@@ -10,12 +10,17 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.ConfigurationItemException;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
+import br.uff.ic.gardener.workspace.WorkspaceOperation;
 import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
+
 
 /**
  * Faz o parser do arquivo de workspace
@@ -28,7 +33,8 @@ public class WorkspaceConfigParser
 
 	public static final String STR_REVISION = "REVISION";
 
-	public static final String STR_LAST_TIMESTAMP_CHECKOUT = "LAST_TIMESTAMP_CHECKOUT";
+	public static final String STR_LAST_TIMESTAMP_CHECKOUT 	= "LAST_TIMESTAMP_CHECKOUT";
+	public static final String STR_HAS_IC					= "HAS_IC";
 	
 	public static String STR_FILE_PROFILE 		= ".profile";
 	
@@ -47,9 +53,10 @@ public class WorkspaceConfigParser
 		workspace = work;
 	}
 	
-	public void loadProfile() throws WorkspaceConfigParserException
+	public void loadProfile(Collection<URI> collIC) throws WorkspaceConfigParserException
 	{
 		
+		collIC.clear();
 		/**
 		 * Guarda o profile do workspace
 		 */
@@ -106,6 +113,17 @@ public class WorkspaceConfigParser
 						throw new WorkspaceConfigParserException(
 								String.format("Não foi possível interpretar %s com valor %s", s,next),
 								s, e);
+					}
+				}else if(s.equals(STR_HAS_IC))
+				{
+					String next = twq.nextToken();
+					try {
+						collIC.add(new URI(next));
+					} catch (URISyntaxException e) {
+					{				
+						throw new WorkspaceConfigParserException(
+							String.format("Não foi possível interpretar %s com valor %s", s,next),
+							s, e);
 					}
 				}
 					

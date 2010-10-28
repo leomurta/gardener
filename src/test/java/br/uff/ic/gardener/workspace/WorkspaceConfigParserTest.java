@@ -3,8 +3,12 @@ package br.uff.ic.gardener.workspace;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -12,9 +16,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.StubAPIClient;
 import br.uff.ic.gardener.util.TestWithTemporaryPath;
+import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
@@ -29,6 +35,26 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 		
 		workspace = new Workspace(pathWorkspace, new StubAPIClient());
 		wParser = new WorkspaceConfigParser(workspace, pathWorkspace);
+	}
+	
+	@Test
+	public void testURI() throws IOException, URISyntaxException
+	{
+		File file = this.folder.newFile("teste.txt");
+		UtilStream.fillFile(file, "aaa", "bbb", "ccc", "ddd");
+		String temp = "file:///"+file.toString();
+		temp = temp.replace('\\', '/');
+		URL url = new URL(temp);
+		URI uri = new URI(temp);
+		String strPath = uri.getPath();
+		String strHost = uri.getHost();
+		String strAutority = uri.getAuthority();
+		String strFragment = uri.getFragment();
+		String strQuery = uri.getQuery();
+		String strPort = Integer.toString(uri.getPort());
+		String strScheme = uri.getScheme();
+		String strSpecifyScheme = uri.getSchemeSpecificPart();
+		String strUserInfo = uri.getUserInfo();
 	}
 	
 	@Test
@@ -48,7 +74,8 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 		psProfile.println("LAST_TIMESTAMP_CHECKOUT       \t\t\t \"4234\"");
 		psProfile.close();
 		
-		wParser.loadProfile();
+		ArrayList<ConfigurationItem> array = new ArrayList<ConfigurationItem>();
+		wParser.loadProfile(array);
 		
 		Assert.assertEquals("Carregamento de arquivo não foi bem sucedido", new Date(4234), workspace.getCheckoutTime());
 		Assert.assertEquals("Carregamento de arquivo não foi bem sucedido", null, workspace.getServSource());

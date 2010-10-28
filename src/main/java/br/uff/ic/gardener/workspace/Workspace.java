@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +25,7 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.UtilStream;
+import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 public class Workspace {
 
@@ -44,6 +48,13 @@ public class Workspace {
 	 * Lista que receberá as novas operações do workspace para serem gravadas em um commit
 	 */
 	private LinkedList<WorkspaceOperation> listNewOperations = new LinkedList<WorkspaceOperation>();
+	
+	private WorkspaceConfigParser parser = null;
+	
+	/**
+	 * Lista com os itens contidos no workspace. (carregados do arquivo de configuração)
+	 */
+	private ArrayList<URI> listICContent = new ArrayList<URI>();
 	
 	/**
 	 * The current revisionID of workspace
@@ -103,10 +114,9 @@ public class Workspace {
 	 * Constructor. it needs a path to look up for the .gdr file.
 	 * 
 	 * @param pathOfWorkspace
+	 * @throws WorkspaceException 
 	 */
-	public Workspace(File pathOfWorkspace, APIClient _client) {
-		path = pathOfWorkspace;
-
+	public Workspace(File pathOfWorkspace, APIClient _client) throws WorkspaceException {
 		if (!path.isDirectory())
 			throw new WorkspaceError(pathOfWorkspace, "the path:("
 					+ pathOfWorkspace.toString()
@@ -119,6 +129,19 @@ public class Workspace {
 					"the APIClient is not valid (is null)", null);
 
 		path = pathOfWorkspace;
+		
+		parser = new WorkspaceConfigParser(this, path);
+		try {
+			parser.loadProfile(listICContent);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
+		}
+		
+		try {
+			parser.loadOperations(this.listOperations);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
+		}		
 	}
 
 	private class NotInitDotFileFilter implements FileFilter {
@@ -232,4 +255,81 @@ public class Workspace {
 	public URI getServSource() {
 		return servSource;
 	}
+
+	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
+	{
+		for(File f: listFiles)
+		{
+			try {
+				URI uri = containItem(f);
+				if(uri == null)
+				{
+					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, f.toString() ));
+				}else
+				{
+					throw new WorkspaceException(f, "O arquivo %s já está contido no workspace", null);
+				}
+			} catch (URISyntaxException e) {
+				throw new WorkspaceException(f, "Não foi possível interpretar o path do arquivo", e);
+			}
+		}
+	}
+	
+	/*private URI getRelativeURI(URI absURI)
+	{
+		URI sourceURI = path.toURI();
+		return sourceURI.relativize(absURI);
+	}*/
+	
+	
+	private URI containItem(File f) throws URISyntaxException 
+	{
+		
+		URI uri = f.toURI();
+		uri = uri.relativize(path.toURI());
+		URI wo = containItem(this.listOperations, uri);
+		if(wo != null)
+			return wo;
+		
+		wo = containItem(this.listNewOperations, uri);
+		if(wo != null)
+			return wo;
+		
+		for(URI uriIC: this.listICContent)
+		{
+			if(uriIC.equals(uri))
+				return uriIC;
+		}
+		return null;
+		
+		
+	}
+	
+	/**
+	 * Return a operation of add in container coll
+	 * @param coll Container
+	 * @param uri Relative URI
+	 * @return the operation that references the URI.
+	 * @throws URISyntaxException 
+	 */
+	private static URI containItem(Collection<WorkspaceOperation> coll, URI uri) throws URISyntaxException
+	{
+		
+		for(WorkspaceOperation op: coll)
+		{
+			if((op.getOperation() == Operation.ADD_FILE) && (op.getParamQtd() <= 0))
+			{				
+				String str = op.getParamAt(0);
+				
+				URI uriColl = new URI(str);
+				if(uriColl.equals(uri))
+					return uriColl;
+			}
+		}
+		
+		return null;
+	}
+	
+
 }
+

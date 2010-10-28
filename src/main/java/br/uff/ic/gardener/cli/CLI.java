@@ -42,6 +42,12 @@ public class CLI {
 	@Option(name = "-ci", aliases = "--commit", metaVar = "COMMIT", usage = "Commit a Configuration Item in repository")
 	private boolean bCommit = false;
 
+	@Option(name = "-add", aliases = "--add", metaVar = "ADD", usage = "Add a Configuration Item (it can use prompt regular expression)")
+	private boolean bAdd = false;
+	
+	@Option(name = "-rem", aliases = "--remove", metaVar = "REMOVE", usage = "Remove a Configuration Item (it can use prompt regular expression)")
+	private boolean bRemove = false;
+	
 	// Other arguments
 	@SuppressWarnings("unused")
 	@Argument
@@ -95,7 +101,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		CHECKOUT, COMMIT, DIFF, NULL
+		CHECKOUT, COMMIT, DIFF, ADD, REMOVE, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -105,17 +111,19 @@ public class CLI {
 	// }
 
 	private OPERATION getOperation() {
-
 		if (bCheckout) {
 			return OPERATION.CHECKOUT;
 		} else if (bCommit) {
 			return OPERATION.COMMIT;
-		} else if(bDiff)
-		{
+		} else if(bDiff){
 			return OPERATION.DIFF;
-		}else
+		}else if(bAdd){
+			return OPERATION.ADD;
+		}else if(bRemove){
+			return OPERATION.REMOVE;
+		}
+		else
 			return OPERATION.NULL;
-
 	}
 
 	private static APIClient apiClient = null;
@@ -269,6 +277,16 @@ public class CLI {
 					list.add(new File(s));
 				onDiff(list);
 			break;
+			case ADD:
+				if(listArguments.size() == 0)
+				{
+					System.err.println("É preciso especificar o nome do(s) arquivo(s) ou uma expressão regular");
+				}
+					
+				Collection<File> listFiles = new LinkedList<File>();
+				listFiles = findFiles(listArguments, listFiles);
+				workspace.addFiles(listFiles);
+				
 			case CHECKOUT:
 			case COMMIT:
 				// trata URI sem file://
@@ -321,6 +339,13 @@ public class CLI {
 				e.printStackTrace();
 				return;
 		}
+	}
+
+	private Collection<File> findFiles(Collection<String> collArg,
+			Collection<File> listFiles) 
+	{
+		
+		return listFiles;
 	}
 
 	/**
