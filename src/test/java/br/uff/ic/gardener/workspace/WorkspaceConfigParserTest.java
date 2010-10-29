@@ -29,7 +29,7 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 	public WorkspaceConfigParser wParser = null;
 	
 	@Before
-	public void setUp()
+	public void setUp() throws WorkspaceException
 	{
 		File pathWorkspace = this.folder.newFolder("workspace");
 		
@@ -74,7 +74,7 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 		psProfile.println("LAST_TIMESTAMP_CHECKOUT       \t\t\t \"4234\"");
 		psProfile.close();
 		
-		ArrayList<ConfigurationItem> array = new ArrayList<ConfigurationItem>();
+		ArrayList<URI> array = new ArrayList<URI>();
 		wParser.loadProfile(array);
 		
 		Assert.assertEquals("Carregamento de arquivo não foi bem sucedido", new Date(4234), workspace.getCheckoutTime());

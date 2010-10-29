@@ -14,8 +14,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import br.uff.ic.gardener.ConfigurationItem;
-import br.uff.ic.gardener.ConfigurationItemException;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.workspace.WorkspaceOperation;
@@ -119,8 +117,9 @@ public class WorkspaceConfigParser
 					String next = twq.nextToken();
 					try {
 						collIC.add(new URI(next));
-					} catch (URISyntaxException e) {
-					{				
+					} catch (URISyntaxException e) 
+					{
+									
 						throw new WorkspaceConfigParserException(
 							String.format("Não foi possível interpretar %s com valor %s", s,next),
 							s, e);
@@ -217,5 +216,9 @@ public class WorkspaceConfigParser
 					String.format("Não foi possível salvar o arquivo %s%s%s",directory.toString(), File.pathSeparator, STR_FILE_PROFILE ),
 					"", e);
 		}
+	}
+
+	public static boolean isConfigFile(File path, File f) {
+		return STR_FILE_OPERATION.equals(f.getName()) || STR_FILE_PROFILE.equals(f.getName());
 	}
 }

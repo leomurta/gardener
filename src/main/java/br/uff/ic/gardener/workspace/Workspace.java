@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -21,11 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.sun.istack.internal.NotNull;
+
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
+import br.uff.ic.gardener.workspace.WorkspaceOperation;
 
 public class Workspace {
 
@@ -60,6 +61,7 @@ public class Workspace {
 	 * The current revisionID of workspace
 	 */
 	private RevisionID currentRevision = RevisionID.ZERO_REVISION;
+	
 	
 	private Date checkoutTime = new Date();
 	
@@ -100,24 +102,31 @@ public class Workspace {
 	
 	public final List<WorkspaceOperation> getOperationList()
 	{
-		//carrega a lista de algum lugar
-		
 		return listOperations;
 	}
 	
-	public List<WorkspaceOperation> getNewOperations()
+	/**
+	 * Retorna lista de novas operações a serem manipuladas
+	 * @return
+	 */
+	public final List<WorkspaceOperation> getNewOperationList()
 	{
-		return listNewOperations;
+		return this.listNewOperations;
 	}
 
 	/**
-	 * Constructor. it needs a path to look up for the .gdr file.
+	 * Constructor. it needs a path to look up for the configuration files
 	 * 
 	 * @param pathOfWorkspace
 	 * @throws WorkspaceException 
 	 */
 	public Workspace(File pathOfWorkspace, APIClient _client) throws WorkspaceException {
-		if (!path.isDirectory())
+		path = pathOfWorkspace;
+		
+		if (path == null)
+			throw new WorkspaceError(null, "Path não especificado", null);
+		
+		if(!path.isDirectory())
 			throw new WorkspaceError(pathOfWorkspace, "the path:("
 					+ pathOfWorkspace.toString()
 					+ ") is not a valid directory.", null);
@@ -128,7 +137,6 @@ public class Workspace {
 			throw new WorkspaceError(pathOfWorkspace,
 					"the APIClient is not valid (is null)", null);
 
-		path = pathOfWorkspace;
 		
 		parser = new WorkspaceConfigParser(this, path);
 		try {
@@ -155,8 +163,8 @@ public class Workspace {
 	}
 
 	/**
-	 * Commita as alterações Para isto ele pega os arquivos e diret�rios do
-	 * diret�rio corrente, ignorando os .diret�rios
+	 * Commita as alterações Para isto ele pega os arquivos e diretórios do
+	 * diretório corrente, ignorando os .diretórios
 	 * 
 	 * @throws WorkspaceException
 	 */
@@ -178,7 +186,7 @@ public class Workspace {
 
 				} catch (IOException e) {
 					throw new WorkspaceException(f,
-							"Erro ao gravar arquivo no buffer em mem�ria", e);
+							"Erro ao gravar arquivo no buffer em memória", e);
 				}
 
 				InputStream inputStream = new ByteArrayInputStream(
@@ -186,14 +194,14 @@ public class Workspace {
 				map.put(f.getName(), inputStream);
 			}
 		} catch (FileNotFoundException e) {
-			throw new WorkspaceException(path, "Arquivo n�o encontrado", e);
+			throw new WorkspaceException(path, "Arquivo não encontrado", e);
 		}
 
 		try {
 			getClient().commit(map);
 		} catch (TransationException e) {
 			throw new WorkspaceException(this.path,
-					"não foi poss�vel enviar as alterações para o servidor.", e);
+					"não foi possível enviar as alterações para o servidor.", e);
 		}
 	}
 
@@ -209,7 +217,7 @@ public class Workspace {
 			getClient().checkout(map, revision);
 		} catch (TransationException e) {
 			throw new WorkspaceException(this.path,
-					"n�o foi poss�vel resgatar as altera��es do o servidor.", e);
+					"não foi possível resgatar as alterações do o servidor.", e);
 		}
 
 		// erase content
@@ -256,37 +264,98 @@ public class Workspace {
 		return servSource;
 	}
 
-	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
-	{
-		for(File f: listFiles)
-		{
-			try {
+	public void removeFiles(LinkedList<File> listFiles) throws WorkspaceException {
+	
+		URI basePath = getPath().toURI();
+		//número de itens adicionados na lista
+		int qtdRemove = 0;
+		
+		try {
+			for(File f: listFiles)
+			{
+				
 				URI uri = containItem(f);
 				if(uri == null)
 				{
-					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, f.toString() ));
+					uri = f.toURI();
+					uri = basePath.relativize(uri);
+					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.REMOVE_FILE, uri.toString() ));
+					f.delete();
+					qtdRemove ++;
+				}else if(WorkspaceConfigParser.isConfigFile(getPath(), f))
+				{
+					//ignora este arquivo
 				}else
 				{
-					throw new WorkspaceException(f, "O arquivo %s já está contido no workspace", null);
+					while(qtdRemove > 0)
+					{
+						listNewOperations.removeLast();
+						qtdRemove--;
+					}
+					throw new WorkspaceException(f, "O arquivo %s já foi removido do workspace", null);
 				}
-			} catch (URISyntaxException e) {
-				throw new WorkspaceException(f, "Não foi possível interpretar o path do arquivo", e);
 			}
+		} catch (URISyntaxException e) {
+			while(qtdRemove > 0)
+			{
+				listNewOperations.removeLast();
+				qtdRemove--;
+			}
+			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
 		}
 	}
 	
-	/*private URI getRelativeURI(URI absURI)
+	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
 	{
-		URI sourceURI = path.toURI();
-		return sourceURI.relativize(absURI);
-	}*/
+		URI basePath = getPath().toURI();
+		//número de itens adicionados na lista
+		int qtdAdd = 0;
+		
+		try
+		{
+			for(File f: listFiles)
+			{
+				URI uri = containItem(f);
+				if(uri == null)
+				{
+					uri = f.toURI();
+					uri = basePath.relativize(uri);
+					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, uri.toString() ));
+					qtdAdd ++;
+				}else if(WorkspaceConfigParser.isConfigFile(getPath(), f))
+				{
+					//ignora este arquivo
+				}else
+				{
+					while(qtdAdd > 0)
+					{
+						listNewOperations.removeLast();
+						qtdAdd--;
+					}
+					throw new WorkspaceException(f, "O arquivo %s já está contido no workspace", null);
+				}
+			}
+		} catch (URISyntaxException e) {
+			while(qtdAdd > 0)
+			{
+				listNewOperations.removeLast();
+				qtdAdd--;
+			}
+			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
+		}
+	}
 	
-	
+	/**
+	 * Verifica se um arquivo já sofreu operação neste workspace
+	 * @param f O arquivo que está sendo procurado
+	 * @return uma URI para o arquivo que está sendo modificado
+	 * @throws URISyntaxException
+	 */
 	private URI containItem(File f) throws URISyntaxException 
 	{
 		
 		URI uri = f.toURI();
-		uri = uri.relativize(path.toURI());
+		uri = path.toURI().relativize(uri);
 		URI wo = containItem(this.listOperations, uri);
 		if(wo != null)
 			return wo;
@@ -317,7 +386,7 @@ public class Workspace {
 		
 		for(WorkspaceOperation op: coll)
 		{
-			if((op.getOperation() == Operation.ADD_FILE) && (op.getParamQtd() <= 0))
+			if((op.getParamQtd() > 0))
 			{				
 				String str = op.getParamAt(0);
 				
@@ -328,6 +397,24 @@ public class Workspace {
 		}
 		
 		return null;
+	}
+
+	public void renameFile(File fileSource, String strNewName) throws WorkspaceException
+	{
+		if(!fileSource.exists())
+			throw new WorkspaceException(fileSource, "Arquivo não existe", null);
+		
+		if(!fileSource.isFile())
+			throw new WorkspaceException(fileSource, "Não foi especificado um arquivo válido", null);
+		
+		try
+		{
+			File fileNew = new File(getPath(), strNewName);
+			fileSource.renameTo(fileNew);
+		}catch(Exception e)
+		{
+			throw new WorkspaceException(fileSource, "Não foi possível renomear para " + strNewName, e);
+		}
 	}
 	
 

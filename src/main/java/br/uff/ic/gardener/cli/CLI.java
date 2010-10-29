@@ -24,6 +24,7 @@ import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.ClientFactory;
 import br.uff.ic.gardener.client.CreationAPIClientException;
+import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 
@@ -47,6 +48,9 @@ public class CLI {
 	
 	@Option(name = "-rem", aliases = "--remove", metaVar = "REMOVE", usage = "Remove a Configuration Item (it can use prompt regular expression)")
 	private boolean bRemove = false;
+	
+	@Option(name = "-rename", aliases = "--remove", metaVar = "RENAME", usage = "Rename a file in the workspace")
+	private boolean bRename = false;
 	
 	// Other arguments
 	@SuppressWarnings("unused")
@@ -101,7 +105,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		CHECKOUT, COMMIT, DIFF, ADD, REMOVE, NULL
+		CHECKOUT, COMMIT, DIFF, ADD, REMOVE, RENAME, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -121,6 +125,8 @@ public class CLI {
 			return OPERATION.ADD;
 		}else if(bRemove){
 			return OPERATION.REMOVE;
+		}else if(bRename){
+			return OPERATION.RENAME;
 		}
 		else
 			return OPERATION.NULL;
@@ -149,8 +155,9 @@ public class CLI {
 	 * @param path
 	 *            O caminho do workspace
 	 * @return o workspace criado
+	 * @throws WorkspaceException 
 	 */
-	private Workspace createWorkspace(File path) {
+	private Workspace createWorkspace(File path) throws WorkspaceException {
 		if (workspace != null)
 			workspace.close();
 
@@ -281,11 +288,42 @@ public class CLI {
 				if(listArguments.size() == 0)
 				{
 					System.err.println("É preciso especificar o nome do(s) arquivo(s) ou uma expressão regular");
-				}
+				}else
+				{
 					
-				Collection<File> listFiles = new LinkedList<File>();
-				listFiles = findFiles(listArguments, listFiles);
-				workspace.addFiles(listFiles);
+					onAdd(listArguments);
+				}
+				break;
+			case REMOVE:
+				if(listArguments.size() == 0)
+				{
+					System.err.println("É preciso especificar o nome do(s) arquivo(s) ou uma expressão regular");
+				}else
+				{
+					
+					onRemove(listArguments);
+				}
+				break;
+				
+			case RENAME:
+				if(listArguments.size() != 2)
+				{
+					System.err.println("É preciso especificar o nome do arquivo de origem e o arquivo destino.");
+					System.err.println("gardener rename nome_origem nome_destino");
+				}else
+				{
+					
+					File fileSource = new File(workspace.getPath(), listArguments.get(0));
+					String strNewName = listArguments.get(1);
+					if(!fileSource.exists())
+					{
+						System.err.printf("Arquivo %s não encontrado.\n", listArguments.get(0));
+					}else
+					{
+						onRename(fileSource, strNewName);
+					}
+				}
+				break;
 				
 			case CHECKOUT:
 			case COMMIT:
@@ -341,15 +379,56 @@ public class CLI {
 		}
 	}
 
-	private Collection<File> findFiles(Collection<String> collArg,
-			Collection<File> listFiles) 
+	
+	private void onAdd(Collection<String> coll) throws WorkspaceException
 	{
+		if(coll.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
 		
-		return listFiles;
+		LinkedList<File> listFile = new LinkedList<File>(); 
+		for(String strGlob: coll)
+		{
+			UtilStream.findFiles(getWorkspace().getPath(), listFile, strGlob, false);
+		}
+		workspace.addFiles(listFile);
+		
+		for(File f: listFile)
+		{
+			System.out.printf("Arquivo %s adicionado", f.toString());			
+		}
+	}
+	
+	private void onRemove(Collection<String> coll) throws WorkspaceException
+	{
+		if(coll.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
+		
+		LinkedList<File> listFile = new LinkedList<File>(); 
+		for(String strGlob: coll)
+		{
+			UtilStream.findFiles(getWorkspace().getPath(), listFile, strGlob, false);
+		}
+		workspace.removeFiles(listFile);
+		
+		for(File f: listFile)
+		{
+			System.out.printf("Arquivo %s removido", f.toString());
+		}
 	}
 
+	private void onRename(File fileSource, String strNewName) throws WorkspaceException
+	{
+		workspace.renameFile(fileSource, strNewName);
+		System.out.printf("Arquivo %s renomeado para %s", fileSource.toString(), strNewName);
+	}
 	/**
-	 * Commit event
+ 	 * Commit event
 	 *
 	 * @throws WorkspaceException
 	 */
