@@ -1,23 +1,48 @@
+package br.uff.ic.gardener.merge;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 
 public class Merge implements IMerge{
+	
 	public File merge(File base, File file1, File file2) {
-		File fileMerge = null;
+		File fileMerge = new File("..\\fileMerge.txt");
+		try {
+			OutputStream outputStream = merge(new FileInputStream(base), new FileInputStream(file1), new FileInputStream(file2));
+			
+			FileOutputStream fileOutputStream = new FileOutputStream(fileMerge);
+			fileOutputStream.write((outputStream.toString()).getBytes());
+			fileOutputStream.close();
+			
+		} 
+		catch (IOException e) { 
+			System.out.println("Erro no acesso ao arquivo !!!");
+		}
 		
+		return fileMerge;
+	}
+
+	public OutputStream merge(InputStream base, InputStream file1, InputStream file2) {
+		OutputStream outputStream = new ByteArrayOutputStream();
 		try {
 			File fileDiff = diff(base, file1);
 			BufferedReader bufferedReaderDiff = new BufferedReader(new FileReader(fileDiff));  
-			BufferedReader bufferedReaderFile2 = new BufferedReader(new FileReader(file2));
+			InputStreamReader inputStreamReaderFile2 = new InputStreamReader(file2);
+			BufferedReader bufferedReaderFile2 = new BufferedReader(inputStreamReaderFile2);
 			
-			//fileMerge = new File("c:\\teste\\merge\\fileMerge.txt");
-			fileMerge = new File("..\\fileMerge.txt");
-			BufferedWriter bufferedWriterMerge = new BufferedWriter(new FileWriter(fileMerge));
+			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+			BufferedWriter bufferedWriterMerge = new BufferedWriter(outputStreamWriter);
 			
 			String linhaDiff, linhaFile2 = null;
 			int startFromFile, countFromFile, startToFile, countToFile;
@@ -90,6 +115,8 @@ public class Merge implements IMerge{
 	    		bufferedWriterMerge.write(linhaFile2);
 	    		bufferedWriterMerge.newLine();
 	    	}
+	    	//bufferedWriterMerge.flush();
+	    	
 			bufferedReaderDiff.close();
 			bufferedReaderFile2.close();
 			bufferedWriterMerge.close();
@@ -97,23 +124,25 @@ public class Merge implements IMerge{
 		} 
 		catch (IOException e) { 
 			System.out.println("Erro no acesso ao arquivo !!!");
-		} 
+		}
 		
+		return outputStream;
 		
-		return fileMerge;
 	}
 	
-	private File diff(File base, File file1) {
+	
+	private File diff(InputStream base, InputStream file1) {
 		// TODO usar modulo diff
-		return new File("c:\\teste\\merge\\unifiedFormat.txt");
+		return new File("..\\unifiedFormat.txt");
 	}
 	
-	private int findLineInFile(File file, String linha) throws IOException{
+	private int findLineInFile(InputStream file, String linha) throws IOException{
 		int ind = 0; 
 		int cont = 0;
 		String linhaFile;
 		
-		BufferedReader bufferedReaderFile = new BufferedReader(new FileReader(file));
+		InputStreamReader inputStreamReaderFile = new InputStreamReader(file);
+		BufferedReader bufferedReaderFile = new BufferedReader(inputStreamReaderFile);
 		while(((linhaFile = bufferedReaderFile.readLine()) != null)) {
 			cont++;
 			if (linha.equals(linhaFile)) {
