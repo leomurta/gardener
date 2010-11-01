@@ -9,16 +9,15 @@ public class NormalDelta extends BasicDelta implements Delta {
     /**
      *
      * @return
-     * @throws Exception
      */
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder();
 
         text.append("@@");
-        text.append(summaryToString(" -", this.getInfo1()));
+        text.append(summaryToString(" -", this.getOriginalFileInfo()));
         text.append(" ");
-        text.append(summaryToString(" +", this.getInfo2()));
+        text.append(summaryToString(" +", this.getNewFileInfo()));
         text.append(" @@");
         text.append("\n");
 
@@ -31,7 +30,7 @@ public class NormalDelta extends BasicDelta implements Delta {
      * @param info
      * @return
      */
-    protected String summaryToString(String sHeader, Info info) {
+    protected String summaryToString(String sHeader, FileInfo info) {
         StringBuilder text = new StringBuilder();
 
         text.append(sHeader);

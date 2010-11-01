@@ -1,16 +1,12 @@
 package br.uff.ic.gardener.patch.delta;
 
-//~--- JDK imports ------------------------------------------------------------
-
-import java.util.Date;
-
 /**
  *
  * @author Daniel
  */
-public class Info {
+public class FileInfo {
     private String path = "";
-    private Date   date;
+    private String date;
 
     /**
      * @return the path
@@ -29,14 +25,14 @@ public class Info {
     /**
      * @return the date
      */
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
     /**
      * @param date the date to set
      */
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 }

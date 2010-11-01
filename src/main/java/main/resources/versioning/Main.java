@@ -329,11 +329,11 @@ public class Main extends JPanel implements ActionListener
 
                        if (projetoField.getText().isEmpty())
                         {
-                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versÃ£o podem estar vazios!", "Protótipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Campos de projeto ou consulta por versao podem estar vazios!", "Prototipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
                         } else {
-                            JOptionPane.showMessageDialog(null, "A proxima versão do projeto: "
+                            JOptionPane.showMessageDialog(null, "A proxima versao do projeto: "
                                     + projetoField.getText() +
-                                    " é " + nextRevision,
+                                    " e " + nextRevision,
                                     "Prototipo do Sistema Gardener", JOptionPane.INFORMATION_MESSAGE);
                         }
 

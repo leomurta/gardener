@@ -1,5 +1,9 @@
 package br.uff.ic.gardener.patch.chunk;
 
+//~--- non-JDK imports --------------------------------------------------------
+
+import br.uff.ic.gardener.patch.parser.BinaryParser;
+
 /**
  *
  * @author Daniel
@@ -7,6 +11,11 @@ package br.uff.ic.gardener.patch.chunk;
 public class BinaryChunk extends BasicChunk implements Chunk {
     private byte[] storedData;
 
+    /**
+     *
+     * @param action
+     * @param storedData
+     */
     public BinaryChunk(Action action, byte[] storedData) {
         super(action);
         setStoredData(storedData);
@@ -26,32 +35,16 @@ public class BinaryChunk extends BasicChunk implements Chunk {
         this.storedData = storedData;
     }
 
-    /**
-     *
-     * @param action
-     * @return
-     * @throws Exception
-     */
-    @Override
-    public String toString(Action action) {
-        if (action == Action.Add) {
-            return "+";
-        } else if (action == Action.Del) {
-            return "-";
-        } else if (action == Action.Mod) {
-            return "//";
-        } else if (action == Action.Mov) {
-            return "m";
-        } else if (action == Action.Non) {
-            return " ";
-        } else {
-            return super.toString(action);
-        }
-    }
-
     @Override
     public String toString() {
-        return super.toString();
+        StringBuilder text = new StringBuilder();
+
+        text.append(toString(getAction(), new BinaryParser()));
+        text.append(" ");
+        text.append(getStoredData());
+        text.append("\n");
+
+        return text.toString();
     }
 
     /**

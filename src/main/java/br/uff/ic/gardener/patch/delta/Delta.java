@@ -13,39 +13,21 @@ import java.util.LinkedList;
  * @author Daniel
  */
 public interface Delta {
+    public FileInfo getOriginalFileInfo();
 
-    /**
-     * @return the info1
-     */
-    public Info getInfo1();
+    public void setOriginalFileInfo(FileInfo info);
 
-    /**
-     * @param info1 the info1 to set
-     */
-    public void setInfo1(Info info1);
+    public FileInfo getNewFileInfo();
 
-    /**
-     * @return the info2
-     */
-    public Info getInfo2();
+    public void setNewFileInfo(FileInfo info);
 
-    /**
-     * @param info2 the info2 to set
-     */
-    public void setInfo2(Info info2);
-
-    /**
-     * @return the deltas
-     */
     public LinkedList<DeltaItem> getDeltaItens();
 
-    /**
-     * @param chunks
-     */
     public void setDeltaItens(LinkedList<DeltaItem> deltaItens);
 
-    /*
+    /**
      *
+     * @return
      */
     @Override
     public String toString();
