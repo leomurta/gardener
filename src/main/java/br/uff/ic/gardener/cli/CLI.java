@@ -37,6 +37,9 @@ import br.uff.ic.gardener.workspace.WorkspaceException;
  */
 public class CLI {
 
+	@Option(name = "-init", aliases = "--init", metaVar = "INIT", usage = "Init a new project in the serv and create a workspace in the current path")
+	private boolean bInit = false;
+	
 	@Option(name = "-co", aliases = "--checkout", metaVar = "CHECKOUT", usage = "Checkout a Configuration Item in repository")
 	private boolean bCheckout = false;
 
@@ -109,7 +112,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		CHECKOUT, COMMIT, DIFF, ADD, REMOVE, RENAME, NULL
+		INIT, CHECKOUT, COMMIT, DIFF, ADD, REMOVE, RENAME, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -119,7 +122,10 @@ public class CLI {
 	// }
 
 	private OPERATION getOperation() {
-		if (bCheckout) {
+		
+		if(bInit){
+			return OPERATION.INIT;
+		}else if (bCheckout) {
 			return OPERATION.CHECKOUT;
 		} else if (bCommit) {
 			return OPERATION.COMMIT;
@@ -282,6 +288,11 @@ public class CLI {
 			
 			switch (getOperation()) {
 			
+			case INIT:
+				if(listArguments.size() == 0)
+					System.err.println("Specify the project name to init.");
+				onInit(listArguments.get(0));
+				break;
 			case DIFF:
 				LinkedList<File> list = new LinkedList<File>();
 				for(String s: this.listArguments)
@@ -384,6 +395,14 @@ public class CLI {
 	}
 
 	
+	//==============================================================
+	//==============================================================
+	//events to Commands
+	//==============================================================
+	private void onInit(String string) {
+		//initServ		
+	}
+
 	private void onAdd(Collection<String> coll) throws WorkspaceException
 	{
 		if(coll.size() == 0)
