@@ -3,6 +3,12 @@ package br.uff.ic.gardener.patch.chunk;
 //~--- non-JDK imports --------------------------------------------------------
 
 import br.uff.ic.gardener.patch.chunk.Chunk.Action;
+import br.uff.ic.gardener.patch.parser.BasicParser;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -35,6 +41,28 @@ public class BasicChunk {
         this.action = action;
     }
 
+    public boolean isInsert() {
+        return (getAction() == Chunk.Action.ADDED);
+    }
+
+    public boolean isDelete() {
+        return (getAction() == Chunk.Action.DELETED);
+    }
+
+    public boolean isContext() {
+        return (getAction() == Chunk.Action.CONTEXT);
+    }
+
+    protected String toString(Action action, BasicParser parser) {
+        try {
+            return parser.toString(action);
+        } catch (Exception ex) {
+            Logger.getLogger(UnifiedChunk.class.getName()).log(Level.SEVERE, null, ex);
+
+            return "";
+        }
+    }
+
     /**
      *
      * @return
@@ -42,15 +70,6 @@ public class BasicChunk {
     @Override
     protected Object clone() {
         return new BasicChunk(this.getAction());
-    }
-
-    /**
-     *
-     * @param action
-     * @throws Exception
-     */
-    public String toString(Action action) {
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
 

@@ -7,6 +7,8 @@ package br.uff.ic.gardener.patch.patcher;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import br.uff.ic.gardener.patch.Patch.Match;
+import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.parser.Result;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -24,12 +26,28 @@ import java.util.LinkedList;
 public interface Patcher {
 
     /**
-     *
-     * @param file
+     * OO version
+     * @param input
      * @param results
      * @return
      */
-    public OutputStream patch(InputStream input, LinkedList<Result> results);
+    public OutputStream patch(InputStream input, LinkedList<Result> results) throws Exception;
+
+    /**
+     *
+     * @param input
+     * @param delta
+     * @return
+     */
+    public OutputStream patch(InputStream input, Delta delta, Match match) throws Exception;
+
+    /**
+     * SAX version
+     * @param input
+     * @param results
+     * @return
+     */
+    public OutputStream patch(InputStream input, InputStream patch, Match match) throws Exception;
 }
 
 

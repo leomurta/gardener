@@ -5,85 +5,104 @@
 
 package br.uff.ic.gardener.server;
 
+import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.*;
-
-import java.util.*;
 import java.io.File;
 
 /**
  *
- * @author Evaldo de Oliveira
+ * @author Evaldo de Oliveira, Alessandreia e Fernanda
  */
 public class Server {
 
-    /**
+   private static Server instance = new Server();
+
+   private Server() {
+
+   }
+
+   /**
     *
-    * @param serv
-    * @param vers
-    * @param fileSource
-    * @param fileName
+    * @return
     */
-   public void ckeckin(ConfigurationServer serv
-                     , Revision vers
-                     , Project proj
-                     , String fileSource
-                     , String fileName)
+   public static Server getInstance() {
+      return instance;
+   }
+
+   /**
+    *
+    * @param project
+    * @param user
+    */
+   public void init(String project, String user)
     {
-
-        Transaction transact = new Transaction();
-        ConfigurationItem ci = new ConfigurationItem();
-
-        transact.createRevision(serv, proj, vers);
-        ci.createFileRevision(serv, proj, vers, fileSource, fileName);
+        Init in = new Init();
+        in.execute(project, user);
     }
 
    /**
     *
-    * @param serv
-    * @param revisionNumber
-    * @return
+    * @param project
     */
-   public ArrayList ckeckout(ConfigurationServer serv, Project proj, String revisionNumber)
-   {
+   public void commitInit(String project)
+    {
+        Init in = new Init();
+        in.commit(project);
+    }
 
-       Transaction trans = new Transaction();
-       Revision revision = new Revision();
+    /**
+     *
+     * @param project
+     */
+    public void rollbackInit(String project)
+    {
+        Init in = new Init();
+        in.unExecute(project);
+    }
 
-       revision.setRevisionNumber(revisionNumber);
+    /**
+     *
+     * @param project
+     * @param user
+     * @param date
+     * @param message
+     * @param path
+     * @param itens
+     */
+    public void ckeckIn(String project
+                      , String user
+                      , String date
+                      , String message
+                      , String path
+                      , File[] itens){
 
-       return trans.metadataRevision(serv, proj, revision);
+        Command ci = new Checkin();
+        ci.execute(project, user, date, message, path, itens);
 
-   }
+    }    
 
-   /**
-    *
-    * @param serv
-    * @param revisionNumber
-    * @return
-    */
-   public File[] ckeckoutFile(Project proj, String revisionNumber)
-   {
+    /**
+     *
+     * @param project
+     */
+    public void commitCheckin(String project)
+    {
 
-       Revision revision = new Revision();
-       ConfigurationItem ci = new ConfigurationItem();
+        Checkin ci = new Checkin();
+        ci.commit(project);
 
-       revision.setRevisionNumber(revisionNumber);
+    }
 
-       return ci.listRevisionFiles(proj, revision);
+    /**
+     *
+     * @param project
+     */
+    public void roolbackCheckin(String project)
+    {
 
-   }
+        Checkin ci = new Checkin();
+        ci.unExecute(project);
 
-   /**
-    *
-    * @param serv
-    * @return
-    */
-   public int nextNumberRevision(Project proj)
-   {
-
-       Transaction trans = new Transaction();
-       return trans.nextRevision(proj);
-
-   }
+    }
 
 }

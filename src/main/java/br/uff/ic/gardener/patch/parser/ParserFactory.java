@@ -1,12 +1,13 @@
-package br.uff.ic.gardener.patch;
+package br.uff.ic.gardener.patch.parser;
 
 //~--- non-JDK imports --------------------------------------------------------
 
 import br.uff.ic.gardener.patch.Patch;
+import br.uff.ic.gardener.patch.Patch;
 import br.uff.ic.gardener.patch.parser.BinaryParser;
 import br.uff.ic.gardener.patch.parser.ContextParser;
-import br.uff.ic.gardener.patch.parser.Parser;
 import br.uff.ic.gardener.patch.parser.NormalParser;
+import br.uff.ic.gardener.patch.parser.Parser;
 import br.uff.ic.gardener.patch.parser.UnifiedParser;
 
 /**
@@ -14,6 +15,13 @@ import br.uff.ic.gardener.patch.parser.UnifiedParser;
  * @author Daniel
  */
 public class ParserFactory {
+
+    /**
+     *
+     * @param format
+     * @return
+     * @throws Exception
+     */
     public static Parser get(Patch.Format format) throws Exception {
         if (format == Patch.Format.Binary) {
             return new BinaryParser();

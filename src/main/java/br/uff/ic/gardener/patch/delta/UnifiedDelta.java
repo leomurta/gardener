@@ -1,5 +1,9 @@
 package br.uff.ic.gardener.patch.delta;
 
+//~--- non-JDK imports --------------------------------------------------------
+
+import br.uff.ic.gardener.patch.parser.UnifiedParser;
+
 /**
  *
  * @author Daniel
@@ -14,9 +18,9 @@ public class UnifiedDelta extends BasicDelta implements Delta {
     public String toString() {
         StringBuilder text = new StringBuilder();
 
-        text.append(infoToString("---", this.getInfo1()));
+        text.append(infoToString(UnifiedParser.ORIGINAL_IDENT, this.getOriginalFileInfo()));
         text.append("\n");
-        text.append(infoToString("+++", this.getInfo2()));
+        text.append(infoToString(UnifiedParser.NEW_IDENT, this.getNewFileInfo()));
         text.append("\n");
 
         return text.toString();
@@ -28,7 +32,7 @@ public class UnifiedDelta extends BasicDelta implements Delta {
      * @param info
      * @return
      */
-    protected String infoToString(String ident, Info info) {
+    protected String infoToString(String ident, FileInfo info) {
         StringBuilder text = new StringBuilder();
 
         text.append(ident);
