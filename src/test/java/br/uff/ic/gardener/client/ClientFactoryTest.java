@@ -13,7 +13,7 @@ public class ClientFactoryTest extends TestWithTemporaryPath {
 		try {
 			ClientFactory.createAPIClient(getPath().toString());
 		} catch (CreationAPIClientException e) {
-			fail("N�o conseguiu criar a API Client");
+			fail("Não conseguiu criar a API Client");
 		}
 	}
 

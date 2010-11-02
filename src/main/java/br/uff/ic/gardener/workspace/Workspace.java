@@ -20,9 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.WorkspaceOperation;
@@ -119,7 +117,7 @@ public class Workspace {
 	 * @param pathOfWorkspace
 	 * @throws WorkspaceException 
 	 */
-	public Workspace(File pathOfWorkspace, APIClient _client) throws WorkspaceException {
+	public Workspace(File pathOfWorkspace) throws WorkspaceException {
 		path = pathOfWorkspace;
 		
 		if (path == null)
@@ -130,11 +128,7 @@ public class Workspace {
 					+ pathOfWorkspace.toString()
 					+ ") is not a valid directory.", null);
 
-		client = _client;
-
-		if (client == null)
-			throw new WorkspaceError(pathOfWorkspace,
-					"the APIClient is not valid (is null)", null);
+	
 
 		
 		parser = new WorkspaceConfigParser(this, path);
@@ -195,13 +189,6 @@ public class Workspace {
 		} catch (FileNotFoundException e) {
 			throw new WorkspaceException(path, "Arquivo não encontrado", e);
 		}
-
-		try {
-			getClient().commit(map);
-		} catch (TransationException e) {
-			throw new WorkspaceException(this.path,
-					"não foi possível enviar as alterações para o servidor.", e);
-		}
 	}
 
 	/**
@@ -210,14 +197,8 @@ public class Workspace {
 	 * 
 	 * @throws WorkspaceException
 	 */
-	public void checkout(RevisionID revision) throws WorkspaceException {
-		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-		try {
-			getClient().checkout(map, revision);
-		} catch (TransationException e) {
-			throw new WorkspaceException(this.path,
-					"não foi possível resgatar as alterações do o servidor.", e);
-		}
+	public void checkout(RevisionID revision, Map<String, InputStream> map) throws WorkspaceException {
+	
 
 		// erase content
 		for (File f : path.listFiles(new NotInitDotFileFilter())) {

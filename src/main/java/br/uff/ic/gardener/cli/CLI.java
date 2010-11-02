@@ -22,8 +22,7 @@ import org.kohsuke.args4j.Option;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
-import br.uff.ic.gardener.client.ClientFactory;
-import br.uff.ic.gardener.client.CreationAPIClientException;
+import br.uff.ic.gardener.client.APIClientException;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -147,9 +146,9 @@ public class CLI {
 	public APIClient getClient() {
 		if (apiClient == null) {
 			try {
-				File file = (new File(uriServ));
-				apiClient = ClientFactory.createAPIClient(file.toString());
-			} catch (CreationAPIClientException e) {
+				apiClient = new APIClient(this.getActualPath());
+			} catch (APIClientException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 				System.exit(-1);
 			}
@@ -159,25 +158,7 @@ public class CLI {
 
 	private Workspace workspace = null;
 
-	/**
-	 * Cria um workspace
-	 *
-	 * @param path
-	 *            O caminho do workspace
-	 * @return o workspace criado
-	 * @throws WorkspaceException 
-	 */
-	private Workspace createWorkspace(File path) throws WorkspaceException {
-		if (workspace != null)
-			workspace.close();
 
-		workspace = new Workspace(path, getClient());
-		return workspace;
-	}
-
-	private Workspace getWorkspace() {
-		return workspace;
-	}
 
 	static private CLI cliSingletons = null;
 
@@ -357,7 +338,6 @@ public class CLI {
 					uriServ = uriWorkspace;
 				}
 
-				createWorkspace(new File(uriWorkspace));
 				if(getOperation() == OPERATION.CHECKOUT)
 					onCheckout();
 				else
@@ -414,7 +394,7 @@ public class CLI {
 		LinkedList<File> listFile = new LinkedList<File>(); 
 		for(String strGlob: coll)
 		{
-			UtilStream.findFiles(getWorkspace().getPath(), listFile, strGlob, false);
+			UtilStream.findFiles(CLI.getActualPath(), listFile, strGlob, false);
 		}
 		workspace.addFiles(listFile);
 		
@@ -435,7 +415,7 @@ public class CLI {
 		LinkedList<File> listFile = new LinkedList<File>(); 
 		for(String strGlob: coll)
 		{
-			UtilStream.findFiles(getWorkspace().getPath(), listFile, strGlob, false);
+			UtilStream.findFiles(CLI.getActualPath(), listFile, strGlob, false);
 		}
 		workspace.removeFiles(listFile);
 		
@@ -456,16 +436,16 @@ public class CLI {
 	 * @throws WorkspaceException
 	 */
 	private void onCommit() throws WorkspaceException {
-		getWorkspace().commit();
+		//getClient().co
 	}
 
 	/**
 	 * Checkout event
 	 *
-	 * @throws WorkspaceException
+	 * @throws TransationException 
 	 */
-	private void onCheckout() throws WorkspaceException {
-		getWorkspace().checkout(revision);
+	private void onCheckout() throws TransationException {
+		getClient().checkout(revision);
 	}
 	
 	
