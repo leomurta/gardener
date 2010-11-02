@@ -20,7 +20,6 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.*;
 
 /**
  *
@@ -40,7 +39,7 @@ public class ClientCommunication {
         BufferedWriter bw = null;
         try {
             mySocket = new Socket(serverURL, 50000);
-
+            
             System.out.println("Connected");
             PrintStream ps = new PrintStream(mySocket.getOutputStream());
             ps.println("Estou enviando dados para o servidor");
@@ -57,6 +56,7 @@ public class ClientCommunication {
             bis.read(mybytearray);
             OutputStream os = mySocket.getOutputStream();
             System.out.println("Sending...");
+
             //envia o bytearray
             os.write(mybytearray);
             // flush para dar "vazão"
@@ -99,7 +99,7 @@ public class ClientCommunication {
 
         ClientCommunication comm = new ClientCommunication();
 
-        comm.doCheckout("187.115.251.106", new RevisionID(0));
+        comm.doCheckout("172.16.0.240", new RevisionID(0));
        // comm.doCheckout("192.168.0.101", new RevisionID(0));
 
     }
