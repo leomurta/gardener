@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package padraocommand;
+package main.resources.versioning;
 
 import java.io.*;
 

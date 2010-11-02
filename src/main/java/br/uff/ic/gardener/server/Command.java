@@ -1,9 +1,11 @@
-package padraocommand;
+package br.uff.ic.gardener.server;
 
-//interface Command
+import br.uff.ic.gardener.database.Database;
+import br.uff.ic.gardener.versioning.*;
 
 import java.io.File;
 
+//interface Command
 /**
  *
  * @author Evaldo de Oliveira
