@@ -2,7 +2,6 @@ package br.uff.ic.gardener.util;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FilenameFilter;
 import java.util.regex.Pattern;
 
 /**

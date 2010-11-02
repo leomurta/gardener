@@ -51,6 +51,11 @@ public class WorkspaceConfigParser
 		workspace = work;
 	}
 	
+	/**
+	 * Carrega o arquivo de configurações
+	 * @param collIC O arquivo de configurações possui uma lista de ICs contidos na revisão corrente, então ele as carrega nesta coleção
+	 * @throws WorkspaceConfigParserException Caso haja algum problema de parser ele carrrega aqui
+	 */
 	public void loadProfile(Collection<URI> collIC) throws WorkspaceConfigParserException
 	{
 		
@@ -141,6 +146,11 @@ public class WorkspaceConfigParser
 		}
 	}
 	
+	/**
+	 * Load the operations in the operation file. This ignore the new operations realize in this workspace 
+	 * @param list the list that receive operations
+	 * @throws WorkspaceConfigParserException
+	 */
 	public void loadOperations(List<WorkspaceOperation> list) throws WorkspaceConfigParserException
 	{
 		list.clear();
@@ -172,11 +182,15 @@ public class WorkspaceConfigParser
 			twq.close();
 			
 		} catch (FileNotFoundException e) {
-			throw new WorkspaceConfigParserException("Não foi possível carregar as operações", token, e);
+			throw new WorkspaceConfigParserException("Cannot load operations", token, e);
 		}
 		
 	}
-	
+	/**
+	 * Append operations in the operation file
+	 * @param list the list of operations to append in the file
+	 * @throws WorkspaceConfigParserException
+	 */
 	public void appendOperations(List<WorkspaceOperation> list) throws WorkspaceConfigParserException
 	{
 		OutputStream outputStream;
@@ -196,6 +210,11 @@ public class WorkspaceConfigParser
 		}
 	}
 
+	/**
+	 * Save the profile archive.
+	 * This is do to save workspace configuration
+	 * @throws WorkspaceConfigParserException
+	 */
 	public void saveProfile() throws WorkspaceConfigParserException
 	{
 		/**
@@ -218,7 +237,14 @@ public class WorkspaceConfigParser
 		}
 	}
 
-	public static boolean isConfigFile(File path, File f) {
+	/**
+	 * Return if the path is a configuration file (profile or operation)
+	 * @param path
+	 * @param f
+	 * @return
+	 */
+	public static boolean isConfigFile(File path, File f)
+	{
 		return STR_FILE_OPERATION.equals(f.getName()) || STR_FILE_PROFILE.equals(f.getName());
 	}
 }

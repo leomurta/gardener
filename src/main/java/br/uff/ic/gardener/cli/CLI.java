@@ -53,7 +53,6 @@ public class CLI {
 	private boolean bRename = false;
 	
 	// Other arguments
-	@SuppressWarnings("unused")
 	@Argument
 	private List<String> listArguments = new ArrayList<String>();
 
@@ -81,18 +80,23 @@ public class CLI {
 	*	diff -u arquivo_1 arquivo_2
 	 */
 	
+	@SuppressWarnings("unused")
 	@Option(name = "-E", aliases="--IgnoreWhiteSpaces", metaVar="DIFF_IGNORE_WHITE_SPACES", usage = "Ignore White Spaces and tabs on Diff operation")
 	private boolean bDiffIgnoreWhiteSpaces = false;
 	
+	@SuppressWarnings("unused")
 	@Option(name = "-B", aliases="--IgnoreWhiteLines", metaVar="DIFF_IGNORE_WHITE_LINES", usage = "Ignore White Lines on Diff operation")
 	private boolean bDiffIgnoreWhiteLines = false;
 	
+	@SuppressWarnings("unused")
 	@Option(name = "-i", aliases="--IgnoreCaseSensitive", metaVar="DIFF_IGNORE_CASE_SENSITIVE", usage = "Ignore Case Sensitive")
 	private boolean bDiffIgnoreCaseSensitive = false;
 	 
+	@SuppressWarnings("unused")
 	@Option(name = "-c", aliases="--ContextFormat", metaVar="DIFF_CONTEXT_FORMAT", usage = "Select Context Format")
 	private char charDiffContextFormat = ' ';
 	
+	@SuppressWarnings("unused")
 	@Option(name = "-u", aliases="--UnifiedFormat", metaVar="DIFF_UNIFIED_FORMAT", usage = "Use Unified Format")
 	private boolean bDiffUnifiedFormat = false;
 	

@@ -17,7 +17,6 @@ import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.mongodb.io.StreamUtil;
 
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.StubAPIClient;
@@ -195,21 +194,6 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 		workspace.close();
 	}
 
-	private static void fillFile(File file, String... strVec) {
-		FileWriter fw;
-		try {
-			fw = new FileWriter(file);
-			PrintWriter pw = new PrintWriter(fw);
-
-			for (String str : strVec) {
-				pw.append(str + "\n");
-			}
-			pw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#checkout()}

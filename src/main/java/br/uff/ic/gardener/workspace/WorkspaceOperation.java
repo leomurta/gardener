@@ -1,14 +1,11 @@
 package br.uff.ic.gardener.workspace;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representa transações a serem realizadas em um workspace que devem ser commitadas
- * @author Marcos
- *
+ * Represents the operations will be realized in the workspace and shall be commited
+ * @author Marcos Côrtes
  */
 public class WorkspaceOperation {
 	public enum Operation
@@ -37,16 +34,22 @@ public class WorkspaceOperation {
 		}
 	}
 	
-	private Operation transation = Operation.NONE;
+	/**
+	 * The operation realized.
+	 */
+	private Operation operation = Operation.NONE;
 	
 	private static ArrayList<String> DEFAULT_NULL_ARRAYLIST = new ArrayList<String>();
 	
+	/**
+	 * List of parameters
+	 */
 	private List<String> listParam = DEFAULT_NULL_ARRAYLIST; 
 	
 	
 	WorkspaceOperation(Operation trans, String... parameters)
 	{
-		transation = trans;
+		operation = trans;
 		listParam = new ArrayList<String>(parameters.length);
 		for(String s: parameters)
 			listParam.add(s);
@@ -64,7 +67,7 @@ public class WorkspaceOperation {
 	
 	public Operation getOperation()
 	{
-		return transation;
+		return operation;
 	}
 	
 	@Override
@@ -91,19 +94,6 @@ public class WorkspaceOperation {
 			return sb.toString();
 		}
 	}
-	
-	/*public URI getRealURI(URI uriBase) throws URISyntaxException 
-	{
-		return getRealURI(uriBase, 0);
-	}
-	
-	public URI getRealURI(URI uriBase, int paramPos) throws URISyntaxException 
-	{
-		
-		URI temp = new URI(String.format("file:///%s/%s", uriBase.toString(), this.getParamAt(paramPos)));
-		
-		return temp;
-	}*/
 	
 	public boolean equals(Object o)
 	{
