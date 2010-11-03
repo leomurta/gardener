@@ -57,32 +57,21 @@ public class Version {
                 Element root = doc.getDocumentElement();                
 
                 NodeList nodeConfigurationItem = root.getElementsByTagName(nameConfigurationItem);
-                NodeList nodeProjectVersion = root.getElementsByTagName(project);
+                NodeList nodeProjectVersion = root.getElementsByTagName(project);                
 
-                Element newVersion = doc.createElement("version");               
-
-                newVersion.setAttribute("userTransaction", user);
-                newVersion.setAttribute("stateVersion", "1");                
-
-                Element dateVersion = doc.createElement("dateVersion");
-                Element messageVersion = doc.createElement("message");
-                Element pathVersion = doc.createElement("pathVersion");
-                Element dateCheckoutVersion = doc.createElement("dateCheckoutVersion");
+                Element newVersion = doc.createElement("version");
                 
-                Text valueDateVersion = doc.createTextNode(date);
-                Text valueMessage = doc.createTextNode(message);
-                Text valuePathVersion = doc.createTextNode(path);
-                Text valueDateCheckoutVersion = doc.createTextNode(" ");
-                
-                dateVersion.appendChild(valueDateVersion);
-                messageVersion.appendChild(valueMessage);
-                pathVersion.appendChild(valuePathVersion);
-                dateCheckoutVersion.appendChild(valueDateCheckoutVersion);
+                newVersion.setAttribute("pathVersion", path);
+                newVersion.setAttribute("numberVersion", "1");                
 
-                newVersion.insertBefore(dateVersion, null);
-                newVersion.insertBefore(messageVersion, null);
-                newVersion.insertBefore(pathVersion, null);
-                newVersion.insertBefore(dateCheckoutVersion, null);
+                Element newTransactionVersion = doc.createElement("transaction");
+
+                newTransactionVersion.setAttribute("dateVersion", date);
+                newTransactionVersion.setAttribute("message", message);
+                newTransactionVersion.setAttribute("userTransaction", user);
+                newTransactionVersion.setAttribute("typeTransaction", "ci");
+
+                newVersion.appendChild(newTransactionVersion);
 
                 if (nodeConfigurationItem.getLength() > 0)
                 {
@@ -98,6 +87,7 @@ public class Version {
 
                     configurationItem.setAttribute("currentVersion", Integer.toString(currentVersion));
                     configurationItem.setAttribute("nextVersion",  Integer.toString(nextVersion));
+                    configurationItem.setAttribute("stateConfigurationItem", "ci");
 
                     configurationItem.appendChild(newVersion);
 
@@ -124,6 +114,7 @@ public class Version {
 
                         newConfigurationItem.setAttribute("currentVersion", "1");
                         newConfigurationItem.setAttribute("nextVersion",  "2");
+                        newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
 
@@ -138,6 +129,7 @@ public class Version {
 
                         newConfigurationItem.setAttribute("currentVersion", "1");
                         newConfigurationItem.setAttribute("nextVersion",  "2");
+                        newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
                         newProjectVersion.appendChild(newConfigurationItem);
