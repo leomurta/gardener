@@ -347,7 +347,7 @@ public class CLI {
 	*
 	*	Segue os comandos...
 	*
-	*	•Ignorar Espaços em branco e “Tabs”
+	*	•Ignorar Espaços em branco e Tabs
 	* 	diff -E arquivo_1 arquivo_2
 	*	
 	*	•Ignorando Linhas em branco

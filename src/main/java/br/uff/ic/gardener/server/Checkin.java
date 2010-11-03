@@ -5,9 +5,8 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.*;
-import java.io.File;
+import java.util.*;
 
 //classe OpenCommand
 /**
@@ -32,7 +31,7 @@ public class Checkin extends Command {
                       , String date
                       , String message
                       , String path
-                      , File[] itens){        
+                      , ArrayList itens){
 
              LogCommandServer logCommand = LogCommandServer.getInstance();
 
@@ -70,12 +69,30 @@ public class Checkin extends Command {
     @Override
         public void commit(String project)
         {
+
+            ArrayList outStanding;
+            ArrayList outFileStanding;
+
+            ConfigurationItem ci = new ConfigurationItem();
             LogCommandServer logCommand = LogCommandServer.getInstance();
 
             this.setState(2);
 
             logCommand.updateLog(this.getClass().getSimpleName(),project, this.getState());
-            logCommand.regOutStanding(this.getClass().getSimpleName(), project);
+            outStanding = logCommand.regOutStanding(this.getClass().getSimpleName(), project);
+            outFileStanding = logCommand.regFileOutStanding(this.getClass().getSimpleName(), project);
+
+            for (int i = 0; i < outFileStanding.size(); i++)
+            {
+
+                ci.createConfigurationItem(
+                        project
+                      , outStanding.get(0).toString()
+                      , outStanding.get(1).toString()
+                      , outStanding.get(2).toString()
+                      , outStanding.get(3).toString()
+                      , outFileStanding.get(i).toString());
+            }
 
         }
 

@@ -5,9 +5,6 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
-import br.uff.ic.gardener.versioning.*;
-
 import java.io.*;
 import java.util.*;
 
@@ -293,7 +290,7 @@ public class LogCommandServer {
                       , String date
                       , String message
                       , String path
-                      , File[] itens) {
+                      , ArrayList itens) {
 
             try{                
 
@@ -324,31 +321,19 @@ public class LogCommandServer {
                 projectOut.appendChild(valueProject);
 
                 Element configurationItens = doc.createElement("configurationItens");
-
-                if (itens!=null)
+                
+                for (int i = 0; i < itens.size(); i++)
                 {
+                     Element file = doc.createElement("file");
+                     file.setAttribute("id", Integer.toString(i+1));
 
-                    for (int i = 0; i < itens.length; i++)
-                    {
-                        Element file = doc.createElement("file");
-                        file.setAttribute("id", Integer.toString(i));
+                     Text valueIten = doc.createTextNode(itens.get(i).toString());
+                     file.appendChild(valueIten);
 
-                        Text valueIten = doc.createTextNode(itens[i].getName());
-                        file.appendChild(valueIten);
+                     configurationItens.appendChild(file);
 
-                        configurationItens.appendChild(file);
-
-                    }
-                }else{
-                        Element file = doc.createElement("file");
-                        file.setAttribute("id", "0");
-
-                        Text valueIten = doc.createTextNode(" ");
-                        file.appendChild(valueIten);
-
-                        configurationItens.appendChild(file);
-                }
-
+                 }
+                
                 elementOut.appendChild(dateOut);
                 elementOut.appendChild(userOut);
                 elementOut.appendChild(messageOut);
@@ -377,9 +362,11 @@ public class LogCommandServer {
      * @param command
      * @param project
      */
-    public void regOutStanding(String command, String project){
+    public ArrayList regOutStanding(String command, String project){
+        
+        try{
 
-            try{
+                ArrayList reg = new ArrayList();
 
                 DocumentBuilderFactory logServer = DocumentBuilderFactory.newInstance();
                 DocumentBuilder docBuilder = logServer.newDocumentBuilder();
@@ -410,24 +397,82 @@ public class LogCommandServer {
                         Node message = listMessage.item(0).getFirstChild();
 
                         NodeList listPath = elementCommand.getElementsByTagName("path");
-                        Node path = listPath.item(0).getFirstChild();
-                        
-                        System.out.println(project + ";"
-                                         + date.getNodeValue().toString() + ";"
-                                         + user.getNodeValue().toString() + ";"
-                                         + message.getNodeValue().toString() + ";"
-                                         + path.getNodeValue().toString());
+                        Node path = listPath.item(0).getFirstChild();                        
+
+                        reg.add(user.getNodeValue().toString());
+                        reg.add(date.getNodeValue().toString());
+                        reg.add(message.getNodeValue().toString());
+                        reg.add(path.getNodeValue().toString());                        
 
                         break;
                     }
+
                 }
+                return reg;
                 
             }catch(Exception err){
 
-                System.out.println(err.getMessage());
+                ArrayList regReturn = new ArrayList();
+
+                regReturn.add(err.getMessage());
+                return regReturn;
 
             }
       }
+
+
+    public ArrayList regFileOutStanding(String command, String project){
+
+        try{
+
+                ArrayList file= new ArrayList();
+
+                DocumentBuilderFactory logServer = DocumentBuilderFactory.newInstance();
+                DocumentBuilder docBuilder = logServer.newDocumentBuilder();
+                Document doc = docBuilder.parse(new File("/gardener/dataOutStanding.xml"));
+
+                Element root = doc.getDocumentElement();
+
+                NodeList listCommand = root.getElementsByTagName(command);
+
+                for (int i =listCommand.getLength()-1; i >=0 ; i--){
+
+                    //como cada elemento do NodeList é um nó, precisamos fazer o cast
+                    Element elementCommand = (Element) listCommand.item(i);
+
+                    NodeList listProject = elementCommand.getElementsByTagName("project");
+                    Node proj = listProject.item(0).getFirstChild();
+
+                    if (proj.getNodeValue().toString().equals(project))
+                    {
+
+                        NodeList listConfigurationItens = elementCommand.getElementsByTagName("configurationItens");
+
+                        Element elementConfigurationItem = (Element) listConfigurationItens.item(0);
+                        NodeList configurationItem = elementConfigurationItem.getElementsByTagName("file");
+
+                        for (int itens = 0; itens < configurationItem.getLength();itens++)
+                        {
+                            Node item = configurationItem.item(itens);
+                            file.add(item.getTextContent().toString());
+                        }
+                        
+                    }
+                    break;
+
+                }
+                return file;
+
+            }catch(Exception err){
+
+                ArrayList regReturn = new ArrayList();
+
+                regReturn.add(err.getMessage());
+                return regReturn;
+
+            }
+      }
+
 
     }
 

@@ -5,9 +5,8 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.*;
-import java.io.File;
+import java.util.*;
 
 /**
  *
@@ -74,7 +73,7 @@ public class Server {
                       , String date
                       , String message
                       , String path
-                      , File[] itens){
+                      , ArrayList itens){
 
         Command ci = new Checkin();
         ci.execute(project, user, date, message, path, itens);

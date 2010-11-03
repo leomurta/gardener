@@ -33,8 +33,8 @@ import java.util.*;
  *
  */
 public class Database {
-    
-    private DB conn;    
+
+    private DB conn;
 
     /**
      * Verifica sistema operacional para definir raiz do projeto
@@ -60,7 +60,7 @@ public class Database {
     public DB Connection(ConfigurationServer serv, Project proj)
     {
             try
-		{                    
+		{
 
                     Mongo connect = new Mongo(serv.getServer(), serv.getPort());
                     conn = connect.getDB(proj.getProject());
@@ -111,17 +111,17 @@ public class Database {
     /**
      * Cria o diretorio da revisao e armazena os metadados no Diretorio do Repositorio de uma determinada versao
      *
-     * @param serv 
+     * @param serv
      * @param vers
      */
-    public void storeDirRepository(ConfigurationServer serv, Project proj, Revision vers)
+    public void storeDirRepository(ConfigurationServer serv, Project proj, Version vers)
     {
 
         try
         {
 
             boolean dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber()).mkdir();
-            if (dir == true) {                
+            if (dir == true) {
 
                 this.storeMetadata(serv, vers, proj);
 
@@ -142,7 +142,7 @@ public class Database {
      * @param stgFileSource arquivo a ser armazenado
      * @param fileName      nome do arquivo armazenado
      */
-    public void storeFileRepository(Revision vers
+    public void storeFileRepository(Version vers
                                   , Project proj
                                   , String stgFileSource
                                   , String fileName)
@@ -174,9 +174,9 @@ public class Database {
     /**
      * Armazena o metadado no BD
      */
-    private void storeMetadata(ConfigurationServer serv, Revision vers, Project proj)
+    private void storeMetadata(ConfigurationServer serv, Version vers, Project proj)
     {
-        
+
         this.conn =  Connection(serv, proj);
         DBCollection collection = this.conn.getCollection(proj.getProject());
 
@@ -199,8 +199,8 @@ public class Database {
      * @param vers
      * @return  retorna o metadado do projeto
      */
-    public ArrayList queryMetadata(ConfigurationServer serv, Project proj, Revision vers)
-    {       
+    public ArrayList queryMetadata(ConfigurationServer serv, Project proj, Version vers)
+    {
 
         this.conn =  Connection(serv, proj);
         DBCollection collection = this.conn.getCollection(proj.getProject());
@@ -240,7 +240,7 @@ public class Database {
      * @param serv
      * @param vers
      */
-    public void updateRevision(Project proj, Revision vers)
+    public void updateRevision(Project proj, Version vers)
     {
         try
         {
@@ -293,7 +293,7 @@ public class Database {
      * @param pVers
      * @return              lista de arquivos
      */
-    public File[] listFiles(Project proj, Revision vers)
+    public File[] listFiles(Project proj, Version vers)
     {
             File dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber());
             File[] listFile = dir.listFiles();
