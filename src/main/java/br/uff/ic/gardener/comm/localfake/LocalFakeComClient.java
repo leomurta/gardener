@@ -1,4 +1,4 @@
-package br.uff.ic.gardener.client;
+package br.uff.ic.gardener.comm.localfake;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -15,22 +16,17 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.TransationException;
+import br.uff.ic.gardener.comm.ComClient;
+import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.util.ANDFileFilter;
 import br.uff.ic.gardener.util.DirectoryFileFilter;
 import br.uff.ic.gardener.util.NameFileFilter;
 import br.uff.ic.gardener.util.UtilStream;
 
-/**
- * It does a simple repository based in zip files per revision.
- * 
- * @author Marcos
- * 
- */
-class LocalAPIClient implements APIClient {
-
+public class LocalFakeComClient implements ComClient {
+	
 	private static final String CONFIG_PROPERTIES = "config.properties";
-
+	
 	/**
 	 * path of repository data. The repository config is a child of this
 	 * directory.
@@ -48,7 +44,7 @@ class LocalAPIClient implements APIClient {
 	Properties properties = null;
 
 	// TODO Ver formato STATIC
-	private static String strConfigPath = ".gdrservsimple";
+	private static String STR_CONFIG_PATH = ".gdrservsimple";
 
 	/**
 	 * Create LocalAPIClient It looks up by config directory in _path specified.
@@ -57,26 +53,27 @@ class LocalAPIClient implements APIClient {
 	 *            Path of repository
 	 * @throws CreationAPIClientException
 	 */
-	public LocalAPIClient(File _path) throws CreationAPIClientException {
+	public LocalFakeComClient(File _path) throws LocalFakeComClientException {
 		if (!_path.isDirectory())
-			throw new CreationAPIClientException(_path.toString()
+			throw new LocalFakeComClientException(_path.toString()
 					+ "is not a directory", null);
 
 		path = _path;
 
 		File[] childs = _path.listFiles(new ANDFileFilter(
-				new DirectoryFileFilter(), new NameFileFilter(strConfigPath)));
+				new DirectoryFileFilter(), new NameFileFilter(STR_CONFIG_PATH)));
 
-		if (childs.length < 1) {
+		if (childs.length < 1) 
+		{
 			try {
-				pathConfig = new File(path.getPath() + "/" + strConfigPath);
+				pathConfig = new File(path.getPath(), STR_CONFIG_PATH);
 				if (!pathConfig.mkdir())
-					throw new CreationAPIClientException(
+					throw new LocalFakeComClientException(
 							"Do not possible create config file: "
 									+ pathConfig.getPath(), null);
 
 			} catch (SecurityException e) {
-				throw new CreationAPIClientException(
+				throw new LocalFakeComClientException(
 						"Do not possible create config file because security questions: "
 								+ pathConfig.getPath(), e);
 			}
@@ -87,22 +84,20 @@ class LocalAPIClient implements APIClient {
 		try {
 			loadProperties();
 		} catch (FileNotFoundException e) {
-			throw new CreationAPIClientException("Property file not found: ", e);
+			throw new LocalFakeComClientException("Property file not found: ", e);
 		} catch (IOException e) {
-			throw new CreationAPIClientException("Property file not found: ", e);
+			throw new LocalFakeComClientException("Property file not found: ", e);
 		}
 	}
-
-	@Override
-	public void checkout(Map<String, InputStream> items, RevisionID revision)
-			throws TransationException {
-
+	
+	/**TODO: Corrigir o Checkout*/
+	public void checkout(RevisionID revision, Map<String, InputStream> items) throws ComClientException{
 		FileInputStream input;
 		try {
 			input = new FileInputStream(getPathOfRevision(revision));
 		} catch (FileNotFoundException e) {
-			throw new TransationException(
-					"Não foi possível achar o arquivo de revisão.", e);
+			throw new ComClientException(
+					"NÃ£o foi possÃ­vel achar o arquivo de revisÃ£o.", "Checkout", getURIServ(), e);
 		}
 		ZipInputStream zos = new ZipInputStream(input);
 
@@ -120,24 +115,23 @@ class LocalAPIClient implements APIClient {
 			zos.close();
 
 		} catch (IOException e) {
-			throw new TransationException("Error at decompact revision.", e);
+			throw new ComClientException("Error at decompact revision.", "Checkout", getURIServ(), e);
 		}
-
+		
 	}
-
+	
 	public String getPathOfRevision(RevisionID r) {
 		return pathConfig.getPath() + File.separatorChar + r.toString()
 				+ ".zip";
 	}
-
-	@Override
-	public RevisionID commit(Map<String, InputStream> items)
-			throws TransationException {
+	
+	public RevisionID commit(String strProject, String strMessage, Map<String, InputStream> items) throws ComClientException {
 		// create a ZipOutputStream to zip the data to
 
-		ZipOutputStream zos;
-		RevisionID newRevision = RevisionID.generateNewRevision(this
-				.getLastRevision().getNumber());
+		ZipOutputStream zos;		
+		/**TODO: Corrigir o Revision ID*/
+		RevisionID newRevision = RevisionID.generateNewRevision(this.getLastRevision().getNumber());
+		//RevisionID newRevision;
 		try {
 			zos = new ZipOutputStream(new FileOutputStream(pathConfig.getPath()
 					+ File.separatorChar + newRevision.toString() + ".zip"));
@@ -155,53 +149,20 @@ class LocalAPIClient implements APIClient {
 			zos.close();
 
 		} catch (FileNotFoundException e) {
-			throw new TransationException("Zip file not found", e);
+			throw new ComClientException("Zip file not found", "Checkout", getURIServ(), e);
 		} catch (IOException e) {
-			throw new TransationException("Zip process has problems", e);
+			throw new ComClientException("Zip process has problems", "Checkout", getURIServ(), e);
 		}
-
-		// atualiza o properties
-		properties.setProperty("LastRevision", newRevision.toString());
-		try {
-			saveProperties();
-		} catch (InternalAPIClientException e) {
-			throw new TransationException(e.toString(), e);
-		}
+		
 		return newRevision;
 	}
-
-	private void saveProperties() throws InternalAPIClientException {
-		File[] files = pathConfig.listFiles(new NameFileFilter(
-				CONFIG_PROPERTIES));
-
-		if (files.length > 0) {
-			FileOutputStream out;
-			try {
-				out = new FileOutputStream(files[0]);
-			} catch (FileNotFoundException e) {
-
-				throw new InternalAPIClientException(
-						"Não foi possível encontrar o arquivo de properties "
-								+ CONFIG_PROPERTIES, e);
-			}
-			try {
-				properties.store(out, "");
-			} catch (IOException e) {
-				throw new InternalAPIClientException(
-						"Erro ao salvar o arquivo de properties: "
-								+ CONFIG_PROPERTIES, e);
-			}
-		}
-	}
-
-	@Override
-	public RevisionID getLastRevision() {
+	
+	private RevisionID getLastRevision() {
 		return RevisionID.fromString(properties.getProperty("LastRevision"));
 	}
-
+	
 	private void loadProperties() throws FileNotFoundException, IOException {
-		File[] files = pathConfig.listFiles(new NameFileFilter(
-				CONFIG_PROPERTIES));
+		File[] files = pathConfig.listFiles(new NameFileFilter(CONFIG_PROPERTIES));
 
 		if (properties == null) {
 			// init properties
@@ -212,8 +173,7 @@ class LocalAPIClient implements APIClient {
 
 		File config = null;
 		if (files.length == 0) {
-			config = new File(pathConfig.getPath() + File.pathSeparatorChar
-					+ CONFIG_PROPERTIES);
+			config = new File(String.format("%s%s%s", pathConfig.getPath(), File.separatorChar, CONFIG_PROPERTIES));
 
 			// store
 			properties.store(new FileOutputStream(config), "");
@@ -223,8 +183,8 @@ class LocalAPIClient implements APIClient {
 		}
 
 		if (files.length == 0)
-			throw new FileNotFoundException("O arquivo " + CONFIG_PROPERTIES
-					+ " não foi encontrado");
+			throw new FileNotFoundException("The file " + CONFIG_PROPERTIES
+					+ " does not found");
 
 		config = files[0];
 
@@ -302,5 +262,20 @@ class LocalAPIClient implements APIClient {
 			// handle exception
 		}
 
+	}
+
+	@Override
+	public URI getURIServ() {
+		return path.toURI();
+	}
+
+	@Override
+	public void close() {
+		//nothing
+	}
+
+	@Override
+	public void init(String strProject) {
+				
 	}
 }

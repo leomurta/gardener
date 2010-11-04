@@ -68,7 +68,7 @@ public class Server {
      * @param path
      * @param itens
      */
-    public void ckeckIn(String project
+    public void checkIn(String project
                       , String user
                       , String date
                       , String message
@@ -102,6 +102,17 @@ public class Server {
         Checkin ci = new Checkin();
         ci.unExecute(project);
 
+    }
+    
+    /**
+     * Return the last revision of a project
+     * @param project
+     * TODO Evaldo, dá uma olhada nisso e pede para retornar a última revisão por favor.
+     * @return
+     */
+    public long getLastRevision(String project)
+    {
+    	return 0;
     }
 
 }
