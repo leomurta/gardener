@@ -3,7 +3,6 @@ package br.uff.ic.gardener.versioning;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import java.io.FileInputStream.*;
 import java.io.DataInputStream.*;
@@ -37,15 +36,14 @@ public class Version {
 
    public void createVersion(String nameConfigurationItem
                       , String project
+                      , int currentVersion
+                      , int nextVersion
                       , String user
                       , String date
                       , String message
                       , String path)
    {
-        try{
-
-                int currentVersion=0;
-                int nextVersion=0;
+        try{                
 
                 Element newConfigurationItem = null;
                 Element newProjectVersion = null;
@@ -80,26 +78,30 @@ public class Version {
 
                     configurationItem.insertBefore(newVersion, null);
 
-                    currentVersion = Integer.parseInt(this.currentVersion(project, nameConfigurationItem));
-                    nextVersion    = currentVersion + 1;
-
                     newVersion.setAttribute("numberVersion", Integer.toString(currentVersion));
 
-                    configurationItem.setAttribute("currentVersion", Integer.toString(currentVersion));
-                    configurationItem.setAttribute("nextVersion",  Integer.toString(nextVersion));
                     configurationItem.setAttribute("stateConfigurationItem", "ci");
+                    configurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
 
                     configurationItem.appendChild(newVersion);
 
                     if (nodeProjectVersion.getLength() > 0)
                     {
                         Element proj = (Element) nodeProjectVersion.item(0);
+
+                        proj.setAttribute("currentVersion", Integer.toString(currentVersion));
+                        proj.setAttribute("nextVersion",  Integer.toString(nextVersion));
+
                         proj.insertBefore(configurationItem, null);
                         root.insertBefore(proj, null);
 
                     }else{
 
                         newProjectVersion = doc.createElement(project);
+
+                        newProjectVersion.setAttribute("currentVersion", Integer.toString(currentVersion));
+                        newProjectVersion.setAttribute("nextVersion",  Integer.toString(nextVersion));
+
                         newProjectVersion.appendChild(configurationItem);
                         root.appendChild(newProjectVersion);
 
@@ -110,28 +112,34 @@ public class Version {
                     newConfigurationItem = doc.createElement(nameConfigurationItem);                   
 
                     if (nodeProjectVersion.getLength() > 0)
-                    {
+                    {                       
 
-                        newConfigurationItem.setAttribute("currentVersion", "1");
-                        newConfigurationItem.setAttribute("nextVersion",  "2");
+                        newConfigurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
                         newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
 
                         Element proj = (Element) nodeProjectVersion.item(0);
+
+                        proj.setAttribute("currentVersion", Integer.toString(currentVersion));
+                        proj.setAttribute("nextVersion",  Integer.toString(nextVersion));
+
                         proj.insertBefore(newConfigurationItem, null);
                         root.insertBefore(proj, null);
 
                     }else{                      
 
 
-                        newProjectVersion = doc.createElement(project);
+                        newProjectVersion = doc.createElement(project);                        
 
-                        newConfigurationItem.setAttribute("currentVersion", "1");
-                        newConfigurationItem.setAttribute("nextVersion",  "2");
+                        newConfigurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
                         newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
+
+                        newProjectVersion.setAttribute("currentVersion", "1");
+                        newProjectVersion.setAttribute("nextVersion",  "2");
+
                         newProjectVersion.appendChild(newConfigurationItem);
                         root.appendChild(newProjectVersion);
 
@@ -151,44 +159,32 @@ public class Version {
 
    }
 
-   public String currentVersion(String project
-                         , String nameConfigurationItem)
+   public String getCurrentVersionProject(String project)
    {
+       
+       String currentVersion;
+
        try
        {
-
-            String currentVersion = "0";
-            int currentVersiontemp= 0;
 
             DocumentBuilderFactory logVersion = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = logVersion.newDocumentBuilder();
             Document doc = docBuilder.parse(new File("/gardener/itensVersion.xml"));
 
             Element root = doc.getDocumentElement();
+
             NodeList listProject = root.getElementsByTagName(project);
 
-            for (int i = 0; i < listProject.getLength(); i++){
-
-                  Element listItem = (Element) listProject.item(i);
-                  NodeList listItemVersion = listItem.getElementsByTagName(nameConfigurationItem);
-
-                  Element item = (Element) listItemVersion.item(i);
-
-                  currentVersion = item.getAttribute("currentVersion").toString();
-
-                  break;
-                  
-            }
-
-            if (currentVersion.equals("0"))
+            if (listProject.getLength() > 0)
             {
-                currentVersion = "1";
+            
+                Element proj = (Element) listProject.item(0);
+                currentVersion = proj.getAttribute("currentVersion").toString();
             }else{
-                currentVersiontemp = Integer.parseInt(currentVersion)+1;
-                currentVersion = Integer.toString(currentVersiontemp);
+                currentVersion = "0";
             }
-
-            return currentVersion;
+            
+            return  currentVersion;
 
         }catch(Exception err)
             {

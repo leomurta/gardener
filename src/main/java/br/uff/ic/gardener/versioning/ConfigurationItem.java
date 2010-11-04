@@ -5,8 +5,6 @@
 
 package br.uff.ic.gardener.versioning;
 
-import java.io.File;
-import java.util.*;
 
 /**
  *
@@ -14,7 +12,7 @@ import java.util.*;
  */
 public class ConfigurationItem {
 
-    String nameConfigurationItem;
+    String nameConfigurationItem;    
 
     /**
     *
@@ -24,14 +22,24 @@ public class ConfigurationItem {
     * @param fileName
     */
    public void createConfigurationItem(String project
+                      , int currentVersion
+                      , int nextVersion
                       , String user
                       , String date
                       , String message
                       , String path
                       , String nameConfigurationItem)
        {
-            Version vers = new Version(); 
-            vers.createVersion(nameConfigurationItem, project, user, date, message, path);
+            Version vers = new Version();
+            vers.createVersion(nameConfigurationItem
+                             , project
+                             , currentVersion
+                             , nextVersion
+                             , user
+                             , date
+                             , message
+                             , path);
+
        }
 
    /**
@@ -41,7 +49,7 @@ public class ConfigurationItem {
     * @return
     */   
 
-   public String nextVersionItem(String project, String itemName)
+   public String nextVersionItem(String project)
    {
 
        int currentVersion;
@@ -49,18 +57,18 @@ public class ConfigurationItem {
 
        Version vers = new Version();
 
-       currentVersion = Integer.parseInt(vers.currentVersion(project, itemName)) + 1;
+       currentVersion = Integer.parseInt(vers.getCurrentVersionProject(project)) + 1;
        nextVersion = currentVersion + 1;
 
        return Integer.toString(nextVersion);
 
    }
 
-   public String currentVersionItem(String project, String itemName)
+   public String currentVersionItem(String project)
    {
 
        Version vers = new Version();
-       return vers.currentVersion(project, itemName);
+       return vers.getCurrentVersionProject(project);
 
    }
 
