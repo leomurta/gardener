@@ -83,7 +83,7 @@ public class Checkin extends Command {
             logCommand.updateLog(this.getClass().getSimpleName(),project, this.getState());
             outStanding = logCommand.regOutStanding(this.getClass().getSimpleName(), project);
             outFileStanding = logCommand.regFileOutStanding(this.getClass().getSimpleName(), project);
-
+		//
             int currentVersion = Integer.parseInt(vers.getCurrentVersionProject(project)) + 1;
             int nextVersion    = currentVersion + 1;
 

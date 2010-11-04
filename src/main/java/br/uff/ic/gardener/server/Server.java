@@ -52,7 +52,7 @@ public class Server {
         Init in = new Init();
         in.commit(project);
 
-        return "Project " + project + " was created successful!";
+        return "Project " + project + " was created successful.";
 
        }catch(Exception err){
 
