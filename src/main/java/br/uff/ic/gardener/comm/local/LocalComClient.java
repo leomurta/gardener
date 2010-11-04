@@ -46,7 +46,7 @@ public class LocalComClient implements ComClient {
 		try {
 			pathTemp = FileHelper.createTemporaryRandomPath();
 			
-			List<File> listFiles = new ArrayList<File>();
+			ArrayList<File> listFiles = new ArrayList<File>();
 			for(Map.Entry<String, InputStream> p: items.entrySet())
 			{
 				File file = FileHelper.createFile(pathTemp, p.getKey());
@@ -54,8 +54,7 @@ public class LocalComClient implements ComClient {
 				listFiles.add(file);
 			}
 		
-			File[] files = new File[listFiles.size()];
-			Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles.toArray(files));
+			Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
 			Server.getInstance().commitCheckin(strProject);
 			FileHelper.deleteDirTree(pathTemp);
 			
