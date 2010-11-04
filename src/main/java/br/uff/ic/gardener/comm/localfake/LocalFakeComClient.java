@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -15,8 +16,8 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.comm.ComClient;
+import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.util.ANDFileFilter;
 import br.uff.ic.gardener.util.DirectoryFileFilter;
 import br.uff.ic.gardener.util.NameFileFilter;
@@ -25,6 +26,7 @@ import br.uff.ic.gardener.util.UtilStream;
 public class LocalFakeComClient implements ComClient {
 	
 	private static final String CONFIG_PROPERTIES = "config.properties";
+	
 	/**
 	 * path of repository data. The repository config is a child of this
 	 * directory.
@@ -42,7 +44,7 @@ public class LocalFakeComClient implements ComClient {
 	Properties properties = null;
 
 	// TODO Ver formato STATIC
-	private static String strConfigPath = ".gdrservsimple";
+	private static String STR_CONFIG_PATH = ".gdrservsimple";
 
 	/**
 	 * Create LocalAPIClient It looks up by config directory in _path specified.
@@ -59,11 +61,12 @@ public class LocalFakeComClient implements ComClient {
 		path = _path;
 
 		File[] childs = _path.listFiles(new ANDFileFilter(
-				new DirectoryFileFilter(), new NameFileFilter(strConfigPath)));
+				new DirectoryFileFilter(), new NameFileFilter(STR_CONFIG_PATH)));
 
-		if (childs.length < 1) {
+		if (childs.length < 1) 
+		{
 			try {
-				pathConfig = new File(path.getPath() + "/" + strConfigPath);
+				pathConfig = new File(path.getPath(), STR_CONFIG_PATH);
 				if (!pathConfig.mkdir())
 					throw new LocalFakeComClientException(
 							"Do not possible create config file: "
@@ -88,13 +91,13 @@ public class LocalFakeComClient implements ComClient {
 	}
 	
 	/**TODO: Corrigir o Checkout*/
-	public void checkout(RevisionID revision, Map<String, InputStream> items) throws TransationException{
+	public void checkout(RevisionID revision, Map<String, InputStream> items) throws ComClientException{
 		FileInputStream input;
 		try {
 			input = new FileInputStream(getPathOfRevision(revision));
 		} catch (FileNotFoundException e) {
-			throw new TransationException(
-					"N�o foi poss�vel achar o arquivo de revis�o.", e);
+			throw new ComClientException(
+					"Não foi possível achar o arquivo de revisão.", "Checkout", getURIServ(), e);
 		}
 		ZipInputStream zos = new ZipInputStream(input);
 
@@ -112,7 +115,7 @@ public class LocalFakeComClient implements ComClient {
 			zos.close();
 
 		} catch (IOException e) {
-			throw new TransationException("Error at decompact revision.", e);
+			throw new ComClientException("Error at decompact revision.", "Checkout", getURIServ(), e);
 		}
 		
 	}
@@ -122,7 +125,7 @@ public class LocalFakeComClient implements ComClient {
 				+ ".zip";
 	}
 	
-	public RevisionID commit(Map<String, InputStream> items) throws TransationException {
+	public RevisionID commit(String strProject, String strMessage, Map<String, InputStream> items) throws ComClientException {
 		// create a ZipOutputStream to zip the data to
 
 		ZipOutputStream zos;		
@@ -146,21 +149,20 @@ public class LocalFakeComClient implements ComClient {
 			zos.close();
 
 		} catch (FileNotFoundException e) {
-			throw new TransationException("Zip file not found", e);
+			throw new ComClientException("Zip file not found", "Checkout", getURIServ(), e);
 		} catch (IOException e) {
-			throw new TransationException("Zip process has problems", e);
+			throw new ComClientException("Zip process has problems", "Checkout", getURIServ(), e);
 		}
 		
 		return newRevision;
 	}
 	
-	public RevisionID getLastRevision() {
+	private RevisionID getLastRevision() {
 		return RevisionID.fromString(properties.getProperty("LastRevision"));
 	}
 	
 	private void loadProperties() throws FileNotFoundException, IOException {
-		File[] files = pathConfig.listFiles(new NameFileFilter(
-				CONFIG_PROPERTIES));
+		File[] files = pathConfig.listFiles(new NameFileFilter(CONFIG_PROPERTIES));
 
 		if (properties == null) {
 			// init properties
@@ -171,8 +173,7 @@ public class LocalFakeComClient implements ComClient {
 
 		File config = null;
 		if (files.length == 0) {
-			config = new File(pathConfig.getPath() + File.pathSeparatorChar
-					+ CONFIG_PROPERTIES);
+			config = new File(String.format("%s%s%s", pathConfig.getPath(), File.separatorChar, CONFIG_PROPERTIES));
 
 			// store
 			properties.store(new FileOutputStream(config), "");
@@ -182,14 +183,14 @@ public class LocalFakeComClient implements ComClient {
 		}
 
 		if (files.length == 0)
-			throw new FileNotFoundException("O arquivo " + CONFIG_PROPERTIES
-					+ " n�o foi encontrado");
+			throw new FileNotFoundException("The file " + CONFIG_PROPERTIES
+					+ " does not found");
 
 		config = files[0];
 
 		properties.load(new FileInputStream(config));
 	}
-	
+
 	/**
 	 * Compress a input stream "item" with key "id"
 	 * 
@@ -261,5 +262,20 @@ public class LocalFakeComClient implements ComClient {
 			// handle exception
 		}
 
+	}
+
+	@Override
+	public URI getURIServ() {
+		return path.toURI();
+	}
+
+	@Override
+	public void close() {
+		//nothing
+	}
+
+	@Override
+	public void init(String strProject) {
+				
 	}
 }

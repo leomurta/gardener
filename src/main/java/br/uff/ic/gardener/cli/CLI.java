@@ -1,6 +1,6 @@
 
 /* UFF - Universidade Federal Fluminense
- *  IC - Instituto de Computa��o
+ *  IC - Instituto de Computação
  */
 
 package br.uff.ic.gardener.cli;
@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -23,8 +22,8 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.APIClientException;
-import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.Workspace;
+import br.uff.ic.gardener.util.FileHelper;
+import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 
 /**
@@ -39,8 +38,11 @@ public class CLI {
 	@Option(name = "-init", aliases = "--init", metaVar = "INIT", usage = "Init a new project in the serv and create a workspace in the current path")
 	private boolean bInit = false;
 	
-	@Option(name = "-co", aliases = "--checkout", metaVar = "CHECKOUT", usage = "Checkout a Configuration Item in repository")
+	@Option(name = "-co", aliases = "--checkout", metaVar = "CHECKOUT", usage = "Checkout a Configuration Item from a repository to a new workspace")
 	private boolean bCheckout = false;
+	
+	@Option(name = "-up", aliases = "--update", metaVar = "UPDATE", usage = "Update current version of workspace to the last version")
+	private boolean bUpdate = false;
 
 	@Option(name = "-ci", aliases = "--commit", metaVar = "COMMIT", usage = "Commit a Configuration Item in repository")
 	private boolean bCommit = false;
@@ -51,7 +53,7 @@ public class CLI {
 	@Option(name = "-rem", aliases = "--remove", metaVar = "REMOVE", usage = "Remove a Configuration Item (it can use prompt regular expression)")
 	private boolean bRemove = false;
 	
-	@Option(name = "-rename", aliases = "--remove", metaVar = "RENAME", usage = "Rename a file in the workspace")
+	@Option(name = "-rename", aliases = "--rename", metaVar = "RENAME", usage = "Rename a file in the workspace")
 	private boolean bRename = false;
 	
 	// Other arguments
@@ -111,7 +113,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		INIT, CHECKOUT, COMMIT, DIFF, ADD, REMOVE, RENAME, NULL
+		INIT, CHECKOUT, COMMIT, UPDATE, DIFF, ADD, REMOVE, RENAME, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -126,6 +128,9 @@ public class CLI {
 			return OPERATION.INIT;
 		}else if (bCheckout) {
 			return OPERATION.CHECKOUT;
+		
+		} else if (bUpdate) {
+			return OPERATION.UPDATE;
 		} else if (bCommit) {
 			return OPERATION.COMMIT;
 		} else if(bDiff){
@@ -141,24 +146,26 @@ public class CLI {
 			return OPERATION.NULL;
 	}
 
-	private static APIClient apiClient = null;
+	/**
+	 * Instance of APIClient
+	 */
+	private APIClient apiClient = null;
+	
 
 	public APIClient getClient() {
 		if (apiClient == null) {
 			try {
-				apiClient = new APIClient(this.getActualPath());
+				if(uriServ != null)
+					apiClient = new APIClient(new File(uriWorkspace), uriServ);
+				else
+					apiClient = new APIClient(new File(uriWorkspace));
 			} catch (APIClientException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				System.exit(-1);
 			}
 		}
 		return apiClient;
 	}
-
-	private Workspace workspace = null;
-
-
 
 	static private CLI cliSingletons = null;
 
@@ -214,7 +221,7 @@ public class CLI {
 	 */
 	static public void doMain(String args)
 	{
-		StringTokenizer  tokens = new StringTokenizer(args);
+		TokenizerWithQuote  tokens = new TokenizerWithQuote(args);
 		LinkedList<String> list = new LinkedList<String>();
 		while(tokens.hasMoreTokens())
 		{
@@ -258,6 +265,7 @@ public class CLI {
 		me().uriWorkspace = CLI.getActualPath().toURI();
 		// me().uriServ = CLI.getActualPath().toURI();
 
+		
 		// default length of execution line
 		parser.setUsageWidth(80);
 
@@ -267,11 +275,30 @@ public class CLI {
 			// parse the arguments.
 			parser.parseArgument(args);
 			
+			//trata do uriWorkspace e do uriServ
+			// trata URI sem file://
+			if (uriWorkspace.getHost() == null
+					|| uriWorkspace.getHost() == "") {
+				uriWorkspace = (new File(uriWorkspace.toString())).toURI();
+			}
+			
+			if (uriServ != null) {
+				// trata URI sem file://
+				if (uriServ.getHost() == null || uriServ.getHost() == "") {
+					uriServ = (new File(uriServ.toString())).toURI();
+				}
+			} else {
+				uriServ = uriWorkspace;
+			}
+			
 			switch (getOperation()) {
 			
 			case INIT:
 				if(listArguments.size() == 0)
+				{
 					System.err.println("Specify the project name to init.");
+					return;
+				}
 				onInit(listArguments.get(0));
 				break;
 			case DIFF:
@@ -309,7 +336,7 @@ public class CLI {
 				}else
 				{
 					
-					File fileSource = new File(workspace.getPath(), listArguments.get(0));
+					File fileSource = new File(new File(uriWorkspace), listArguments.get(0));
 					String strNewName = listArguments.get(1);
 					if(!fileSource.exists())
 					{
@@ -320,27 +347,16 @@ public class CLI {
 					}
 				}
 				break;
-				
+			
+			case UPDATE:
+					
+			onUpdate();
+			
+			break;
 			case CHECKOUT:
-			case COMMIT:
-				// trata URI sem file://
-				if (uriWorkspace.getHost() == null
-						|| uriWorkspace.getHost() == "") {
-					uriWorkspace = (new File(uriWorkspace.toString())).toURI();
-				}
-
-				if (uriServ != null) {
-					// trata URI sem file://
-					if (uriServ.getHost() == null || uriServ.getHost() == "") {
-						uriServ = (new File(uriServ.toString())).toURI();
-					}
-				} else {
-					uriServ = uriWorkspace;
-				}
-
-				if(getOperation() == OPERATION.CHECKOUT)
 					onCheckout();
-				else
+			break;
+			case COMMIT:
 					onCommit();
 			break;
 			default:
@@ -369,8 +385,13 @@ public class CLI {
 			return;
 		}
 		 catch (TransationException e) {
-				e.printStackTrace();
-				return;
+			e.printStackTrace();
+			return;
+		}
+		catch(APIClientException e)
+		{
+			e.printStackTrace();
+			return;
 		}
 	}
 
@@ -379,57 +400,16 @@ public class CLI {
 	//==============================================================
 	//events to Commands
 	//==============================================================
-	private void onInit(String string) {
-		//initServ		
+	
+	private void onInit(String string) throws APIClientException {
+		getClient().init(string);
 	}
 
-	private void onAdd(Collection<String> coll) throws WorkspaceException
+	private void onUpdate()
 	{
-		if(coll.size() == 0)
-		{
-			System.err.printf("Nenhum arquivo encontrado");
-			return;
-		}
 		
-		LinkedList<File> listFile = new LinkedList<File>(); 
-		for(String strGlob: coll)
-		{
-			UtilStream.findFiles(CLI.getActualPath(), listFile, strGlob, false);
-		}
-		workspace.addFiles(listFile);
-		
-		for(File f: listFile)
-		{
-			System.out.printf("Arquivo %s adicionado", f.toString());			
-		}
 	}
 	
-	private void onRemove(Collection<String> coll) throws WorkspaceException
-	{
-		if(coll.size() == 0)
-		{
-			System.err.printf("Nenhum arquivo encontrado");
-			return;
-		}
-		
-		LinkedList<File> listFile = new LinkedList<File>(); 
-		for(String strGlob: coll)
-		{
-			UtilStream.findFiles(CLI.getActualPath(), listFile, strGlob, false);
-		}
-		workspace.removeFiles(listFile);
-		
-		for(File f: listFile)
-		{
-			System.out.printf("Arquivo %s removido", f.toString());
-		}
-	}
-
-	private void onRename(File fileSource, String strNewName) throws WorkspaceException
-	{
-		workspace.renameFile(fileSource, strNewName);
-		System.out.printf("Arquivo %s renomeado para %s", fileSource.toString(), strNewName);
-	}
 	/**
  	 * Commit event
 	 *
@@ -448,6 +428,54 @@ public class CLI {
 		getClient().checkout(revision);
 	}
 	
+	
+	private void onAdd(Collection<String> coll) throws APIClientException
+	{
+		if(coll.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
+		
+		LinkedList<File> listFile = new LinkedList<File>(); 
+		for(String strGlob: coll)
+		{
+			FileHelper.findFiles(CLI.getActualPath(), listFile, strGlob, false);
+		}
+		getClient().addFiles(listFile);
+		
+		for(File f: listFile)
+		{
+			System.out.printf("Arquivo %s adicionado", f.toString());			
+		}
+	}
+	
+	private void onRemove(Collection<String> coll) throws APIClientException
+	{
+		if(coll.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
+		
+		LinkedList<File> listFile = new LinkedList<File>(); 
+		for(String strGlob: coll)
+		{
+			FileHelper.findFiles(CLI.getActualPath(), listFile, strGlob, false);
+		}
+		getClient().removeFiles(listFile);
+		
+		for(File f: listFile)
+		{
+			System.out.printf("Arquivo %s removido", f.toString());
+		}
+	}
+
+	private void onRename(File fileSource, String strNewName) throws APIClientException
+	{
+		getClient().renameFile(fileSource, strNewName);
+		System.out.printf("Arquivo %s renomeado para %s", fileSource.toString(), strNewName);
+	}
 	
 	/**
 	* O diff tem 4 formatos diferentes e umas configurações.

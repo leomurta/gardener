@@ -35,19 +35,19 @@ public class App{
     svr.init("gardener", "camila");
     svr.commitInit("gardener");
 
-    svr.ckeckIn("gardener", "evado", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
+    svr.checkIn("gardener", "evado", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
     svr.roolbackCheckin("gardener");
 
-    svr.ckeckIn("gardener", "viviam", "30/10/2010", "Alteração do codigo do sistema gardener", "c:/gardener", listFile);
+    svr.checkIn("gardener", "viviam", "30/10/2010", "Alteração do codigo do sistema gardener", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
 
-    svr.ckeckIn("gardener", "camila", "30/10/2010", "Mudança em diretorio", "c:/gardener", listFile);
+    svr.checkIn("gardener", "camila", "30/10/2010", "Mudança em diretorio", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
     
-    svr.ckeckIn("gardener", "leandro", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
+    svr.checkIn("gardener", "leandro", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
 
-    svr.ckeckIn("gardener", "marcos", "30/10/2010", "Alteração de cálculo", "c:/gardener", listFile);
+    svr.checkIn("gardener", "marcos", "30/10/2010", "Alteração de cálculo", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
 
   }

@@ -6,7 +6,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import br.uff.ic.gardener.cli.CLITest;
 import br.uff.ic.gardener.client.ClientFactoryTest;
-import br.uff.ic.gardener.client.LocalAPIClientTest;
 import br.uff.ic.gardener.workspace.WorkspaceConfigParserTest;
 import br.uff.ic.gardener.workspace.WorkspaceTest;
 import br.uff.ic.gardener.util.TokenizerWithQuoteTest;
@@ -16,11 +15,11 @@ import br.uff.ic.gardener.patch.PatchTest;
 @SuiteClasses({ 
 	WorkspaceTest.class, 
 	CLITest.class,  
-	ClientFactoryTest.class, 
-	LocalAPIClientTest.class, 
+	ClientFactoryTest.class,  
 	WorkspaceTest.class, 
 	WorkspaceConfigParserTest.class,
 	PatchTest.class, 
-	TokenizerWithQuoteTest.class})
+	TokenizerWithQuoteTest.class,
+	ConfigurationItemTest.class})
 public class AllTests {
 }

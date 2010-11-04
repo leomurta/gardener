@@ -18,7 +18,7 @@ public class TokenizerWithQuoteTest {
 		
 		ArrayList<String> array = new ArrayList<String>();
 		
-		while(twq.hasNextToken())
+		while(twq.hasMoreTokens())
 		{
 			array.add(twq.nextToken());
 		}
@@ -99,7 +99,18 @@ public class TokenizerWithQuoteTest {
 		};		
 		TestTokenizerWithQuoteCustom(source, dest);
 	}
-	
+	@Test public void TestTokenizerWithQuote_6()
+	{
+		String source = "init -w\"C:\\A B C\\D E F\\\" aboboras";
+		String[] dest =
+		{
+				"init",
+				"-w",
+				"C:\\A B C\\D E F\\",
+				"aboboras"
+		};
+		TestTokenizerWithQuoteCustom(source, dest);
+	}
 	@Test
 	public void TestTokenizerWithQuote_5()
 	{

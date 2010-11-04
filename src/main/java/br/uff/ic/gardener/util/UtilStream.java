@@ -12,10 +12,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Queue;
-
 
 /**
  * Classe para operações rotineiras de manipulação de Streams
@@ -66,40 +62,7 @@ public class UtilStream {
 	
 	}
 	
-	/**
-	 * Encontra os arquivos em uma árvore de diretórios
-	 * @param path O diretório raíz a ser procurado
-	 * @param collDest A colecção de destino
-	 * @param strGlob uma string formato Glob usada para comparação
-	 * @param allowPath Se aceita todos os diretórios para buscar ou os elimina usando a regra do glob também.
-	 * @return A coleção preenchida
-	 */
-	public static Collection<File> findFiles(File path, Collection<File> collDest, final String strGlob, final boolean allowPath)
-	{
-		GlobFilenameFilter filter = new GlobFilenameFilter(strGlob, allowPath);//força permitir os paths
-		
-		Queue<File> queuePath = new LinkedList<File>();
-		queuePath.offer(path);
-		
-		while(queuePath.size() >0)
-		{
-			
-			path = queuePath.remove();
-			File[] childs = path.listFiles(filter);
-			for(File fileChild: childs)
-			{
-				if(fileChild.isDirectory())
-				{
-					queuePath.offer(fileChild);
-				}else
-				{
-					collDest.add(fileChild);
-				}
-			}
-		}
-		
-		return collDest;
-	}
+	
 	
 	public static String getLineSeperator()
 	{

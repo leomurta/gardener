@@ -71,7 +71,7 @@ public class WorkspaceConfigParser
 			 */
 			//InputStream inputStreamOperation = null;
 			TokenizerWithQuote twq = new TokenizerWithQuote(inputStreamProfile);
-			while(twq.hasNextToken())
+			while(twq.hasMoreTokens())
 			{
 				String s = twq.nextToken();
 				if(s.equals(STR_REVISION))
@@ -159,7 +159,7 @@ public class WorkspaceConfigParser
 		try {
 			inputStreamProfile = new FileInputStream(new File(directory, STR_FILE_OPERATION));
 			TokenizerWithQuote twq = new TokenizerWithQuote(inputStreamProfile);
-			while(twq.hasNextToken())
+			while(twq.hasMoreTokens())
 			{
 				token = twq.nextToken();
 				if(Operation.ADD_FILE.getLabel().equals(token))
@@ -235,6 +235,15 @@ public class WorkspaceConfigParser
 					String.format("Não foi possível salvar o arquivo %s%s%s",directory.toString(), File.pathSeparator, STR_FILE_PROFILE ),
 					"", e);
 		}
+	}
+	
+	/**
+	 * Save content of father workspace in the directory 
+	 */
+	public void save() throws WorkspaceConfigParserException
+	{
+		saveProfile();
+		appendOperations(this.workspace.getNewOperationList());
 	}
 
 	/**

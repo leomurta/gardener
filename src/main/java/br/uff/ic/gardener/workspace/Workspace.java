@@ -32,6 +32,8 @@ public class Workspace {
 	 */
 	private File path = null;
 	
+	private String strProjectName = null;
+	
 	/**
 	 * reference to the client aplication
 	 */
@@ -109,6 +111,16 @@ public class Workspace {
 	public final List<WorkspaceOperation> getNewOperationList()
 	{
 		return this.listNewOperations;
+	}
+	
+	public String getProjectName()
+	{
+		return strProjectName;
+	}
+	
+	public void setProjectName(String _str)
+	{
+		strProjectName = _str;
 	}
 
 	/**
@@ -244,7 +256,7 @@ public class Workspace {
 		return servSource;
 	}
 
-	public void removeFiles(LinkedList<File> listFiles) throws WorkspaceException {
+	public void removeFiles(Collection<File> listFiles) throws WorkspaceException {
 	
 		URI basePath = getPath().toURI();
 		//número de itens adicionados na lista
@@ -394,6 +406,22 @@ public class Workspace {
 		}catch(Exception e)
 		{
 			throw new WorkspaceException(fileSource, "Não foi possível renomear para " + strNewName, e);
+		}
+	}
+	
+	
+	/**
+	 * Save workspace content in the config files in the directory
+	 * @throws WorkspaceException 
+	 */
+	public void saveConfig() throws WorkspaceException
+	{
+		try
+		{
+			parser.save();
+		}catch(WorkspaceConfigParserException e)
+		{
+			throw new WorkspaceException(null, "Error in the save workspace", e);
 		}
 	}
 	

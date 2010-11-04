@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.client.StubAPIClient;
 import br.uff.ic.gardener.util.TestWithTemporaryPath;
 import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
@@ -28,7 +27,7 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 	{
 		File pathWorkspace = this.folder.newFolder("workspace");
 		
-		workspace = new Workspace(pathWorkspace, new StubAPIClient());
+		workspace = new Workspace(pathWorkspace);
 		wParser = new WorkspaceConfigParser(workspace, pathWorkspace);
 	}
 	

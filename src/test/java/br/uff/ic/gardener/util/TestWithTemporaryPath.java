@@ -15,9 +15,14 @@ public class TestWithTemporaryPath {
 
 	private File path = null;
 
-	protected File getPath() {
+	protected  File getPath() {
 		if (path == null)
 			path = folder.newFolder(this.getClass().getName());
 		return path;
+	}
+	
+	protected void releasePath()
+	{
+		FileHelper.deleteDirTree(path);
 	}
 }

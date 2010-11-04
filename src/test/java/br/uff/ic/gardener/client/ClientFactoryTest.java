@@ -1,20 +1,24 @@
 package br.uff.ic.gardener.client;
 
-import static org.junit.Assert.fail;
+import java.io.File;
 
+import org.junit.Assert;
 import org.junit.Test;
 
+import br.uff.ic.gardener.comm.ComClient;
+import br.uff.ic.gardener.comm.ComFactory;
 import br.uff.ic.gardener.util.TestWithTemporaryPath;
 
 public class ClientFactoryTest extends TestWithTemporaryPath {
 
 	@Test
-	public final void testCreateAPIClient() {
-		try {
-			ClientFactory.createAPIClient(getPath().toString());
-		} catch (CreationAPIClientException e) {
-			fail("Não conseguiu criar a API Client");
-		}
+	public final void testCreateAPIClient() throws Exception {
+		File file = folder.newFolder("teste");
+		
+		//primeiro com file
+		ComClient comClient = ComFactory.createComClient(file.toURI(), "");
+		
+		Assert.assertTrue(comClient != null);
 	}
 
 }

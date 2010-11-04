@@ -1,5 +1,7 @@
 package br.uff.ic.gardener;
 import java.io.InputStream;
+import java.net.URI;
+
 import br.uff.ic.gardener.RevisionID;
 /**
  * Configuration Item Class. Works like a Configuration Item data and metadata container.
@@ -10,14 +12,14 @@ public class ConfigurationItem {
 	private CIType type;
 	private RevisionID revision;
 	private String user;
-	private String uri;
+	private URI uri;
 	
 	public InputStream getItemAsInputStream() {
 		return item;
 	}
-	public void setItemFromInputStream(InputStream item) {
+	/*public void setItemFromInputStream(InputStream item) {
 		this.item = item;
-	}
+	}*/
 	
 	/**TODO: Fazer a conversão da forma apropriada e não meramente ilustrativa*/
 	//public File getItemAsFile(){
@@ -35,9 +37,11 @@ public class ConfigurationItem {
 	public void setType(CIType type) {
 		this.type = type;
 	}
+	
 	public RevisionID getRevision() {
 		return revision;
 	}
+	
 	public void setRevision(RevisionID revision) {
 		this.revision = revision;
 	}
@@ -47,11 +51,18 @@ public class ConfigurationItem {
 	public void setUser(String user) {
 		this.user = user;
 	}
-	public String getUri() {
+	public URI getUri() {
 		return uri;
 	}
-	public void setUri(String uri) {
-		this.uri = uri;
+	public void setUri(URI _uri) {
+		this.uri = _uri;
 	}
 	
+	public ConfigurationItem(URI _uri, InputStream _item, CIType _type, RevisionID _revision, String _user)
+	{
+		item 	= _item;
+		uri 	= _uri;
+		type 	= _type;
+		user 	= _user;
+	}
 }

@@ -5,35 +5,53 @@ package br.uff.ic.gardener.workspace;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.client.StubAPIClient;
-import br.uff.ic.gardener.util.TestWithTemporaryPath;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
+import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 /**
  * @author Marcos Côrtes
  * 
  */
-public class WorkspaceTest extends TestWithTemporaryPath{
+public class WorkspaceTest{
 
 
-	File pathWS = null;
+	static File pathWS = null;
 
-	Workspace workspace = null;
+	static Workspace workspace = null;
 
+	@BeforeClass
+	public static void setUpClass() throws WorkspaceException, IOException
+	{
+		pathWS = FileHelper.createTemporaryRandomPath();
+		workspace = new Workspace(pathWS);
+		createWorkspaceStruct(pathWS, true);
+	}
+	
+	@AfterClass
+	public static void tearDownClass()
+	{
+		workspace.close();
+		FileHelper.deleteDirTree(pathWS);
+	}
+	
 	/**
 	 * @throws IOException 
 	 * @throws WorkspaceException 
@@ -140,7 +158,7 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 	/*
 	 * Cria a estrutura do workspace de arquivos e diretórios
 	 */
-	private static void createWorkspaceStructDirAndFiles(File filePath, int treeDepth, int fileCount, int dirCount, boolean randomizeFileDirCount)
+	public static void createWorkspaceStructDirAndFiles(File filePath, int treeDepth, int fileCount, int dirCount, boolean randomizeFileDirCount)
 	throws IOException
 	{
 		if(!filePath.isDirectory())
@@ -178,10 +196,10 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 		
 	}
 
-	public final void createWorkspace() throws WorkspaceException {
-		// folder
-		workspace = new Workspace(pathWS, new StubAPIClient());
-	}
+	//public final static void createWorkspace() throws WorkspaceException {
+	//	// folder
+	//	workspace = new Workspace(pathWS);
+	//}
 
 	/**
 	 * Test method for {@link br.uff.ic.gardener.workspace.Workspace#commit()}.
@@ -189,9 +207,8 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 	 */
 	@Test
 	public final void testCommit() throws WorkspaceException {
-		createWorkspace();
 		workspace.commit();
-		workspace.close();
+		//workspace.close();
 	}
 
 
@@ -201,25 +218,32 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 	 * @throws WorkspaceException 
 	 */
 	@Test
-	public final void testCheckout() throws WorkspaceException {
-		createWorkspace();
-		workspace.checkout(RevisionID.LAST_REVISION);
-		workspace.close();
+	public final void testCheckout() throws WorkspaceException 
+	{
+		Map<String, InputStream> map = new TreeMap<String, InputStream>();
+		workspace.checkout(RevisionID.LAST_REVISION, map);
 	}
 	
 	@Test
 	public final void testAdd() throws WorkspaceException, IOException
 	{
-		createWorkspaceStruct(getPath(),false);
-		workspace = new Workspace(getPath(), new StubAPIClient());
+		File f1 = new File(pathWS, "abobora1");
+		File f2 = new File(pathWS, "abobora2");
+		File f3 = new File(pathWS, "abobora3");
+		@SuppressWarnings("unused")
+		File f4 = new File(pathWS, "abobora4");
+		UtilStream.fillFile(f1, "1", "1", "1", "1", "1", "1", "1");
+		UtilStream.fillFile(f2, "2", "2", "2", "2", "2", "2", "2");
+		UtilStream.fillFile(f3, "3", "3", "3", "3", "3", "3", "3");
 		
 		LinkedList<File> listFiles = new LinkedList<File>();
 		
-		UtilStream.findFiles(getPath(), listFiles, "**", true);
+		FileHelper.findFiles(pathWS, listFiles, "**", true);//tenta adicionar todos de propósito
 		
 		
 		workspace.addFiles(listFiles);
 		
+		//só deveria adicionar os que não existem na lista
 		for(WorkspaceOperation op: workspace.getNewOperationList())
 		{
 			File file = new File(workspace.getPath(), op.getParamAt(0));
@@ -230,19 +254,20 @@ public class WorkspaceTest extends TestWithTemporaryPath{
 	@Test
 	public final void testRemove() throws IOException, WorkspaceException
 	{
-		createWorkspaceStruct(getPath(), true);
-		workspace = new Workspace(getPath(), new StubAPIClient());
-		
+	
 		LinkedList<File> listFiles = new LinkedList<File>();
 		
-		UtilStream.findFiles(getPath(), listFiles, "**", true);
+		FileHelper.findFiles(pathWS, listFiles, "**", true);
 		
 		workspace.removeFiles(listFiles);
 		
 		for(WorkspaceOperation op: workspace.getNewOperationList())
 		{
-			File file = new File(workspace.getPath(), op.getParamAt(0));
-			org.junit.Assert.assertTrue(!file.exists());				
+			if(op.getOperation() == Operation.REMOVE_FILE)
+			{
+				File file = new File(workspace.getPath(), op.getParamAt(0));
+				org.junit.Assert.assertTrue(!file.exists());
+			}
 		}
 	}
 }

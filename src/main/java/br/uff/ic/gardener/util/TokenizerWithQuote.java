@@ -59,7 +59,7 @@ public class TokenizerWithQuote {
 		return lastToken;
 	}
 	
-	public boolean hasNextToken()
+	public boolean hasMoreTokens()
 	{
 		return lastToken != INT_END_OF_STREAM;
 	}
@@ -84,7 +84,7 @@ public class TokenizerWithQuote {
 	{
 		try
 		{
-			if(!hasNextToken())
+			if(!hasMoreTokens())
 				return null;
 			
 			if(isQuote(getLastToken()))

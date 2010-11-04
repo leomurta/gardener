@@ -2,10 +2,14 @@ package br.uff.ic.gardener.client;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
 import br.uff.ic.gardener.comm.ComClient;
+import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -15,62 +19,94 @@ import br.uff.ic.gardener.TransationException;
 /**
  * API Client Interface
  * 
- * @author Marcos C�rtes
+ * @author Marcos Cortes
  */
 public class APIClient {
 	
 	/**
 	 * reference to the client aplication
 	 */
-	private ComClient ComClient = null;
+	private ComClient comClient = null;
 
-	/**
-	 * get APIClient of application
-	 * 
-	 */
-	private ComClient getComClient() {
-		return ComClient;
-	}
-	
 	private Workspace workspace = null;
 	
+	/**
+	 * the path of workspace
+	 */
 	private File path = null;
 
-		private Workspace getWorkspace() throws APIClientException {
-		
-			if(path == null)
-				throw new APIClientException("path não especificado", null);
-			if(workspace == null)
-			{
-				try {
-					workspace = new Workspace(path);
-				} catch (WorkspaceException e) {
-					throw new APIClientException("Não foi possível criar o Workspace", e);
-				}
-			}
-			return workspace;
+	private URI getURIServ()
+	{
+		return workspace.getServSource();
 	}
 	
+	/**
+	 * get APIClient of application
+	 * @throws APIClientException 
+	 * 
+	 */
+	private ComClient getComClient() throws APIClientException 
+	{
+		if(getURIServ() == null && comClient == null)
+		{
+			throw new APIClientException("Request specify URIServ", null);
+		}
+		if(comClient == null || !comClient.getURIServ().equals(getURIServ()))
+		{
+			try {
+				comClient = ComFactory.createComClient(getURIServ(), null);
+			} catch (Exception e) {
+				throw new APIClientException("Não foi possível criar a ComClient", e);
+			}
+		}
+		return comClient;
+	}
+	
+	private Workspace getWorkspace() throws APIClientException 
+	{
+		if(workspace == null)
+		{
+			try {
+				workspace = new Workspace(path);
+			} catch (WorkspaceException e) {
+				throw new APIClientException("Não foi possível criar o Workspace", e);
+			}
+		}
+		return workspace;
+	}
+	
+	
+	public APIClient(File _uriWorkspace) throws APIClientException
+	{
+		try
+		{
+			workspace = new Workspace(_uriWorkspace);
+		}catch(WorkspaceException e)
+		{
+			throw new APIClientException("Can not create Workspace", e);
+		}
+		
+	//	uriServ = workspace.getServSource();
+	}
 	/**Constructor that Sets Workspace URI and initialize the workspace attribute
 	 * @param uriWorkspace
 	 *            Workspace path, the name of workspace file*/
-	public APIClient(String uriWorkspace) throws APIClientException
+	public APIClient(File _uriWorkspace, URI _uriServ) throws APIClientException
 	{
-		path = new File(uriWorkspace);
+		try
+		{
+			workspace = new Workspace (_uriWorkspace);			
+		}catch(WorkspaceException e)
+		{
+			throw new APIClientException("Can not create Workspace", e);
+		}
 		getWorkspace();
-	}
-	
-	public APIClient(File uriWorkspace) throws APIClientException
-	{
-		path = uriWorkspace;
-		getWorkspace();
+		workspace.setServSource(_uriServ);		
 	}
 	
 	/**
 	 * CheckOut a revision from the serv. It is the simple way.
 	 * 
-	 * @param items
-	 *            the items of revision.
 	 * @param revision
 	 *            the revision number.
 	 * @throw TransationException it throws when the system cannot checkout
@@ -82,14 +118,15 @@ public class APIClient {
 		//get checkout from Communication
 		Map<String, InputStream> map = new TreeMap<String, InputStream>();
 		try {
-			getComClient().checkout(revision, map);
-			getWorkspace().checkout(revision, map);
-		} catch (TransationException e) {
-			throw new TransationException("Error retrieving files from server. ", e);
+			getComClient().checkout(revision, map);//Obtém os itens da conexão 
+			getWorkspace().checkout(revision, map);//Popula os itens no Workspace
+			getWorkspace().saveConfig();
 		} catch (WorkspaceException ew){
 			throw new TransationException("Workspace filling error", ew);
+		} catch (ComClientException e) {
+			throw new TransationException("Error retrieving files from server", e);
 		} catch (APIClientException e) {
-			throw new TransationException(e.getMessage(), (Exception)e.getCause());
+			throw new TransationException("Error in APIClient ", e);
 		}
 		
 		//set checkout to Workspace
@@ -105,6 +142,60 @@ public class APIClient {
 	RevisionID commit() throws TransationException
 	{
 		return RevisionID.ZERO_REVISION;
+		
+	}
+
+	public void addFiles(Collection<File> listFiles) throws APIClientException 
+	{	
+		try
+		{
+			getWorkspace().addFiles(listFiles);
+			getWorkspace().saveConfig();
+		}catch(WorkspaceException e)
+		{
+			throw new APIClientException("Do not add files in the workspace", e);
+		}
+	}
+
+	public void removeFiles(Collection<File> listFiles) throws APIClientException 
+	{
+		try
+		{
+			getWorkspace().removeFiles(listFiles);
+			getWorkspace().saveConfig();
+		}catch(WorkspaceException e)
+		{
+			throw new APIClientException("Do not remove files in the workspace", e);
+		}
+	}
+
+	public void renameFile(File fileSource, String strNewName) throws APIClientException 
+	{
+		try
+		{
+			getWorkspace().renameFile(fileSource, strNewName);
+			getWorkspace().saveConfig();
+		}catch(WorkspaceException e)
+		{
+			throw new APIClientException("Do not rename file in the workspace", e);
+		}
+		
+	}
+
+	/**
+	 * Create a project in the serv
+	 * @param string
+	 * @throws APIClientException 
+	 */
+	public void init(String strProject) throws APIClientException 
+	{
+		getComClient().init(strProject);
+		getWorkspace().setCurrentRevision(RevisionID.ZERO_REVISION);
+		try {
+			getWorkspace().saveConfig();
+		} catch (WorkspaceException e) {
+			throw new APIClientException("Problem on save workspace", e);
+		}
 		
 	}
 
