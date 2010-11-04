@@ -5,16 +5,16 @@
 
 package br.uff.ic.gardener.versioning;
 
-import br.uff.ic.gardener.database.Database;
-import br.uff.ic.gardener.server.*;
-
 import java.io.File;
+import java.util.*;
 
 /**
  *
  * @author Evaldo de Oliveira
  */
 public class ConfigurationItem {
+
+    String nameConfigurationItem;
 
     /**
     *
@@ -23,29 +23,44 @@ public class ConfigurationItem {
     * @param fileSource
     * @param fileName
     */
-   public void createFileRevision(ConfigurationServer serv, Project proj, Revision vers, String fileSource, String fileName)
-   {
-       Database db = new Database();
-
-       int revision = db.lastRevision(proj);
-
-       vers.setRevisionNumber(Integer.toString(revision));
-
-       db.storeFileRepository(vers, proj, fileSource, fileName);
-
-   }
+   public void createConfigurationItem(String project
+                      , String user
+                      , String date
+                      , String message
+                      , String path
+                      , String nameConfigurationItem)
+       {
+            Version vers = new Version(); 
+            vers.createVersion(nameConfigurationItem, project, user, date, message, path);
+       }
 
    /**
     *
     * @param serv
     * @param vers
     * @return
-    */
-   public File[] listRevisionFiles(Project proj, Revision vers)
+    */   
+
+   public String nextVersionItem(String project, String itemName)
    {
 
-       Database db = new Database();
-       return db.listFiles(proj, vers);
+       int currentVersion;
+       int nextVersion;
+
+       Version vers = new Version();
+
+       currentVersion = Integer.parseInt(vers.currentVersion(project, itemName)) + 1;
+       nextVersion = currentVersion + 1;
+
+       return Integer.toString(nextVersion);
+
+   }
+
+   public String currentVersionItem(String project, String itemName)
+   {
+
+       Version vers = new Version();
+       return vers.currentVersion(project, itemName);
 
    }
 

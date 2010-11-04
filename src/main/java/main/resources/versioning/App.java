@@ -5,7 +5,9 @@
 
 package main.resources.versioning;
 
-import java.io.*;
+import br.uff.ic.gardener.server.*;
+
+import java.util.*;
 
 //classe Application
 /**
@@ -23,31 +25,50 @@ public class App{
 
     Server svr = Server.getInstance();
 
-    File dir = new File("c:/gardener");
-    File[] listFile = dir.listFiles();
+    ArrayList listFile = new ArrayList();    
 
     svr.init("gardener", "evaldo");
     svr.commitInit("gardener");
 
-    svr.init("gardener", "viviam");
-    svr.rollbackInit("gardener");
-
-    svr.init("gardener", "camila");
-    svr.commitInit("gardener");
-
-    svr.ckeckIn("gardener", "evado", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
+    svr.ckeckIn("gardener", "evado", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
     svr.roolbackCheckin("gardener");
-
-    svr.ckeckIn("gardener", "viviam", "30/10/2010", "Alteração do codigo do sistema gardener", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
-
-    svr.ckeckIn("gardener", "camila", "30/10/2010", "Mudança em diretorio", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
     
-    svr.ckeckIn("gardener", "leandro", "30/10/2010", "Atualização do sistema gardener", "c:/gardener", listFile);
+    listFile.add("teste111.txt");
+    listFile.add("teste211.txt");
+    listFile.add("teste311.txt");
+    listFile.add("teste411.txt");
+
+    svr.ckeckIn("gardener", "viviam", "30/10/2010", "Alteracao do codigo do sistema gardener", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
 
-    svr.ckeckIn("gardener", "marcos", "30/10/2010", "Alteração de cálculo", "c:/gardener", listFile);
+    listFile.clear();
+    
+    listFile.add("teste111.txt");
+    listFile.add("teste211.txt");
+    listFile.add("teste311.txt");
+    listFile.add("teste411.txt");
+
+    svr.ckeckIn("gardener", "camila", "30/10/2010", "Mudanca em diretorio", "c:/gardener", listFile);
+    svr.commitCheckin("gardener");
+
+    listFile.clear();
+
+    listFile.add("teste111.txt");
+    listFile.add("teste211.txt");
+    listFile.add("teste311.txt");
+    listFile.add("teste411.txt");
+
+    svr.ckeckIn("gardener", "leandro", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
+    svr.commitCheckin("gardener");
+
+    listFile.clear();
+
+    listFile.add("teste111.txt");
+    listFile.add("teste213.txt");
+    listFile.add("teste314.txt");
+    listFile.add("teste411.txt");
+    
+    svr.ckeckIn("gardener", "marcos", "30/10/2010", "Alteracao de calculo", "c:/gardener", listFile);
     svr.commitCheckin("gardener");
 
   }

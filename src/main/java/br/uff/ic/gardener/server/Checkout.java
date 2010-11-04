@@ -5,7 +5,6 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.*;
 
 /**

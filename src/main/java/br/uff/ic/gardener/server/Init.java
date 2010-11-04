@@ -5,7 +5,6 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.database.Database;
 import br.uff.ic.gardener.versioning.*;
 
 
@@ -63,7 +62,7 @@ public class Init extends Command {
             this.setState(2);
 
             logCommand.updateLog(this.getClass().getSimpleName(),project, this.getState());
-            logCommand.regOutStanding(this.getClass().getSimpleName(), project);
+
         }
 
         public void setState(int state)
