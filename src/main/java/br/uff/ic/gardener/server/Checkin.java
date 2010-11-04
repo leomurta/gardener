@@ -74,6 +74,8 @@ public class Checkin extends Command {
             ArrayList outFileStanding;
 
             ConfigurationItem ci = new ConfigurationItem();
+            Version vers = new Version();
+
             LogCommandServer logCommand = LogCommandServer.getInstance();
 
             this.setState(2);
@@ -81,12 +83,17 @@ public class Checkin extends Command {
             logCommand.updateLog(this.getClass().getSimpleName(),project, this.getState());
             outStanding = logCommand.regOutStanding(this.getClass().getSimpleName(), project);
             outFileStanding = logCommand.regFileOutStanding(this.getClass().getSimpleName(), project);
+		//
+            int currentVersion = Integer.parseInt(vers.getCurrentVersionProject(project)) + 1;
+            int nextVersion    = currentVersion + 1;
 
             for (int i = 0; i < outFileStanding.size(); i++)
             {
 
                 ci.createConfigurationItem(
                         project
+                      , currentVersion
+                      , nextVersion
                       , outStanding.get(0).toString()
                       , outStanding.get(1).toString()
                       , outStanding.get(2).toString()

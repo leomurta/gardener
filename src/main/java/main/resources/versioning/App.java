@@ -25,51 +25,62 @@ public class App{
 
     Server svr = Server.getInstance();
 
-    ArrayList listFile = new ArrayList();    
+    ArrayList listFile = new ArrayList();
 
-    svr.init("gardener", "evaldo");
-    svr.commitInit("gardener");
+    String returnCommitCk;
+    String returnCommitInit;
+    String project="ufjf";
 
-    svr.ckeckIn("gardener", "evado", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
-    svr.roolbackCheckin("gardener");
-    
-    listFile.add("teste111.txt");
-    listFile.add("teste211.txt");
-    listFile.add("teste311.txt");
-    listFile.add("teste411.txt");
+    returnCommitInit = svr.init(project, "evaldo");
+    System.out.println(returnCommitInit);
+	//
+    listFile.add(project+"-"+"teste1.txt");
+    listFile.add(project+"-"+"teste2.txt");
+    listFile.add(project+"-"+"teste3.txt");
+    listFile.add(project+"-"+"teste4.txt");
 
-    svr.ckeckIn("gardener", "viviam", "30/10/2010", "Alteracao do codigo do sistema gardener", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
-
-    listFile.clear();
-    
-    listFile.add("teste111.txt");
-    listFile.add("teste211.txt");
-    listFile.add("teste311.txt");
-    listFile.add("teste411.txt");
-
-    svr.ckeckIn("gardener", "camila", "30/10/2010", "Mudanca em diretorio", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
+    returnCommitCk = svr.ckeckIn(project, "evado", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
+    System.out.println(returnCommitCk);
 
     listFile.clear();
 
-    listFile.add("teste111.txt");
-    listFile.add("teste211.txt");
-    listFile.add("teste311.txt");
-    listFile.add("teste411.txt");
+    listFile.add(project+"-"+"teste1.txt");
+    listFile.add(project+"-"+"teste2.txt");
+    listFile.add(project+"-"+"teste3.txt");
+    listFile.add(project+"-"+"teste4.txt");
 
-    svr.ckeckIn("gardener", "leandro", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
+    returnCommitCk = svr.ckeckIn(project, "viviam", "30/10/2010", "Alteracao do codigo do sistema gardener", "c:/gardener", listFile);
+    System.out.println(returnCommitCk);
 
     listFile.clear();
-
-    listFile.add("teste111.txt");
-    listFile.add("teste213.txt");
-    listFile.add("teste314.txt");
-    listFile.add("teste411.txt");
     
-    svr.ckeckIn("gardener", "marcos", "30/10/2010", "Alteracao de calculo", "c:/gardener", listFile);
-    svr.commitCheckin("gardener");
+    listFile.add(project+"-"+"teste1.txt");
+    listFile.add(project+"-"+"teste2.txt");
+    listFile.add(project+"-"+"teste3.txt");
+    listFile.add(project+"-"+"teste4.txt");
 
+    returnCommitCk = svr.ckeckIn(project, "camila", "30/10/2010", "Mudanca em diretorio", "c:/gardener", listFile);
+    System.out.println(returnCommitCk);
+    
+    listFile.clear();
+
+    listFile.add(project+"-"+"teste1.txt");
+    listFile.add(project+"-"+"teste2.txt");
+    listFile.add(project+"-"+"teste3.txt");
+    listFile.add(project+"-"+"teste4.txt");
+
+    returnCommitCk = svr.ckeckIn(project, "leandro", "30/10/2010", "Atualizacao do sistema gardener", "c:/gardener", listFile);
+    System.out.println(returnCommitCk);
+    
+    listFile.clear();
+
+    listFile.add(project+"-"+"teste0.txt");
+    listFile.add(project+"-"+"teste2.txt");
+    listFile.add(project+"-"+"teste3.txt");
+    listFile.add(project+"-"+"teste4.txt");
+    
+    returnCommitCk = svr.ckeckIn(project, "marcos", "30/10/2010", "Alteracao de calculo", "c:/gardener", listFile);
+    System.out.println(returnCommitCk);
+    
   }
 }
