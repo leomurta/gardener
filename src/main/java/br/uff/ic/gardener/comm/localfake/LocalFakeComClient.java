@@ -28,7 +28,7 @@ import br.uff.ic.gardener.ConfigurationItem;
 
 public class LocalFakeComClient implements ComClient {
 	
-	private static final String CONFIG_PROPERTIES = "config.properties";
+	public static final String CONFIG_PROPERTIES = "config.properties";
 	
 	/**
 	 * path of repository data. The repository config is a child of this
@@ -46,8 +46,12 @@ public class LocalFakeComClient implements ComClient {
 	 */
 	Properties properties = null;
 
-	// TODO Ver formato STATIC
-	private static String STR_CONFIG_PATH = ".gdrservsimple";
+	public static String STR_CONFIG_PATH = ".gdrservsimple";
+	
+	public static String getPathProperties()
+	{
+		return STR_CONFIG_PATH + "/" + CONFIG_PROPERTIES;
+	}
 
 	/**
 	 * Create LocalAPIClient It looks up by config directory in _path specified.
@@ -231,10 +235,25 @@ public class LocalFakeComClient implements ComClient {
 	 * @throws IOException
 	 *             zipping has a problem
 	 */
-	private void zipInputStream(String id, InputStream item, ZipOutputStream zos)
+	public static void zipInputStream(String id, InputStream item, ZipOutputStream zos)
 			throws IOException {
+
+		StringBuilder sb = new StringBuilder();
+		int i = 0;
+		for(; i < id.length(); i++)
+		{
+			if(id.charAt(i)== '/')
+			{
+				//faznada
+			}else
+			{
+				break;
+			}
+		}
+		String newId = id.substring(i);
+		
 		// create a new zip entry
-		ZipEntry anEntry = new ZipEntry(id);
+		ZipEntry anEntry = new ZipEntry(newId);
 
 		// place the zip entry in the ZipOutputStream object
 		zos.putNextEntry(anEntry);

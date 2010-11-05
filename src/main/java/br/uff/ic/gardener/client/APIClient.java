@@ -143,7 +143,10 @@ public class APIClient {
 	 */
 	public RevisionID commit(String msg) throws TransationException
 	{
-		return RevisionID.ZERO_REVISION;
+		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
+		getWorkspace().generateCheckin(list);
+		getComClient().commit("", msg, list);
+		getWorkspace().processOperations();
 	}
 
 	public void addFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 

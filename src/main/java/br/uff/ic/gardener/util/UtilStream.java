@@ -202,13 +202,25 @@ public class UtilStream {
      * @param i
      * @throws IOException 
      */
-	public static void fillRandomData(FileOutputStream fileOutputStream, int size) throws IOException 
+	public static void fillRandomData(OutputStream out, int size) throws IOException 
 	{
 		Random r = new Random();
 		while(size > 0)
 		{
-			fileOutputStream.write(r.nextInt());
+			out.write(r.nextInt());
 			size--;
+		}
+	}
+	
+	/**
+	 * Create content witch each line is it line number. 
+	 */
+	public static void fillLineNumber(OutputStream out, int lineCount )
+	{
+		PrintStream p = new PrintStream(out);
+		for(int i = 0 ; i < lineCount; i++)
+		{
+			p.printf("%d%s", i, UtilStream.getLineSeperator());
 		}
 	}
 }

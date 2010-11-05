@@ -436,6 +436,23 @@ public class Workspace {
 	public FileFilter getNotFileConfigFilter() {
 		return parser.getNotFileConfigFilter();
 	}
+
+	/**
+	 * Generate ConfigurationItens representing the new revision configured in the workspace 
+	 * @param list
+	 */
+	public void generateCheckin(List<ConfigurationItem> list) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * process operations with reflect a new version
+	 */
+	public void processOperations() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 
 }

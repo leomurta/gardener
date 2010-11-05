@@ -3,12 +3,15 @@ package br.uff.ic.gardener.util;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
 
 import java.io.FileFilter;
+import br.uff.ic.gardener.util.ComparatorFile;
 
 public class FileHelper {
 	
@@ -213,5 +216,41 @@ public class FileHelper {
 		
 		File f = new File(ret);
 		return f;
+	}
+
+	
+	public static boolean comparDirs(File pathA, File pathB)
+	{
+		if(!pathA.isDirectory() || !pathB.isDirectory())
+			return false;
+		
+		File[] vecA = pathA.listFiles();
+		File[] vecB = pathB.listFiles();
+
+		final int size =vecA.length;
+		
+		if(size != vecB.length)
+			return false;
+		
+		ComparatorFile comparator = new ComparatorFile();
+		Arrays.sort(vecA, comparator );
+		Arrays.sort(vecB, comparator);
+		
+		
+		for( int i = 0; i < size; i++)
+		{
+			if(vecA[i].compareTo(vecB[i]) != 0)
+				return false;
+			else
+			{
+				if(vecA[i].isDirectory())
+				{
+					if(!comparDirs(vecA[i], vecB[i]))
+						return false;
+				}
+			}
+		}
+		
+		return true;
 	}
 }

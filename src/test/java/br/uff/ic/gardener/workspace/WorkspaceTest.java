@@ -178,7 +178,8 @@ public class WorkspaceTest{
 			File newFile = new File(filePath, nameFile);
 			if(newFile.createNewFile())
 			{
-				UtilStream.fillFile(newFile, nameFile + "1", nameFile + "2" , nameFile + "3", nameFile + "4"  );
+				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
+				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
 			}
 			nameFile = nextString(nameFile);
 		}

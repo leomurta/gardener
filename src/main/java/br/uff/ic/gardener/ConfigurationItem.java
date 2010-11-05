@@ -58,6 +58,11 @@ public class ConfigurationItem {
 		this.uri = _uri;
 	}
 	
+	public ConfigurationItem(URI _uri, InputStream _item, RevisionID rev)
+	{
+		
+		this(_uri, _item, CIType.file, rev, "");
+	}
 	public ConfigurationItem(URI _uri, InputStream _item, CIType _type, RevisionID _revision, String _user)
 	{
 		item 	= _item;
