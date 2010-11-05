@@ -7,7 +7,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,7 +54,7 @@ public class CLITest {
 	
 	private static File pathServ = null;
 	
-	private static File pathWS	= null;
+	//private static File pathWS	= null;
 	
 	@BeforeClass
 	public static void setUpClass()
@@ -60,22 +62,46 @@ public class CLITest {
 		try
 		{
 			pathServ = FileHelper.createTemporaryRandomPath();
-			pathWS   = FileHelper.createTemporaryRandomPath();
+			File pathWS   = FileHelper.createTemporaryRandomPath();
+			
+			
+			//CLI.doMain(String.format("init -w\"%s\" -s\"%s\" aboboras", pathWS.toString(), strServ));
+			CLI.doMain(new String[]{"init", "-w", pathWS.toString(), "-s", getStrServ(), "abobora"});
 			
 			WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
 			
-			String tempStrPath = pathServ.getPath();
-			tempStrPath = tempStrPath.replace(File.separatorChar, '/');
-			String strServ = String.format("filefake:///%s", tempStrPath);
-			//CLI.doMain(String.format("init -w\"%s\" -s\"%s\" aboboras", pathWS.toString(), strServ));
-			CLI.doMain(new String[]{"init", "-w", pathWS.toString(), "-s", strServ, "abobora"});
-			
+			CLI.doMain("add -w\"%s\" **", pathWS.toString());
+			CLI.doMain("add -ci -w\"%s\" -s\"%s\"", pathWS.toString(), getStrServ());
+			FileHelper.deleteDirTree(pathWS);
 		}catch(Exception e)
 		{
 			pathServ = null;
-			pathWS = null;
+			//pathWS = null;
 			assertTrue(false);
 		}
+	}
+	
+	private static String getStrServ()
+	{
+		String tempStrPath = pathServ.getPath();
+		tempStrPath = tempStrPath.replace(File.separatorChar, '/');
+		return String.format("filefake:///%s", tempStrPath);
+	}
+	
+	@Test
+	public void testCheckoutTempWorkspace() throws IOException
+	{
+		File f = checkoutTempWorkspace();
+		FileHelper.deleteDirTree(f);
+	}
+	
+	private File checkoutTempWorkspace() throws IOException
+	{
+		File pathWorkspace;
+			pathWorkspace = FileHelper.createTemporaryRandomPath();
+		
+		CLI.doMain("co -w\"%s\" -s\"%s\"", pathWorkspace.toString(), getStrServ());
+		return pathWorkspace;
 	}
 
 	@AfterClass
@@ -83,14 +109,13 @@ public class CLITest {
 	{
 		try
 		{
-			if(pathWS != null)
-				FileHelper.deleteDirTree(pathWS);
 			if(pathServ != null)
 				FileHelper.deleteDirTree(pathServ);
 		}catch(Exception e)
 		{
 		}
 	}
+	
 	
 	/**
 	 * @throws java.lang.Exception
@@ -100,21 +125,46 @@ public class CLITest {
 	{
 	}
 	
+	/**
+	 * Test a simple Case of checkout.
+	 */
 	@Test
-	public void testDoCommit()
+	public void testGeneral()
 	{
+		
+	}
+	
+	@Test
+	public void testDoCommit() throws IOException
+	{
+		File pathWS = checkoutTempWorkspace();
+		for(int i = 0; i < 30; i++)
+		{
+			File f = new File(pathWS, UUID.randomUUID().toString());
+			try
+			{
+				f.createNewFile();
+				UtilStream.fillRandomData(new FileOutputStream(f), 512);
+			}catch(IOException e)
+			{
+				
+			}
+		}
 		//String temp = String.format("filefake:///%s", pathServ.getPath());
 		CLI.doMain("add -w\"%s\" **", pathWS.toString());
 		CLI.doMain("ci -w\"%s\" -m\"Testando commit pós add\"", pathWS.toString());
+		
+		FileHelper.deleteDirTree(pathWS);
 	}
+	
 	
 	@Test
 	public void testDoDiff()
 	{
 		try
 		{
-			File fileA = new File(CLITest.pathWS, "a.txt");
-			File fileB = new File(CLITest.pathWS, "b.txt");
+			File fileA = FileHelper.createTemporaryRandomFile();
+			File fileB = FileHelper.createTemporaryRandomFile();
 			UtilStream.fillFile(fileA, "1", "2", "3");
 			UtilStream.fillFile(fileB, "1", "2", "4");
 			CLI.doMain(String.format("diff %s %s", fileA.toString(), fileB.toString()));

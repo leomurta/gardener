@@ -97,6 +97,16 @@ public class LocalFakeComClient implements ComClient {
 	@Override
 	public void checkout(String strProject, RevisionID revision,  Collection<ConfigurationItem> items) throws ComClientException{
 		FileInputStream input;
+		if(revision.equals(RevisionID.LAST_REVISION))
+		{
+			revision = this.getLastRevision();
+		}
+		
+		if(revision.getNumber() == 0 ) //< a última revisão não tem nada.
+		{
+			return;
+		}
+		
 		try {
 			input = new FileInputStream(getPathOfRevision(revision));
 		} catch (FileNotFoundException e) {
