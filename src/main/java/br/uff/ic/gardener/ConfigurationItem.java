@@ -65,4 +65,12 @@ public class ConfigurationItem {
 		type 	= _type;
 		user 	= _user;
 	}
+
+	/**
+	 * Return the identificator in String form
+	 * @return
+	 */
+	public String getStringID() {
+		return uri.getPath();
+	}
 }

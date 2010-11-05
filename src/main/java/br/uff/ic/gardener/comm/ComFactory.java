@@ -5,7 +5,7 @@ import java.net.URI;
 
 import br.uff.ic.gardener.comm.local.LocalComClient;
 import br.uff.ic.gardener.comm.localfake.LocalFakeComClient;
-import br.uff.ic.gardener.comm.remote.RemoveComClient;
+import br.uff.ic.gardener.comm.remote.RemoteComClient;
 import br.uff.ic.gardener.util.FileHelper;
 
 
@@ -41,7 +41,7 @@ public class ComFactory {
 			return new LocalFakeComClient(f);
 		}else if("http".equalsIgnoreCase(strType))
 		{
-			return new RemoveComClient(uriServ);
+			return new RemoteComClient(uriServ);
 		}else
 		{
 			throw new Exception("Não foi possível especificar qual tipo de ComClient deve ser criada: " + uriServ.toASCIIString());

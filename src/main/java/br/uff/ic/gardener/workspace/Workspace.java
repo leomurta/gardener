@@ -1,14 +1,9 @@
 package br.uff.ic.gardener.workspace;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,11 +12,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.APIClient;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.WorkspaceOperation;
 
@@ -175,34 +170,37 @@ public class Workspace {
 	 * 
 	 * @throws WorkspaceException
 	 */
-	public void commit() throws WorkspaceException {
-		File files[] = path.listFiles(new NotInitDotFileFilter());
+	public Collection<ConfigurationItem> commit() throws WorkspaceException 
+	{
+		getClient();
+		//File files[] = path.listFiles(new NotInitDotFileFilter());
 
-		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-
-		try {
-			for (File f : files) {
-				InputStream is;
-
-				is = new FileInputStream(f);
-
-				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-
-				try {
-					UtilStream.copy(is, outBuffer);
-
-				} catch (IOException e) {
-					throw new WorkspaceException(f,
-							"Erro ao gravar arquivo no buffer em memória", e);
-				}
-
-				InputStream inputStream = new ByteArrayInputStream(
-						outBuffer.toByteArray());
-				map.put(f.getName(), inputStream);
-			}
-		} catch (FileNotFoundException e) {
-			throw new WorkspaceException(path, "Arquivo não encontrado", e);
-		}
+		return new LinkedList<ConfigurationItem>();
+//		Map<String, InputStream> map = new TreeMap<String, InputStream>();
+//
+//		try {
+//			for (File f : files) {
+//				InputStream is;
+//
+//				is = new FileInputStream(f);
+//
+//				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+//
+//				try {
+//					UtilStream.copy(is, outBuffer);
+//
+//				} catch (IOException e) {
+//					throw new WorkspaceException(f,
+//							"Erro ao gravar arquivo no buffer em memória", e);
+//				}
+//
+//				InputStream inputStream = new ByteArrayInputStream(
+//						outBuffer.toByteArray());
+//				map.put(f.getName(), inputStream);
+//			}
+//		} catch (FileNotFoundException e) {
+//			throw new WorkspaceException(path, "Arquivo não encontrado", e);
+//		}
 	}
 
 	/**
@@ -211,7 +209,7 @@ public class Workspace {
 	 * 
 	 * @throws WorkspaceException
 	 */
-	public void checkout(RevisionID revision, Map<String, InputStream> map) throws WorkspaceException {
+	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
 	
 
 		// erase content
@@ -219,20 +217,29 @@ public class Workspace {
 			f.delete();
 		}
 
-		for (Map.Entry<String, InputStream> e : map.entrySet()) {
-			File f = new File(path, e.getKey());
+		for (ConfigurationItem e : list) {
+			//File f = new File(path, e.getStringID());
+			File f = null;
+			try {
+				f = FileHelper.createFile(path, e.getStringID());
+			} catch (IllegalArgumentException ee) {
+				throw new WorkspaceException(f,
+						"Do not create file in repository", ee);
+			} catch (IOException eee) {
+				throw new WorkspaceException(f,
+						"Do not create file in repository", eee);
+			}
 			try {
 				f.createNewFile();
-			} catch (IOException e2) {
-				// TODO Auto-generated catch block
+			} catch (IOException e1) {
 				throw new WorkspaceException(f,
-						"Do not create file in repository", e2);
+						"Do not create file in repository", e1);
 			}
 
 			try {
 
 				OutputStream out = new FileOutputStream(f);
-				UtilStream.copy(e.getValue(), out);
+				UtilStream.copy(e.getItemAsInputStream(), out);
 
 			} catch (IOException e1) {
 				throw new WorkspaceException(f,
@@ -270,7 +277,7 @@ public class Workspace {
 				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
 				{				
 					URI uri = containItem(f);
-					if(uri == null)
+					if(uri != null)
 					{
 						uri = f.toURI();
 						uri = basePath.relativize(uri);
@@ -284,7 +291,7 @@ public class Workspace {
 							listNewOperations.removeLast();
 							qtdRemove--;
 						}
-						throw new WorkspaceException(f, "O arquivo %s já foi removido do workspace", null);
+						throw new WorkspaceException(f, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
 					}
 				}
 			}

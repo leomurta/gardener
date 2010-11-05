@@ -419,11 +419,11 @@ public class CLI {
 	//events to Commands
 	//==============================================================
 	
-	private void onInit(String string) throws APIClientException {
+	private void onInit(String string) throws APIClientException, WorkspaceException {
 		getClient().init(string);
 	}
 
-	private void onUpdate()
+	private void onUpdate() throws TransationException
 	{
 		getClient().update();
 	}
@@ -493,7 +493,7 @@ public class CLI {
 		}
 	}
 
-	private void onRename(File fileSource, String strNewName) throws APIClientException
+	private void onRename(File fileSource, String strNewName) throws APIClientException, WorkspaceException
 	{
 		getClient().renameFile(fileSource, strNewName);
 		System.out.printf("Arquivo %s renomeado para %s", fileSource.toString(), strNewName);

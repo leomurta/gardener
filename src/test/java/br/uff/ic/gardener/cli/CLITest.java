@@ -111,34 +111,18 @@ public class CLITest {
 	@Test
 	public void testDoDiff()
 	{
-		File pathDiff = null;
 		try
 		{
-			pathDiff = FileHelper.createFile(CLITest.pathWS, "cliDiff");
-		}catch(IOException e)
-		{
-			fail("FileHelper fail: File pathDiff = FileHelper.createFile(CLITest.pathWS, \"cliDiff\");");
-		}
-		
-		try
-		{
-			File fileA = new File(pathDiff, "a.txt");
-			File fileB = new File(pathDiff, "b.txt");
+			File fileA = new File(CLITest.pathWS, "a.txt");
+			File fileB = new File(CLITest.pathWS, "b.txt");
 			UtilStream.fillFile(fileA, "1", "2", "3");
 			UtilStream.fillFile(fileB, "1", "2", "4");
 			CLI.doMain(String.format("diff %s %s", fileA.toString(), fileB.toString()));
+			fileA.delete();
+			fileB.delete();
 		}catch(Exception e)
 		{
 			fail("Diff does not execute correctely");
-		}
-		try
-		{
-			
-			//FileHelper.deleteDirTree(pathDiff);
-			FileHelper.deleteDirTree(pathDiff);
-		}catch(SecurityException e)
-		{
-			fail("FileHelper fail: File pathDiff = FileHelper.deleteDirTree(pathDiff);");
 		}
 	}
 }

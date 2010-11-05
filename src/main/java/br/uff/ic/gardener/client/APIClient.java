@@ -1,12 +1,11 @@
 package br.uff.ic.gardener.client;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.LinkedList;
+import java.util.List;
+
 
 import java.io.FileFilter;
 
@@ -15,6 +14,7 @@ import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 
@@ -115,14 +115,13 @@ public class APIClient {
 	 * @throw TransationException it throws when the system cannot checkout
 	 *        data. It will have a message of the exception
 	 */
-	//void checkout(Map<String, InputStream> items, RevisionID revision)
 	public void checkout(RevisionID revision, String msg)throws TransationException{
 		
 		//get checkout from Communication
-		Map<String, InputStream> map = new TreeMap<String, InputStream>();
+		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout(revision, map);//Obtém os itens da conexão 
-			getWorkspace().checkout(revision, map);//Popula os itens no Workspace
+			getComClient().checkout("", revision, list);//Obtém os itens da conexão 
+			getWorkspace().checkout(revision, list);//Popula os itens no Workspace
 			getWorkspace().saveConfig();
 		} catch (WorkspaceException ew){
 			throw new TransationException("Workspace filling error", ew);
@@ -205,9 +204,9 @@ public class APIClient {
 	 * Update the workspace to the last revision
 	 */
 	public void update() throws TransationException{
-		Map<String, InputStream> map = new HashMap<String, InputStream>();
+		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout(getComClient().getLastRevision(""), map);
+			getComClient().checkout("", getComClient().getLastRevision(""), list);
 		} catch (ComClientException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

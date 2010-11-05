@@ -1,16 +1,16 @@
 package br.uff.ic.gardener.comm.remote;
 
-import java.io.InputStream;
 import java.net.URI;
-import java.util.Map;
+import java.util.Collection;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 
-public class RemoveComClient implements ComClient {
+public class RemoteComClient implements ComClient {
 
-	public RemoveComClient(URI uri)
+	public RemoteComClient(URI uri)
 	{
 		
 	}
@@ -30,23 +30,30 @@ public class RemoveComClient implements ComClient {
 
 
 	@Override
-	public void checkout(RevisionID revision, Map<String, InputStream> items)
-			throws ComClientException {
+	public void init(String strProject) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public RevisionID commit(String strProject, String strMessage,
-			Map<String, InputStream> items) throws ComClientException {
+	public RevisionID getLastRevision(String strProject) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 	@Override
-	public void init(String strProject) {
+	public RevisionID commit(String strProject, String strMessage,
+			Collection<ConfigurationItem> items) throws ComClientException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void checkout(String strProject, RevisionID revision,
+			Collection<ConfigurationItem> items) throws ComClientException {
 		// TODO Auto-generated method stub
 		
 	}
