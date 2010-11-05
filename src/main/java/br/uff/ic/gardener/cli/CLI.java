@@ -22,7 +22,10 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.APIClientException;
+import br.uff.ic.gardener.util.ANDFileFilter;
 import br.uff.ic.gardener.util.FileHelper;
+import br.uff.ic.gardener.util.GlobFilenameFilter;
+import br.uff.ic.gardener.util.NotDirectoryFileFilter;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 
@@ -57,12 +60,15 @@ public class CLI {
 	@Option(name = "-rename", aliases = "--rename", metaVar = "RENAME", usage = "Rename a file in the workspace")
 	private boolean bRename = false;
 	
+	@Option(name = "-m", aliases = "--message", metaVar = "MESSAGE", usage="Message to transations (Checkout, Checkin)")
+	private String strMessage = "";
+	
 	// Other arguments
 	@Argument
 	private List<String> listArguments = new ArrayList<String>();
 
 	@Option(name = "-w", aliases = "--workspace", metaVar = "WORKSPACE", usage = "Specify the source of ICs (URI or path)")
-	private URI uriWorkspace = null;
+	private File pathWorkspace = null;
 
 	@Option(name = "-s", aliases = "--serv", metaVar = "SERV", usage = "Specify the serv")
 	private URI uriServ = null;
@@ -157,9 +163,9 @@ public class CLI {
 		if (apiClient == null) {
 			try {
 				if(uriServ != null)
-					apiClient = new APIClient(new File(uriWorkspace), uriServ);
+					apiClient = new APIClient(pathWorkspace, uriServ);
 				else
-					apiClient = new APIClient(new File(uriWorkspace));
+					apiClient = new APIClient(pathWorkspace);
 			} catch (APIClientException e) {
 				e.printStackTrace();
 				System.exit(-1);
@@ -216,6 +222,15 @@ public class CLI {
 	}
 
 	/**
+	 * Do the main and parse the arg parameter with shall be String.format formatation.
+	 * @param arg
+	 * @param formatArgs
+	 */
+	static public void doMain(String arg, Object... formatArgs)
+	{
+		doMain(String.format(arg, formatArgs));
+	}
+	/**
 	 * Interpret and execute cli operations in the args array
 	 * @param args
 	 * 				String with comands (it will be tokenize)
@@ -238,6 +253,7 @@ public class CLI {
 	 */
 	static public void doMain(String[] args) {
 		me().internalDoMain(args);
+		resetCLI();
 	}
 
 	/**
@@ -263,10 +279,8 @@ public class CLI {
 		CmdLineParser parser = new CmdLineParser(this);
 
 		// default destiny
-		me().uriWorkspace = CLI.getActualPath().toURI();
-		// me().uriServ = CLI.getActualPath().toURI();
-
-		
+		pathWorkspace = CLI.getActualPath();
+				
 		// default length of execution line
 		parser.setUsageWidth(80);
 
@@ -276,20 +290,13 @@ public class CLI {
 			// parse the arguments.
 			parser.parseArgument(args);
 			
-			//trata do uriWorkspace e do uriServ
-			// trata URI sem file://
-			if (uriWorkspace.getHost() == null
-					|| uriWorkspace.getHost() == "") {
-				uriWorkspace = (new File(uriWorkspace.toString())).toURI();
-			}
-			
 			if (uriServ != null) {
 				// trata URI sem file://
-				if (uriServ.getHost() == null || uriServ.getHost() == "") {
-					uriServ = (new File(uriServ.toString())).toURI();
+				if (uriServ.getScheme() == null || uriServ.getScheme() == "") {
+					uriServ = (new File(uriServ).toURI());
 				}
 			} else {
-				uriServ = uriWorkspace;
+				uriServ = pathWorkspace.toURI();
 			}
 			
 			switch (getOperation()) {
@@ -298,7 +305,6 @@ public class CLI {
 				if(listArguments.size() == 0)
 				{
 					System.err.println("Specify the project name to init.");
-					return;
 				}
 				onInit(listArguments.get(0));
 				break;
@@ -314,7 +320,6 @@ public class CLI {
 					System.err.println("É preciso especificar o nome do(s) arquivo(s) ou uma expressão regular");
 				}else
 				{
-					
 					onAdd(listArguments);
 				}
 				break;
@@ -337,7 +342,7 @@ public class CLI {
 				}else
 				{
 					
-					File fileSource = new File(new File(uriWorkspace), listArguments.get(0));
+					File fileSource = new File(pathWorkspace, listArguments.get(0));
 					String strNewName = listArguments.get(1);
 					if(!fileSource.exists())
 					{
@@ -355,10 +360,10 @@ public class CLI {
 			
 			break;
 			case CHECKOUT:
-					onCheckout();
+					onCheckout(strMessage);
 			break;
 			case COMMIT:
-					onCommit();
+					onCommit(strMessage);
 			break;
 			default:
 				// this will redirect the output to the specified output
@@ -366,34 +371,46 @@ public class CLI {
 				break;
 			}
 		} catch (CmdLineException e) {
-			// if there's a problem in the command line,
-			// you'll get this exception. this will report
-			// an error message.
-			System.err.println(e.getMessage());
-			// System.err.println("gardener -[checkout|commit] [-workspace]:%%path%%");
-
-			// print the list of available options
-			parser.printUsage(System.err);
-			System.err.println();
-
-			// print option sample. This is useful some time
-			System.err.println("  Exemplo: gardener"
-					+ parser.printExample(ExampleMode.ALL));
-
-			return;
-		} catch (WorkspaceException e) {
-			e.printStackTrace();
-			return;
+			printError("Invalid command line", e, parser);
 		}
-		 catch (TransationException e) {
-			e.printStackTrace();
-			return;
+		catch (WorkspaceException e) {
+			 printError("Workspace error", e, parser);
+		}
+		catch (TransationException e) {
+			 printError("Transation error", e, parser);
 		}
 		catch(APIClientException e)
 		{
-			e.printStackTrace();
-			return;
+			printError("Controller error:", e, parser);
 		}
+	}
+	
+	/**
+	 * Reset CLI Commands
+	 */
+	private static void resetCLI() 
+	{
+		cliSingletons = null;
+		CLI.me();
+	}
+
+	private static void printError(String msg, Throwable error, CmdLineParser parser)
+	{
+		System.err.println(String.format("%s: %s", msg, error.getMessage()));
+		parser.printUsage(System.err);
+		System.err.println(parser.printExample(ExampleMode.ALL));
+		
+		// if there's a problem in the command line,
+		// you'll get this exception. this will report
+		// an error message.
+		//System.err.println(e.getMessage());
+		// System.err.println("gardener -[checkout|commit] [-workspace]:%%path%%");
+
+		// print the list of available options
+		//parser.printUsage(System.err);
+		//System.err.println();
+
+		// print option sample. This is useful some time
 	}
 
 	
@@ -408,7 +425,7 @@ public class CLI {
 
 	private void onUpdate()
 	{
-		
+		getClient().update();
 	}
 	
 	/**
@@ -416,8 +433,8 @@ public class CLI {
 	 *
 	 * @throws WorkspaceException
 	 */
-	private void onCommit() throws WorkspaceException {
-		//getClient().co
+	private void onCommit(String message) throws TransationException {
+			getClient().commit(message);
 	}
 
 	/**
@@ -425,12 +442,12 @@ public class CLI {
 	 *
 	 * @throws TransationException 
 	 */
-	private void onCheckout() throws TransationException {
-		getClient().checkout(revision);
+	private void onCheckout(String message) throws TransationException {
+		getClient().checkout(revision, message);
 	}
 	
 	
-	private void onAdd(Collection<String> coll) throws APIClientException
+	private void onAdd(Collection<String> coll) throws WorkspaceException, APIClientException
 	{
 		if(coll.size() == 0)
 		{
@@ -441,17 +458,21 @@ public class CLI {
 		LinkedList<File> listFile = new LinkedList<File>(); 
 		for(String strGlob: coll)
 		{
-			FileHelper.findFiles(CLI.getActualPath(), listFile, strGlob, false);
+			FileHelper.findFiles(pathWorkspace, listFile, new ANDFileFilter(getClient().getWorkspaceNotFileConfigFilter(), new GlobFilenameFilter(strGlob), new NotDirectoryFileFilter()));
 		}
+
 		getClient().addFiles(listFile);
+		
+		URI uriBase = pathWorkspace.toURI();
 		
 		for(File f: listFile)
 		{
-			System.out.printf("Arquivo %s adicionado", f.toString());			
+			URI uri = FileHelper.getRelative(uriBase,f.toURI());
+			System.out.println(String.format("Arquivo %s adicionado", uri.getPath()));			
 		}
 	}
 	
-	private void onRemove(Collection<String> coll) throws APIClientException
+	private void onRemove(Collection<String> coll) throws WorkspaceException, APIClientException
 	{
 		if(coll.size() == 0)
 		{

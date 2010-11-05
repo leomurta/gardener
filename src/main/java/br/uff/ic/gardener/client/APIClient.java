@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import java.io.FileFilter;
 
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -30,11 +32,6 @@ public class APIClient {
 
 	private Workspace workspace = null;
 	
-	/**
-	 * the path of workspace
-	 */
-	private File path = null;
-
 	private URI getURIServ()
 	{
 		return workspace.getServSource();
@@ -65,13 +62,7 @@ public class APIClient {
 	private Workspace getWorkspace() throws APIClientException 
 	{
 		if(workspace == null)
-		{
-			try {
-				workspace = new Workspace(path);
-			} catch (WorkspaceException e) {
-				throw new APIClientException("Não foi possível criar o Workspace", e);
-			}
-		}
+			throw new APIClientException("The workspace instance is null", null);
 		return workspace;
 	}
 	
@@ -105,6 +96,18 @@ public class APIClient {
 	}
 	
 	/**
+	 * Return a fileFilter that ignore Workspace Configuration Files
+	 * @return
+	 * @throws APIClientException 
+	 */
+	public FileFilter getWorkspaceNotFileConfigFilter() throws APIClientException {
+			return getWorkspace().getNotFileConfigFilter();
+
+	}
+
+	
+	
+	/**
 	 * CheckOut a revision from the serv. It is the simple way.
 	 * 
 	 * @param revision
@@ -113,7 +116,7 @@ public class APIClient {
 	 *        data. It will have a message of the exception
 	 */
 	//void checkout(Map<String, InputStream> items, RevisionID revision)
-	public void checkout(RevisionID revision)throws TransationException{
+	public void checkout(RevisionID revision, String msg)throws TransationException{
 		
 		//get checkout from Communication
 		Map<String, InputStream> map = new TreeMap<String, InputStream>();
@@ -139,13 +142,12 @@ public class APIClient {
 	 * @return the new revision generate
 	 * @throws TransationException
 	 */
-	RevisionID commit() throws TransationException
+	public RevisionID commit(String msg) throws TransationException
 	{
 		return RevisionID.ZERO_REVISION;
-		
 	}
 
-	public void addFiles(Collection<File> listFiles) throws APIClientException 
+	public void addFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
 	{	
 		try
 		{
@@ -153,11 +155,11 @@ public class APIClient {
 			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
-			throw new APIClientException("Do not add files in the workspace", e);
+			throw e;//new APIClientException("Do not add files in the workspace", e);
 		}
 	}
 
-	public void removeFiles(Collection<File> listFiles) throws APIClientException 
+	public void removeFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
 	{
 		try
 		{
@@ -165,11 +167,11 @@ public class APIClient {
 			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
-			throw new APIClientException("Do not remove files in the workspace", e);
+			throw e;
 		}
 	}
 
-	public void renameFile(File fileSource, String strNewName) throws APIClientException 
+	public void renameFile(File fileSource, String strNewName) throws APIClientException , WorkspaceException 
 	{
 		try
 		{
@@ -177,7 +179,7 @@ public class APIClient {
 			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
-			throw new APIClientException("Do not rename file in the workspace", e);
+			throw e;
 		}
 		
 	}
@@ -187,17 +189,33 @@ public class APIClient {
 	 * @param string
 	 * @throws APIClientException 
 	 */
-	public void init(String strProject) throws APIClientException 
+	public void init(String strProject) throws APIClientException , WorkspaceException 
 	{
 		getComClient().init(strProject);
 		getWorkspace().setCurrentRevision(RevisionID.ZERO_REVISION);
 		try {
 			getWorkspace().saveConfig();
 		} catch (WorkspaceException e) {
-			throw new APIClientException("Problem on save workspace", e);
+			throw e;
 		}
 		
 	}
 
+	/**
+	 * Update the workspace to the last revision
+	 */
+	public void update() throws TransationException{
+		Map<String, InputStream> map = new HashMap<String, InputStream>();
+		try {
+			getComClient().checkout(getComClient().getLastRevision(""), map);
+		} catch (ComClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 }

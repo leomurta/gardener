@@ -8,6 +8,7 @@ import br.uff.ic.gardener.cli.CLITest;
 import br.uff.ic.gardener.client.ClientFactoryTest;
 import br.uff.ic.gardener.workspace.WorkspaceConfigParserTest;
 import br.uff.ic.gardener.workspace.WorkspaceTest;
+import br.uff.ic.gardener.util.FileHelperTest;
 import br.uff.ic.gardener.util.TokenizerWithQuoteTest;
 import br.uff.ic.gardener.patch.PatchTest;
 
@@ -20,6 +21,7 @@ import br.uff.ic.gardener.patch.PatchTest;
 	WorkspaceConfigParserTest.class,
 	PatchTest.class, 
 	TokenizerWithQuoteTest.class,
-	ConfigurationItemTest.class})
+	ConfigurationItemTest.class,
+	FileHelperTest.class})
 public class AllTests {
 }

@@ -278,4 +278,9 @@ public class LocalFakeComClient implements ComClient {
 	public void init(String strProject) {
 				
 	}
+
+	@Override
+	public RevisionID getLastRevision(String strProject) {
+		return getLastRevision();
+	}
 }

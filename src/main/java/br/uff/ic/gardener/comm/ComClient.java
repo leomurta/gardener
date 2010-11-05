@@ -55,6 +55,12 @@ public interface ComClient extends Closeable {
 	 * @param strProject
 	 */
 	public void init(String strProject);
+
+	/**
+	 * Return the last revision of a project at serv
+	 * @return
+	 */
+	RevisionID getLastRevision(String strProject);
 	
 
 }

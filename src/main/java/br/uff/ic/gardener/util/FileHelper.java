@@ -3,11 +3,12 @@ package br.uff.ic.gardener.util;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
+
+import java.io.FileFilter;
 
 public class FileHelper {
 	
@@ -119,6 +120,30 @@ public class FileHelper {
 		return collDest;
 	}
 	
+	public static Collection<File> findFiles(File path, Collection<File> collDest, final FileFilter fileFilter)
+	{		
+		Queue<File> queuePath = new LinkedList<File>();
+		queuePath.offer(path);
+		
+		while(queuePath.size() >0)
+		{
+			
+			path = queuePath.remove();
+			File[] childs = path.listFiles(new ORFileFilter(new DirectoryFileFilter(), fileFilter));
+			for(File fileChild: childs)
+			{
+				if(fileChild.isDirectory())
+				{
+					queuePath.offer(fileChild);
+				}else
+				{
+					collDest.add(fileChild);
+				}
+			}
+		}
+		return collDest;	
+	}
+	
 	public static File createTemporaryRandomPath() throws IOException
 	{
 		File file = createTemporaryRandomFile();
@@ -155,5 +180,38 @@ public class FileHelper {
 	{
 		return pathRadix.relativize(path);
 		//return new URI(TextHelper.getRelative(pathRadix.toString(), path.toString(), '/'));
+	}
+
+	/**
+	 * Return a File from a URI what can has somewhere scheme
+	 * @param uriServ
+	 * @return
+	 */
+	public static File getFileFromURI(URI uri) 
+	{
+		String path = uri.getPath();
+		StringBuilder sb = new StringBuilder();
+		int i = 0; 
+		for(; i < path.length(); i++)
+		{
+			if(path.charAt(i) != '/')
+				break;
+			//sb.append(path.charAt(i));
+			//faznada para ignorar os //// do inicio
+		}
+		for(; i < path.length(); i++)
+		{
+			final char c =path.charAt(i); 
+			if( c == '/')
+				sb.append(File.separator);
+			else
+				sb.append(c);
+		}
+		String ret = sb.toString().trim();
+		if("".equals(ret))
+			return null;
+		
+		File f = new File(ret);
+		return f;
 	}
 }

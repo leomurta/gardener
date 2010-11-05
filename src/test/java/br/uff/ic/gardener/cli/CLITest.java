@@ -68,7 +68,7 @@ public class CLITest {
 			tempStrPath = tempStrPath.replace(File.separatorChar, '/');
 			String strServ = String.format("filefake:///%s", tempStrPath);
 			//CLI.doMain(String.format("init -w\"%s\" -s\"%s\" aboboras", pathWS.toString(), strServ));
-			CLI.doMain(new String[]{"init", "-w", pathWS.toURI().toString(), "-s", strServ, "abobora"});
+			CLI.doMain(new String[]{"init", "-w", pathWS.toString(), "-s", strServ, "abobora"});
 			
 		}catch(Exception e)
 		{
@@ -104,8 +104,8 @@ public class CLITest {
 	public void testDoCommit()
 	{
 		//String temp = String.format("filefake:///%s", pathServ.getPath());
-		CLI.doMain(String.format("add -w\"%s\" **", pathWS.toString()));
-		CLI.doMain("co -w");
+		CLI.doMain("add -w\"%s\" **", pathWS.toString());
+		CLI.doMain("ci -w\"%s\" -m\"Testando commit pós add\"", pathWS.toString());
 	}
 	
 	@Test

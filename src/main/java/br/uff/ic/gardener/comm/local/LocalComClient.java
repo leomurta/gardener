@@ -54,7 +54,7 @@ public class LocalComClient implements ComClient {
 				listFiles.add(file);
 			}
 		
-			Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
+			Server.getInstance().ckeckIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
 			Server.getInstance().commitCheckin(strProject);
 			FileHelper.deleteDirTree(pathTemp);
 			
@@ -85,6 +85,11 @@ public class LocalComClient implements ComClient {
 	public void init(String strProject) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public RevisionID getLastRevision(String strProject) {
+		return RevisionID.ZERO_REVISION;
 	}
 	
 	

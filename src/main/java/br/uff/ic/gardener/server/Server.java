@@ -134,4 +134,9 @@ public class Server {
 
     }
 
+    public long getLastRevision(String project)
+    {
+    	return 0;
+    }
+
 }
