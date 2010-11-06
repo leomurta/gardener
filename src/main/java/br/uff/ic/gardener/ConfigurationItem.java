@@ -8,61 +8,86 @@ import br.uff.ic.gardener.RevisionID;
  * 
  * @author Vitor Neves*/
 public class ConfigurationItem {
+
+	/**InputStream source of CI data.
+	*/
 	private InputStream item;
+	
+	/**Type of CI
+	  */
 	private CIType type;
+	
+	/**Revision source of IC
+	  */
 	private RevisionID revision;
+	
+	/**The user owner of IC
+	  */
 	private String user;
+	
+	/**Locator/Identificator of IC
+	  */
 	private URI uri;
 	
+	/**Generate and return de source IC data
+	  */
 	public InputStream getItemAsInputStream() {
 		return item;
 	}
-	/*public void setItemFromInputStream(InputStream item) {
-		this.item = item;
-	}*/
 	
-	/**TODO: Fazer a conversão da forma apropriada e não meramente ilustrativa*/
-	//public File getItemAsFile(){
-	//	return new File(this.item.toString());
-	//}
-	
-	/**TODO: Fazer a conversão da forma apropriada e não meramente ilustrativa*/
-	//public void setItemFromFile(File item){
-	//	this.item = item. 
-	//}
-	
+	/**Return the IC type.
+	  */
 	public CIType getType() {
 		return type;
 	}
-	public void setType(CIType type) {
-		this.type = type;
-	}
 	
+	/**Return revision of IC
+	  */
 	public RevisionID getRevision() {
 		return revision;
 	}
 	
-	public void setRevision(RevisionID revision) {
-		this.revision = revision;
-	}
+	/**Return user Owner of IC
+	  */
 	public String getUser() {
 		return user;
 	}
-	public void setUser(String user) {
-		this.user = user;
-	}
+
+	/** Return ID of IC
+	  */
 	public URI getUri() {
 		return uri;
 	}
-	public void setUri(URI _uri) {
-		this.uri = _uri;
-	}
 	
+	/**Constructor
+	  *@param _uri Identificator/Locator of IC
+	  *@param _item source of data
+	  *@param _type the Type of IC
+	  *@param _revision the revision source of IC
+	  *@param _user the user IC owner 
+	  */
 	public ConfigurationItem(URI _uri, InputStream _item, CIType _type, RevisionID _revision, String _user)
 	{
 		item 	= _item;
 		uri 	= _uri;
+		revision = _revision;
 		type 	= _type;
 		user 	= _user;
+	}
+	
+	/**Constructor. This constructor infer the IC type by InputStream Type
+	  *@param _uri Identificator/Locator of IC
+	  *@param _item source of data
+	  *@param _type the Type of IC
+	  *@param _revision the revision source of IC
+	  *@param _user the user IC owner 
+	  */
+	public ConfigurationItem(URI _uri, InputStream _item, RevisionID _revision)
+	{
+		item 	= _item;
+		uri 	= _uri;
+		revision= _revision;
+		type 	= null;
+		user 	= null;
 	}
 }
