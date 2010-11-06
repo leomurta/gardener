@@ -4,17 +4,15 @@
  */
 
 package br.uff.ic.gardener.versioning;
-
-import br.uff.ic.gardener.database.Database;
-import br.uff.ic.gardener.server.*;
-
-import java.io.File;
+//
 
 /**
  *
  * @author Evaldo de Oliveira
  */
 public class ConfigurationItem {
+
+    String nameConfigurationItem;    
 
     /**
     *
@@ -23,29 +21,54 @@ public class ConfigurationItem {
     * @param fileSource
     * @param fileName
     */
-   public void createFileRevision(ConfigurationServer serv, Project proj, Revision vers, String fileSource, String fileName)
-   {
-       Database db = new Database();
+   public void createConfigurationItem(String project
+                      , int currentVersion
+                      , int nextVersion
+                      , String user
+                      , String date
+                      , String message
+                      , String path
+                      , String nameConfigurationItem)
+       {
+            Version vers = new Version();
+            vers.createVersion(nameConfigurationItem
+                             , project
+                             , currentVersion
+                             , nextVersion
+                             , user
+                             , date
+                             , message
+                             , path);
 
-       int revision = db.lastRevision(proj);
-
-       vers.setRevisionNumber(Integer.toString(revision));
-
-       db.storeFileRepository(vers, proj, fileSource, fileName);
-
-   }
+       }
 
    /**
     *
     * @param serv
     * @param vers
     * @return
-    */
-   public File[] listRevisionFiles(Project proj, Revision vers)
+    */   
+
+   public String nextVersionItem(String project)
    {
 
-       Database db = new Database();
-       return db.listFiles(proj, vers);
+       int currentVersion;
+       int nextVersion;
+
+       Version vers = new Version();
+
+       currentVersion = Integer.parseInt(vers.getCurrentVersionProject(project)) + 1;
+       nextVersion = currentVersion + 1;
+
+       return Integer.toString(nextVersion);
+
+   }
+
+   public String currentVersionItem(String project)
+   {
+
+       Version vers = new Version();
+       return vers.getCurrentVersionProject(project);
 
    }
 

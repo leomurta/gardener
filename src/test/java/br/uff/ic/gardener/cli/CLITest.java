@@ -3,17 +3,24 @@
  */
 package br.uff.ic.gardener.cli;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import br.uff.ic.gardener.comm.ComClient;
+import br.uff.ic.gardener.comm.localfake.LocalFakeComClient;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
+import br.uff.ic.gardener.workspace.WorkspaceTest;
 
 /**
  * @author Marcos
@@ -29,16 +36,7 @@ public class CLITest {
 		if (CLI.me() == null)
 			fail("Cannot get CLI singletons");
 	}
-
-	/**
-	 * Test method for
-	 * {@link br.uff.ic.gardener.cli.CLI#main(java.lang.String[])}.
-	 */
-	@Test
-	public void testDoMain() {
-		// TODO Marcos
-		// fail("Not yet implemented");
-	}
+	
 
 	@Test
 	public void testGetActualPath() {
@@ -50,32 +48,97 @@ public class CLITest {
 		} catch (Exception e) {
 			fail("generate exception");
 		}
-
+	}
+	
+	private static File pathServ = null;
+	
+	private static File pathWS	= null;
+	
+	@BeforeClass
+	public static void setUpClass()
+	{
+		try
+		{
+			pathServ = FileHelper.createTemporaryRandomPath();
+			pathWS   = FileHelper.createTemporaryRandomPath();
+			
+			WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
+			
+			String tempStrPath = pathServ.getPath();
+			tempStrPath = tempStrPath.replace(File.separatorChar, '/');
+			String strServ = String.format("filefake:///%s", tempStrPath);
+			//CLI.doMain(String.format("init -w\"%s\" -s\"%s\" aboboras", pathWS.toString(), strServ));
+			CLI.doMain(new String[]{"init", "-w", pathWS.toURI().toString(), "-s", strServ, "abobora"});
+			
+		}catch(Exception e)
+		{
+			pathServ = null;
+			pathWS = null;
+			assertTrue(false);
+		}
 	}
 
-	/**
-	 * Temporary directory to use with workspace
-	 */
-	@Rule
-	public TemporaryFolder folder = new TemporaryFolder();
-	
+	@AfterClass
+	public static void tearDownClass()
+	{
+		try
+		{
+			if(pathWS != null)
+				FileHelper.deleteDirTree(pathWS);
+			if(pathServ != null)
+				FileHelper.deleteDirTree(pathServ);
+		}catch(Exception e)
+		{
+		}
+	}
 	
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp() throws Exception {
-
+	public void setUp() throws Exception
+	{
 	}
 	
 	@Test
-	public void testDoDiff() throws IOException
+	public void testDoCommit()
 	{
-		File pathWS = folder.newFolder("cliDiff");
-		File fileA = new File(pathWS, "a.txt");
-		File fileB = new File(pathWS, "b.txt");
-		UtilStream.fillFile(fileA, "1", "2", "3");
-		UtilStream.fillFile(fileB, "1", "2", "4");
-		CLI.doMain(String.format("diff %s %s", fileA.toString(), fileB.toString()));
+		//String temp = String.format("filefake:///%s", pathServ.getPath());
+		CLI.doMain(String.format("add -w\"%s\" **", pathWS.toString()));
+		CLI.doMain("co -w");
+	}
+	
+	@Test
+	public void testDoDiff()
+	{
+		File pathDiff = null;
+		try
+		{
+			pathDiff = FileHelper.createFile(CLITest.pathWS, "cliDiff");
+		}catch(IOException e)
+		{
+			fail("FileHelper fail: File pathDiff = FileHelper.createFile(CLITest.pathWS, \"cliDiff\");");
+		}
+		
+		try
+		{
+			File fileA = new File(pathDiff, "a.txt");
+			File fileB = new File(pathDiff, "b.txt");
+			UtilStream.fillFile(fileA, "1", "2", "3");
+			UtilStream.fillFile(fileB, "1", "2", "4");
+			CLI.doMain(String.format("diff %s %s", fileA.toString(), fileB.toString()));
+		}catch(Exception e)
+		{
+			fail("Diff does not execute correctely");
+		}
+		try
+		{
+			
+			//FileHelper.deleteDirTree(pathDiff);
+			FileHelper.deleteDirTree(pathDiff);
+		}catch(SecurityException e)
+		{
+			fail("FileHelper fail: File pathDiff = FileHelper.deleteDirTree(pathDiff);");
+		}
 	}
 }

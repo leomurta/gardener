@@ -5,20 +5,25 @@ import java.io.File;
 /**
  * return false to files that couple with a regular expression.
  * 
- * @author Marcos Côrtes
+ * @author Marcos Cï¿½rtes
  * 
  */
 public class NotRegExpNameFileFilter extends RegExpNameFileFilter {
 
-	String strRegExp = "";
 
 	public NotRegExpNameFileFilter(String _regExp) {
 		super(_regExp);
 	}
-
+	
+	public NotRegExpNameFileFilter(String _regExp, boolean allowPath) 
+	{
+		super(_regExp, allowPath);
+	}
 	@Override
-	public boolean accept(File pathname) {
-		return !super.accept(pathname);
+	public boolean accept(File file)
+	{
+		return !super.accept(file);
+		
 	}
 
 }

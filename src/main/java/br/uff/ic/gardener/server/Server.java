@@ -3,9 +3,10 @@
  * and open the template in the editor.
  */
 
-package padraocommand;
+package br.uff.ic.gardener.server;
 
-import java.io.File;
+import br.uff.ic.gardener.versioning.*;
+import java.util.*;
 
 /**
  *
@@ -14,7 +15,7 @@ import java.io.File;
 public class Server {
 
    private static Server instance = new Server();
-
+   
    private Server() {
 
    }
@@ -32,20 +33,34 @@ public class Server {
     * @param project
     * @param user
     */
-   public void init(String project, String user)
+   public String init(String project, String user)
     {
         Init in = new Init();
         in.execute(project, user);
+
+        return this.commitInit(project);
+
     }
 
    /**
     *
     * @param project
     */
-   public void commitInit(String project)
+   public String commitInit(String project)
     {
+       try{
         Init in = new Init();
         in.commit(project);
+
+        return "Project " + project + " was created successful.";
+
+       }catch(Exception err){
+
+           Init roll = new Init();
+           roll.unExecute(project);
+
+           return err.getMessage();
+       }
     }
 
     /**
@@ -67,15 +82,17 @@ public class Server {
      * @param path
      * @param itens
      */
-    public void ckeckIn(String project
+    public String ckeckIn(String project
                       , String user
                       , String date
                       , String message
                       , String path
-                      , File[] itens){
+                      , ArrayList itens){
 
-        Command ci = new Checkin();
-        ci.execute(project, user, date, message, path, itens);
+        Checkin ck = new Checkin();
+        ck.execute(project, user, date, message, path, itens);
+        
+        return this.commitCheckin(project);
 
     }    
 
@@ -83,11 +100,25 @@ public class Server {
      *
      * @param project
      */
-    public void commitCheckin(String project)
+    public String commitCheckin(String project)
     {
+        
+        try
+        {
+            Version vers = new Version();
+            Checkin ck = new Checkin();
 
-        Checkin ci = new Checkin();
-        ci.commit(project);
+            ck.commit(project);
+
+            return Integer.toString(Integer.parseInt(vers.getCurrentVersionProject(project))+1);
+
+       }catch(Exception err){
+
+           Checkin ck = new Checkin();
+           ck.unExecute(project);
+
+           return err.getMessage();
+       }
 
     }
 

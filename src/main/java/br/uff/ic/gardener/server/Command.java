@@ -1,9 +1,10 @@
-package padraocommand;
+package br.uff.ic.gardener.server;
+
+import br.uff.ic.gardener.versioning.*;
+
+import java.util.*;
 
 //interface Command
-
-import java.io.File;
-
 /**
  *
  * @author Evaldo de Oliveira
@@ -43,7 +44,7 @@ public abstract class Command {
                       , String date
                       , String message
                       , String path
-                      , File[] itens){
+                      , ArrayList itens){
 
         };
 

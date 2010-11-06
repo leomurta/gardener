@@ -9,29 +9,66 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Class description
- *
- *
- * @version        Enter version here..., 10/10/26
- * @author         Enter your name here...
+ * Classe para operações rotineiras de manipulação de Streams
  */
 public class UtilStream {
+	public static final int DEFAULT_BUFFER_SIZE = 2156;
 
-    /** Field description */
-    public static final int DEFAULT_BUFFER_SIZE = 2156;
+	private static byte[] BUFFER = new byte[DEFAULT_BUFFER_SIZE];
 
-    /** Field description */
-    private static byte[] BUFFER = new byte[DEFAULT_BUFFER_SIZE];
-
-    /** Field description */
     private static String ENCONDING = "UTF-8";
 
-    /** Field description */
     private static char[] CHARBUFFER = new char[DEFAULT_BUFFER_SIZE];
+	
+	public static void fillStream(OutputStream os, String... strVec)throws IOException
+	{
+		//PrintWriter pw = new PrintWriter(os, false);
+		PrintStream ps = new PrintStream (os);
+		for (String str : strVec) 
+		{
+			ps.format("%s%s", str, getLineSeperator());
+		}
+		ps.flush();
+	}
+	
+	public static void fillPrintStream(PrintStream ps, String... strVec)throws IOException
+	{
+		for (String str : strVec) 
+		{
+			ps.format("%s%s", str, getLineSeperator());
+		}
+	}
+	
+	/**
+	 * Preenche um arquivo com várias linhas de String
+	 * @param file o arquivo a ser preenchido
+	 * @param strVec as linhas que o preencherão
+	 */
+	public static void fillFile(File file, String... strVec)throws IOException
+	{
+		FileWriter fw;
+		fw = new FileWriter(file);
+		PrintWriter pw = new PrintWriter(fw);
+
+		for (String str : strVec) {
+			pw.append(str + getLineSeperator());
+		}
+		pw.close();
+	
+	}
+	
+	
+	
+	public static String getLineSeperator()
+	{
+		return System.getProperty("line.separator");
+	}
+
 
     /**
      *
@@ -90,26 +127,6 @@ public class UtilStream {
         fillFile( new File( strFile ), strVec );
     }
 
-    /**
-     * Preenche um arquivo com várias linhas de String
-     * @param file o arquivo a ser preenchido
-     * @param strVec as linhas que o preencherão
-     *
-     * @throws IOException
-     */
-    public static void fillFile( File file, String... strVec ) throws IOException {
-        FileWriter fw;
-
-        fw = new FileWriter( file );
-
-        PrintWriter pw = new PrintWriter( fw );
-
-        for (String str : strVec) {
-            pw.append( str + "\n" );
-        }
-
-        pw.close();
-    }
 
     /**
      * Convert InputStream to String (only support UTF-8).
@@ -166,7 +183,8 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static OutputStream toOutputStream( String text ) throws IOException {
+    public static OutputStream toOutputStream( String text ) throws IOException 
+    {
         byte[]                stringByteArray = text.getBytes();
         ByteArrayOutputStream out             = new ByteArrayOutputStream( stringByteArray.length );
 
