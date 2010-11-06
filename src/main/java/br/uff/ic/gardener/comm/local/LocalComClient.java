@@ -54,7 +54,7 @@ public class LocalComClient implements ComClient {
 				listFiles.add(file);
 			}
 		
-			Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
+		//	Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
 			Server.getInstance().commitCheckin(strProject);
 			FileHelper.deleteDirTree(pathTemp);
 			
