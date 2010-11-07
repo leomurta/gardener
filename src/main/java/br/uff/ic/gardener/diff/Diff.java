@@ -5,12 +5,14 @@ import java.util.List;
 
 public class Diff {
 
-    private File fileVersionOne = null;
-    private File fileVersionTwo = null;
+    private final File fileVersionOne;
+    private final File fileVersionTwo;
+    private final char format;
 
-    public Diff(File fileVersionOne, File fileVersionTwo) {
+    public Diff(File fileVersionOne, File fileVersionTwo, char format) {
         this.fileVersionOne = fileVersionOne;
         this.fileVersionTwo = fileVersionTwo;
+        this.format = format;
     }
 
     /**
@@ -22,18 +24,18 @@ public class Diff {
         return comparator.diff(fileVersionOne, fileVersionTwo);
     }
 
+    public void createOutputFormat(IResultDiff resultDiff, char formatName) {
+        IFormat formatter = FormatFactory.getFormatter(formatName);
+        FormatFactory.setMainHeader(fileVersionOne, fileVersionTwo);
+        formatter.format(resultDiff);
+    }
+
     public void printResult(IResultDiff result) {
         List listResult = result.getResult();
     }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-        //Files - test
-        File file1 = new File("../lao.txt");
-        File file2 = new File("../tzu.txt");
-
+    public void setOutputFormat() {
+        IResultDiff resultDiff = this.compare();
+        this.createOutputFormat(resultDiff, format);
     }
 }
