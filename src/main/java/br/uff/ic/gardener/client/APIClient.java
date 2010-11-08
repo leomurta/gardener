@@ -101,7 +101,7 @@ public class APIClient {
 	 * @throws APIClientException 
 	 */
 	public FileFilter getWorkspaceNotFileConfigFilter() throws APIClientException {
-			return getWorkspace().getNotFileConfigFilter();
+			return Workspace.getNotFileConfigFilter();
 
 	}
 

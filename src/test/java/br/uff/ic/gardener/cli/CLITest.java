@@ -290,11 +290,11 @@ public class CLITest {
 		
 		CLI.doMain("add -w\"%s\" **", pathWS.toString());
 		
-		CLI.doMain("add -ci -w\"%s\" -s\"%s\"", pathWS.toString(), getStrServ(pathServ));
+		CLI.doMain("-ci -w\"%s\" -s\"%s\"", pathWS.toString(), getStrServ(pathServ));
 		
 		File pathWS_New = FileHelper.createTemporaryRandomPath();
 		
-		CLI.doMain("add -co -w\"%s\" -s\"%s\"", pathWS_New.toString(), getStrServ(pathServ));
+		CLI.doMain("-co -w\"%s\" -s\"%s\"", pathWS_New.toString(), getStrServ(pathServ));
 		
 		boolean ok = FileHelper.comparDirs(pathWS, pathWS_New);
 		assertTrue(ok);

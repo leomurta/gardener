@@ -7,7 +7,6 @@ package br.uff.ic.gardener.util;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
@@ -21,13 +20,14 @@ public class TextHelper {
 
     /**
      * Method description
+     * @param <T>
      *
      *
      * @param list
      *
      * @return
      */
-    public static String toString( LinkedList list ) {
+    public static <T> String toString( Iterable<T> list ) {
         return toString( list, true );
     }
 
@@ -84,6 +84,7 @@ public class TextHelper {
 
     /**
      * Method description
+     * @param <T>
      *
      *
      * @param list
@@ -91,7 +92,7 @@ public class TextHelper {
      *
      * @return
      */
-    public static String toString( LinkedList list, boolean linebreak ) {
+    public static <T> String toString( Iterable<T> list, boolean linebreak ) {
         StringBuilder text = new StringBuilder();
 
         if (linebreak) {

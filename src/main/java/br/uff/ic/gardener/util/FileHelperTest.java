@@ -36,15 +36,6 @@ public class FileHelperTest {
 		fail("Not yet implemented");
 	}
 
-	@Test
-	public void testGetRelativeFileFile() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetRelativeURIURI() {
-		fail("Not yet implemented");
-	}
 
 	@Test
 	public void testGetFileFromURI() {

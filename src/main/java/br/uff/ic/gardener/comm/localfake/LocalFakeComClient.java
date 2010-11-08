@@ -239,7 +239,6 @@ public class LocalFakeComClient implements ComClient {
 	public static void zipInputStream(String id, InputStream item, ZipOutputStream zos)
 			throws IOException {
 
-		StringBuilder sb = new StringBuilder();
 		int i = 0;
 		for(; i < id.length(); i++)
 		{

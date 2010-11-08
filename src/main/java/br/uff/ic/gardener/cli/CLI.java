@@ -104,11 +104,9 @@ public class CLI {
 	@Option(name = "-i", aliases="--IgnoreCaseSensitive", metaVar="DIFF_IGNORE_CASE_SENSITIVE", usage = "Ignore Case Sensitive")
 	private boolean bDiffIgnoreCaseSensitive = false;
 	 
-	@SuppressWarnings("unused")
 	@Option(name = "-c", aliases="--ContextFormat", metaVar="DIFF_CONTEXT_FORMAT", usage = "Select Context Format")
 	private char charDiffContextFormat = ' ';
 	
-	@SuppressWarnings("unused")
 	@Option(name = "-u", aliases="--UnifiedFormat", metaVar="DIFF_UNIFIED_FORMAT", usage = "Use Unified Format")
 	private boolean bDiffUnifiedFormat = false;
 	
