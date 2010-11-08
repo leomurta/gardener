@@ -98,4 +98,10 @@ public class ConfigurationItem {
 	public String getStringID() {
 		return uri.getPath();
 	}
+	
+	@Override
+	public String toString()
+	{
+		return String.format("(%s, %s)", uri.getPath(), revision.toString());
+	}
 }

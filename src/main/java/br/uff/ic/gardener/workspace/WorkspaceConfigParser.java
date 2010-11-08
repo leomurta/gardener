@@ -270,7 +270,7 @@ public class WorkspaceConfigParser
 		return fProfile.exists() && fOp.exists();
 	}
 
-	public FileFilter getNotFileConfigFilter()
+	static public FileFilter getNotFileConfigFilter()
 	{
 		return new NotFilenameFilter(STR_FILE_PROFILE, STR_FILE_OPERATION); 
 	}

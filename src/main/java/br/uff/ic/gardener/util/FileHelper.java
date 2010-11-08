@@ -221,11 +221,25 @@ public class FileHelper {
 	
 	public static boolean comparDirs(File pathA, File pathB)
 	{
+		return comparDirs(pathA,pathB, null);
+	}
+	public static boolean comparDirs(File pathA, File pathB, FileFilter ignoreCase)
+	{
 		if(!pathA.isDirectory() || !pathB.isDirectory())
 			return false;
 		
-		File[] vecA = pathA.listFiles();
-		File[] vecB = pathB.listFiles();
+		File[] vecA = null;
+		File[] vecB = null;
+		if(ignoreCase == null)
+		{
+			vecA = pathA.listFiles();
+			vecB = pathB.listFiles();
+		}else
+		{
+			FileFilter filter = new NotFileFilter(ignoreCase);
+			vecA = pathA.listFiles(filter);
+			vecB = pathB.listFiles(filter);
+		}
 
 		final int size =vecA.length;
 		
@@ -239,13 +253,13 @@ public class FileHelper {
 		
 		for( int i = 0; i < size; i++)
 		{
-			if(vecA[i].compareTo(vecB[i]) != 0)
+			if(vecA[i].getName().compareTo(vecB[i].getName()) != 0)
 				return false;
 			else
 			{
 				if(vecA[i].isDirectory())
 				{
-					if(!comparDirs(vecA[i], vecB[i]))
+					if(!comparDirs(vecA[i], vecB[i], ignoreCase))
 						return false;
 				}
 			}

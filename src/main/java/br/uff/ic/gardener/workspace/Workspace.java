@@ -433,8 +433,8 @@ public class Workspace {
 		}
 	}
 
-	public FileFilter getNotFileConfigFilter() {
-		return parser.getNotFileConfigFilter();
+	static public FileFilter getNotFileConfigFilter() {
+		return WorkspaceConfigParser.getNotFileConfigFilter();
 	}
 
 	/**

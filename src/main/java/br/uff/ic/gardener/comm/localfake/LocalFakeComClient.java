@@ -177,6 +177,7 @@ public class LocalFakeComClient implements ComClient {
 				zipInputStream(ci.getStringID(),ci.getItemAsInputStream(), zos);
 			}
 
+			properties.setProperty("LastRevision", RevisionID.generateNewRevision(getLastRevision().getNumber()).toString());
 			// close the stream
 			zos.close();
 
