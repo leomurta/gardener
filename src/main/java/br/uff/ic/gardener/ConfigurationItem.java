@@ -59,6 +59,7 @@ public class ConfigurationItem {
 		return uri;
 	}
 	
+
 	/**Constructor
 	  *@param _uri Identificator/Locator of IC
 	  *@param _item source of data
@@ -89,5 +90,12 @@ public class ConfigurationItem {
 		revision= _revision;
 		type 	= null;
 		user 	= null;
+	}
+	/**
+	 * Return the identificator in String form
+	 * @return
+	 */
+	public String getStringID() {
+		return uri.getPath();
 	}
 }

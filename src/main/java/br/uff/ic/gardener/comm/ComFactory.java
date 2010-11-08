@@ -5,7 +5,8 @@ import java.net.URI;
 
 import br.uff.ic.gardener.comm.local.LocalComClient;
 import br.uff.ic.gardener.comm.localfake.LocalFakeComClient;
-import br.uff.ic.gardener.comm.remote.RemoveComClient;
+import br.uff.ic.gardener.comm.remote.RemoteComClient;
+import br.uff.ic.gardener.util.FileHelper;
 
 
 /**
@@ -28,17 +29,19 @@ public class ComFactory {
 	public static ComClient createComClient(URI uriServ, String param)
 	throws Exception {
 		
-		final String strType = uriServ.getHost();
+		final String strType = uriServ.getScheme();
 		
 		if("file".equalsIgnoreCase(strType))
 		{
 			return new LocalComClient(uriServ);
 		}else if("filefake".equalsIgnoreCase(strType))
 		{
-			return new LocalFakeComClient(new File(uriServ));
+			File f = FileHelper.getFileFromURI(uriServ);
+			
+			return new LocalFakeComClient(f);
 		}else if("http".equalsIgnoreCase(strType))
 		{
-			return new RemoveComClient(uriServ);
+			return new RemoteComClient(uriServ);
 		}else
 		{
 			throw new Exception("Não foi possível especificar qual tipo de ComClient deve ser criada: " + uriServ.toASCIIString());

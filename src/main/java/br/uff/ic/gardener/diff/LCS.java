@@ -14,7 +14,7 @@ public class LCS implements IDiff {
 
     private LCSBean[][] arrayLcs;
     private List<LinesBean> linesFileOne = new ArrayList<LinesBean>();
-    private List<LinesBean> linesFileTwo = new ArrayList<LinesBean>();
+    private List<LinesBean> columnFileTwo = new ArrayList<LinesBean>();
 
     public LCS() {
     }
@@ -35,38 +35,37 @@ public class LCS implements IDiff {
 
     private void start(File baseFile, File comparedFile) throws IOException {
         String line = null;
-
+        linesFileOne.add(null);
+        columnFileTwo.add(null);
         BufferedReader reader = new BufferedReader(new FileReader(baseFile));
         while ((line = reader.readLine()) != null) {
             linesFileOne.add(new LinesBean(line));
         }
 
         line = null;
-
         reader = new BufferedReader(new FileReader(comparedFile));
         while ((line = reader.readLine()) != null) {
-            linesFileTwo.add(new LinesBean(line));
+            columnFileTwo.add(new LinesBean(line));
         }
-
-        arrayLcs = new LCSBean[linesFileOne.size()][linesFileTwo.size()];
+        arrayLcs = new LCSBean[linesFileOne.size()][columnFileTwo.size()];
     }
 
     private boolean lcs() {
 
         int m = linesFileOne.size();
-        int n = linesFileTwo.size();
+        int n = columnFileTwo.size();
 
         for (int i = 0; i < m; i++) {
-            arrayLcs[i][0] = new LCSBean();
+            arrayLcs[i][0] = new LCSBean(0,Arrow.UP);
         }
 
-        for (int j = 0; j < m; j++) {
-            arrayLcs[0][j] = new LCSBean();
+        for (int j = 0; j < n; j++) {
+            arrayLcs[0][j] = new LCSBean(0,Arrow.UP);
         }
 
         for (int i = 1; i < m; i++) {
             for (int j = 1; j < n; j++) {
-                if (compare(linesFileOne.get(i), linesFileTwo.get(j))) {
+                if (compare(linesFileOne.get(i), columnFileTwo.get(j))) {
                     arrayLcs[i][j] = new LCSBean(arrayLcs[i - 1][j - 1].getCounter() + 1, Arrow.DIAGONAL);
                 } else {
                     if (arrayLcs[i - 1][j].getCounter() >= arrayLcs[i][j - 1].getCounter()) {
@@ -87,9 +86,9 @@ public class LCS implements IDiff {
     private IResultDiff printLCS() {
         List lcs = new ArrayList();
 
-        printLCS(lcs, linesFileOne.size(), linesFileTwo.size());
+        printLCS(lcs, linesFileOne.size()-1, columnFileTwo.size()-1);
 
-        return new ResultLCS(linesFileOne, linesFileTwo, lcs);
+        return new ResultLCS(linesFileOne, columnFileTwo, lcs);
     }
 
     private void printLCS(List lcs, int i, int j) {
@@ -98,6 +97,8 @@ public class LCS implements IDiff {
         }
         if (arrayLcs[i][j].getArrow() == Arrow.DIAGONAL) {
             printLCS(lcs, i - 1, j - 1);
+            //print xi - Validation.
+            System.out.println(linesFileOne.get(i).getLine());
             lcs.add(linesFileOne.get(i));
         } else {
             if (arrayLcs[i][j].getArrow() == Arrow.UP) {

@@ -1,14 +1,9 @@
 package br.uff.ic.gardener.workspace;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,11 +12,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.APIClient;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.WorkspaceOperation;
 
@@ -126,35 +121,37 @@ public class Workspace {
 	/**
 	 * Constructor. it needs a path to look up for the configuration files
 	 * 
+	 * This constructor only load data if the path has the configuration files. If not, it create workspace and wait for save command to write the configuration files in the path.
 	 * @param pathOfWorkspace
-	 * @throws WorkspaceException 
+	 * @param loadWorkspace tryLoadWorkspace in the pathOfWorkspace. Specify it false to create a new workspace without configuration files.
+	 * @throws IllegalArgumentException 
 	 */
-	public Workspace(File pathOfWorkspace) throws WorkspaceException {
+	public Workspace(File pathOfWorkspace) throws IllegalArgumentException, WorkspaceException
+	{
 		path = pathOfWorkspace;
 		
 		if (path == null)
-			throw new WorkspaceError(null, "Path não especificado", null);
+			throw new IllegalArgumentException("path cannot be null");
 		
 		if(!path.isDirectory())
-			throw new WorkspaceError(pathOfWorkspace, "the path:("
-					+ pathOfWorkspace.toString()
-					+ ") is not a valid directory.", null);
-
+				throw new IllegalArgumentException("path should be a directory");
 	
-
-		
 		parser = new WorkspaceConfigParser(this, path);
-		try {
-			parser.loadProfile(listICContent);
-		} catch (WorkspaceConfigParserException e) {
-			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
-		}
 		
-		try {
-			parser.loadOperations(this.listOperations);
-		} catch (WorkspaceConfigParserException e) {
-			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
-		}		
+		if(parser.isWorkspaceDir(path))
+		{
+			try {
+				parser.loadProfile(listICContent);
+			} catch (WorkspaceConfigParserException e) {
+				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
+			}
+			
+			try {
+				parser.loadOperations(this.listOperations);
+			} catch (WorkspaceConfigParserException e) {
+				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
+			}
+		}
 	}
 
 	private class NotInitDotFileFilter implements FileFilter {
@@ -173,34 +170,37 @@ public class Workspace {
 	 * 
 	 * @throws WorkspaceException
 	 */
-	public void commit() throws WorkspaceException {
-		File files[] = path.listFiles(new NotInitDotFileFilter());
+	public Collection<ConfigurationItem> commit() throws WorkspaceException 
+	{
+		getClient();
+		//File files[] = path.listFiles(new NotInitDotFileFilter());
 
-		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-
-		try {
-			for (File f : files) {
-				InputStream is;
-
-				is = new FileInputStream(f);
-
-				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-
-				try {
-					UtilStream.copy(is, outBuffer);
-
-				} catch (IOException e) {
-					throw new WorkspaceException(f,
-							"Erro ao gravar arquivo no buffer em memória", e);
-				}
-
-				InputStream inputStream = new ByteArrayInputStream(
-						outBuffer.toByteArray());
-				map.put(f.getName(), inputStream);
-			}
-		} catch (FileNotFoundException e) {
-			throw new WorkspaceException(path, "Arquivo não encontrado", e);
-		}
+		return new LinkedList<ConfigurationItem>();
+//		Map<String, InputStream> map = new TreeMap<String, InputStream>();
+//
+//		try {
+//			for (File f : files) {
+//				InputStream is;
+//
+//				is = new FileInputStream(f);
+//
+//				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+//
+//				try {
+//					UtilStream.copy(is, outBuffer);
+//
+//				} catch (IOException e) {
+//					throw new WorkspaceException(f,
+//							"Erro ao gravar arquivo no buffer em memória", e);
+//				}
+//
+//				InputStream inputStream = new ByteArrayInputStream(
+//						outBuffer.toByteArray());
+//				map.put(f.getName(), inputStream);
+//			}
+//		} catch (FileNotFoundException e) {
+//			throw new WorkspaceException(path, "Arquivo não encontrado", e);
+//		}
 	}
 
 	/**
@@ -209,7 +209,7 @@ public class Workspace {
 	 * 
 	 * @throws WorkspaceException
 	 */
-	public void checkout(RevisionID revision, Map<String, InputStream> map) throws WorkspaceException {
+	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
 	
 
 		// erase content
@@ -217,20 +217,29 @@ public class Workspace {
 			f.delete();
 		}
 
-		for (Map.Entry<String, InputStream> e : map.entrySet()) {
-			File f = new File(path, e.getKey());
+		for (ConfigurationItem e : list) {
+			//File f = new File(path, e.getStringID());
+			File f = null;
+			try {
+				f = FileHelper.createFile(path, e.getStringID());
+			} catch (IllegalArgumentException ee) {
+				throw new WorkspaceException(f,
+						"Do not create file in repository", ee);
+			} catch (IOException eee) {
+				throw new WorkspaceException(f,
+						"Do not create file in repository", eee);
+			}
 			try {
 				f.createNewFile();
-			} catch (IOException e2) {
-				// TODO Auto-generated catch block
+			} catch (IOException e1) {
 				throw new WorkspaceException(f,
-						"Do not create file in repository", e2);
+						"Do not create file in repository", e1);
 			}
 
 			try {
 
 				OutputStream out = new FileOutputStream(f);
-				UtilStream.copy(e.getValue(), out);
+				UtilStream.copy(e.getItemAsInputStream(), out);
 
 			} catch (IOException e1) {
 				throw new WorkspaceException(f,
@@ -265,26 +274,25 @@ public class Workspace {
 		try {
 			for(File f: listFiles)
 			{
-				
-				URI uri = containItem(f);
-				if(uri == null)
-				{
-					uri = f.toURI();
-					uri = basePath.relativize(uri);
-					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.REMOVE_FILE, uri.toString() ));
-					f.delete();
-					qtdRemove ++;
-				}else if(WorkspaceConfigParser.isConfigFile(getPath(), f))
-				{
-					//ignora este arquivo
-				}else
-				{
-					while(qtdRemove > 0)
+				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
+				{				
+					URI uri = containItem(f);
+					if(uri != null)
 					{
-						listNewOperations.removeLast();
-						qtdRemove--;
+						uri = f.toURI();
+						uri = basePath.relativize(uri);
+						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.REMOVE_FILE, uri.toString() ));
+						f.delete();
+						qtdRemove ++;
+					}else
+					{
+						while(qtdRemove > 0)
+						{
+							listNewOperations.removeLast();
+							qtdRemove--;
+						}
+						throw new WorkspaceException(f, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
 					}
-					throw new WorkspaceException(f, "O arquivo %s já foi removido do workspace", null);
 				}
 			}
 		} catch (URISyntaxException e) {
@@ -300,31 +308,31 @@ public class Workspace {
 	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
 	{
 		URI basePath = getPath().toURI();
-		//número de itens adicionados na lista
+		//número de itens adicionados na lista nesta operação de add
 		int qtdAdd = 0;
 		
 		try
 		{
 			for(File f: listFiles)
 			{
-				URI uri = containItem(f);
-				if(uri == null)
+				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
 				{
-					uri = f.toURI();
-					uri = basePath.relativize(uri);
-					listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, uri.toString() ));
-					qtdAdd ++;
-				}else if(WorkspaceConfigParser.isConfigFile(getPath(), f))
-				{
-					//ignora este arquivo
-				}else
-				{
-					while(qtdAdd > 0)
+					URI uri = containItem(f);
+					if(uri == null)
 					{
-						listNewOperations.removeLast();
-						qtdAdd--;
+						uri = f.toURI();
+						uri = basePath.relativize(uri);
+						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, uri.toString() ));
+						qtdAdd ++;
+					}else
+					{
+						while(qtdAdd > 0)
+						{
+							listNewOperations.removeLast();
+							qtdAdd--;
+						}
+						throw new WorkspaceException(f, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
 					}
-					throw new WorkspaceException(f, "O arquivo %s já está contido no workspace", null);
 				}
 			}
 		} catch (URISyntaxException e) {
@@ -423,6 +431,27 @@ public class Workspace {
 		{
 			throw new WorkspaceException(null, "Error in the save workspace", e);
 		}
+	}
+
+	public FileFilter getNotFileConfigFilter() {
+		return parser.getNotFileConfigFilter();
+	}
+
+	/**
+	 * Generate ConfigurationItens representing the new revision configured in the workspace 
+	 * @param list
+	 */
+	public void generateCheckin(List<ConfigurationItem> list) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * process operations with reflect a new version
+	 */
+	public void processOperations() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 

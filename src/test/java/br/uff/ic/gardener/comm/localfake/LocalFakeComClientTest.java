@@ -83,7 +83,8 @@ public class LocalFakeComClientTest {
 		LocalComClientTest.fillMap(pathWS, pathWS, map);
 		
 		ComClient com = new LocalFakeComClient(pathServ);
-		com.commit("", "Uma mensagem estranha aqui", map);
+		fail("Not implemented");
+	//	com.commit("", "Uma mensagem estranha aqui", map);
 	}
 
 	@Test

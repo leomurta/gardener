@@ -10,6 +10,7 @@ package br.uff.ic.gardener.util;
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 /**
@@ -158,6 +159,18 @@ public class TextHelper {
 		}
 		
 		return sb.toString();
+	}
+
+	public static String randomString(int size) 
+	{	
+		char[] c = new char[size];
+		Random r = new Random();
+		for(int i = 0; i < size; i++)
+		{
+			c[i] = (char) ('a' + r.nextInt('z' - 'a'));
+		}
+		
+		return new String(c);
 	}
 }
 
