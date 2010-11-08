@@ -6,7 +6,7 @@ import java.io.FileFilter;
 /**
  * This Class permits AND operations with others filters in the search process.
  * 
- * @author Marcos Côrtes
+ * @author Marcos Cï¿½rtes
  * 
  */
 public class ANDFileFilter implements FileFilter {
@@ -21,7 +21,7 @@ public class ANDFileFilter implements FileFilter {
 	public boolean accept(File dir) {
 		for (FileFilter f : fileVec) {
 			if (!f.accept(dir))
-				return false;
+					return false;
 		}
 		return true;
 	}

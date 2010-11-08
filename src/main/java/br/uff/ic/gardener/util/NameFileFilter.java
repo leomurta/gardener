@@ -3,6 +3,11 @@ package br.uff.ic.gardener.util;
 import java.io.File;
 import java.io.FileFilter;
 
+/**
+ * Filter files with same name in _strName
+ * @author Marcos
+ *
+ */
 public class NameFileFilter implements FileFilter {
 
 	String strName = "";

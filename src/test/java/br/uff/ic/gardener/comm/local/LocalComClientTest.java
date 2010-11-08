@@ -99,7 +99,7 @@ public class LocalComClientTest {
 		Map<String, InputStream> map = new TreeMap<String, InputStream>();
 		fillMap(pathWS, pathWS, map);
 		
-		this.comm.checkout(RevisionID.LAST_REVISION, map);
+		//this.comm.checkout(RevisionID.LAST_REVISION, map);
 		
 	}
 
@@ -107,8 +107,8 @@ public class LocalComClientTest {
 	public void testCommit() throws FileNotFoundException, ComClientException {
 		Map<String, InputStream> map = new TreeMap<String, InputStream>();
 		fillMap(pathWS, pathWS, map);
-		
-		comm.commit("","Teste ", map);
+		fail("Not implemented");
+	//	comm.commit("","Teste ", map);
 	}
 
 	@Test
