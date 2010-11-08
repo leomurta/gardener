@@ -7,6 +7,7 @@ package br.uff.ic.gardener.cli;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -22,6 +23,7 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.APIClientException;
+import br.uff.ic.gardener.diff.Diff;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -280,7 +282,17 @@ public class CLI {
 			// trata URI sem file://
 			if (uriWorkspace.getHost() == null
 					|| uriWorkspace.getHost() == "") {
-				uriWorkspace = (new File(uriWorkspace.toString())).toURI();
+				try {
+					uriWorkspace = new URI(
+							"file",
+							"", 
+							uriWorkspace.getPath(),
+							uriWorkspace.getFragment()
+							);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+					return;
+				}
 			}
 			
 			if (uriServ != null) {
@@ -504,7 +516,7 @@ public class CLI {
 	*	•Formato Normal
 	*	diff arquivo_1 arquivo_2
 	*/
-	private void onDiff(Collection<File> collFiles ) throws TransationException
+	private void onDiff(List<File> collFiles ) throws TransationException
 	{
 		if(collFiles.size() != 2)
 		{
@@ -520,7 +532,22 @@ public class CLI {
 			
 			throw new TransationException(str.toString());
 		}
-		
+			
+		/*
+		 *   case 'c': //CONTEXT-FORMAT
+                return getContextFormatter();
+            case 'l': // LESS-CONTEXT-FORMAT
+                return getLessContextFormatter();
+            case 'f': //FULL-CONTEXT-FORMAT
+                return getFullContextFormatter();
+            case 'n':  //NORMAL-FORMAT
+                return getNormalFormatter();
+            case 'u':  //UNIFIED-FORMAT
+                return getUnifiedFormatter();
+		 */
+		Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
+        diff.setOutputFormat();
+        
 		//usem estas variáveis
 		bDiffIgnoreWhiteSpaces = false;
 			
@@ -531,5 +558,21 @@ public class CLI {
 		charDiffContextFormat = ' ';
 			
 		bDiffUnifiedFormat = false;
+	}
+
+	private char getContextFormat() {
+		if(bDiffUnifiedFormat)
+			return 'u';
+		else if(charDiffContextFormat != ' ')
+		{
+			if(charDiffContextFormat == 'l')
+				return 'l';
+			else if(charDiffContextFormat == 'f')
+				return 'f';
+			else
+				return 'c';
+		}
+		else
+			return 'n';
 	}
 }
