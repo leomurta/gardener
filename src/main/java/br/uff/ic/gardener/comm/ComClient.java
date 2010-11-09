@@ -1,12 +1,11 @@
 package br.uff.ic.gardener.comm;
 
 import java.io.Closeable;
-import java.io.InputStream;
 import java.net.URI;
-import java.util.Map;
+import java.util.Collection;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.TransationException;
 
 /**
  * API Client Interface
@@ -15,27 +14,25 @@ import br.uff.ic.gardener.TransationException;
  */
 public interface ComClient extends Closeable {
 	/**
-	 * CheckOut a revision from the serv. It is the simple way.
-	 * 
-	 * @param items
-	 *            the items of revision.
-	 * @param revision
-	 *            the revision number.
-	 * @throw TransationException it throws when the system cannot checkout
-	 *        data. It will have a message of the exception
-	 */
-	void checkout(RevisionID revision, Map<String, InputStream> items)
-			throws ComClientException;
-
-	/**
-	 * Commit a new revision to the serv. it is the simple way.
-	 * @param strProject TODO
-	 * @param strMessage TODO
-	 * @param items
+	 * Commit a new revision to the serv. It is the simple way.
+	 * @param strProject The name of project in the serv
+	 * @param strMessage The message usage in the revision commited
+	 * @param items the collection of ConfigurationItems
 	 * @return the new revision generate
-	 * @throws TransationException
+	 * @throws ComClientException
 	 */
-	RevisionID commit(String strProject, String strMessage, Map<String, InputStream> items)
+	RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items)
+			throws ComClientException;
+	
+	/**
+	 * Checkout a revision from repository
+	 * @param strProject The name of project in the serv
+	 * @param strMessage The message usage in the revision commited
+	 * @param items the collection of ConfigurationItems that receive data
+	 * @return the new revision generate
+	 * @throws ComClientException
+	 */
+	void checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
 			throws ComClientException;
 
 	/**
@@ -55,6 +52,12 @@ public interface ComClient extends Closeable {
 	 * @param strProject
 	 */
 	public void init(String strProject);
+
+	/**
+	 * Return the last revision of a project at serv
+	 * @return
+	 */
+	RevisionID getLastRevision(String strProject);
 	
 
 }

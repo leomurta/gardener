@@ -6,21 +6,19 @@ package br.uff.ic.gardener.workspace;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Random;
-import java.util.TreeMap;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
@@ -176,7 +174,8 @@ public class WorkspaceTest{
 			File newFile = new File(filePath, nameFile);
 			if(newFile.createNewFile())
 			{
-				UtilStream.fillFile(newFile, nameFile + "1", nameFile + "2" , nameFile + "3", nameFile + "4"  );
+				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
+				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
 			}
 			nameFile = nextString(nameFile);
 		}
@@ -220,8 +219,8 @@ public class WorkspaceTest{
 	@Test
 	public final void testCheckout() throws WorkspaceException 
 	{
-		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-		workspace.checkout(RevisionID.LAST_REVISION, map);
+		Collection<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
+		workspace.checkout(RevisionID.LAST_REVISION, list);
 	}
 	
 	@Test

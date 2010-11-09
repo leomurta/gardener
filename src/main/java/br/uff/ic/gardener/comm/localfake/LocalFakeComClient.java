@@ -9,12 +9,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Map;
+import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import java.util.Collection;
 
+import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -22,10 +24,11 @@ import br.uff.ic.gardener.util.ANDFileFilter;
 import br.uff.ic.gardener.util.DirectoryFileFilter;
 import br.uff.ic.gardener.util.NameFileFilter;
 import br.uff.ic.gardener.util.UtilStream;
+import br.uff.ic.gardener.ConfigurationItem;
 
 public class LocalFakeComClient implements ComClient {
 	
-	private static final String CONFIG_PROPERTIES = "config.properties";
+	public static final String CONFIG_PROPERTIES = "config.properties";
 	
 	/**
 	 * path of repository data. The repository config is a child of this
@@ -43,8 +46,12 @@ public class LocalFakeComClient implements ComClient {
 	 */
 	Properties properties = null;
 
-	// TODO Ver formato STATIC
-	private static String STR_CONFIG_PATH = ".gdrservsimple";
+	public static String STR_CONFIG_PATH = ".gdrservsimple";
+	
+	public static String getPathProperties()
+	{
+		return STR_CONFIG_PATH + "/" + CONFIG_PROPERTIES;
+	}
 
 	/**
 	 * Create LocalAPIClient It looks up by config directory in _path specified.
@@ -91,8 +98,19 @@ public class LocalFakeComClient implements ComClient {
 	}
 	
 	/**TODO: Corrigir o Checkout*/
-	public void checkout(RevisionID revision, Map<String, InputStream> items) throws ComClientException{
+	@Override
+	public void checkout(String strProject, RevisionID revision,  Collection<ConfigurationItem> items) throws ComClientException{
 		FileInputStream input;
+		if(revision.equals(RevisionID.LAST_REVISION))
+		{
+			revision = this.getLastRevision();
+		}
+		
+		if(revision.getNumber() == 0 ) //< a última revisão não tem nada.
+		{
+			return;
+		}
+		
 		try {
 			input = new FileInputStream(getPathOfRevision(revision));
 		} catch (FileNotFoundException e) {
@@ -110,7 +128,20 @@ public class LocalFakeComClient implements ComClient {
 				UtilStream.copy(zos, os);
 
 				InputStream is = new ByteArrayInputStream(os.toByteArray());
-				items.put(entry.getName(), is);
+				//TODO Pedir para Vitor rever isso:
+				URI name = null;
+				try
+				{
+					name = new URI(entry.getName());
+				}catch(URISyntaxException e)
+				{
+					try {
+						name = new URI("www.uff.br");
+					} catch (URISyntaxException e1) {
+						throw new ComClientException("Cannot resolve uri syntax of a name",  "checkout", path.toURI(), e);
+					}
+				}
+				items.add(new ConfigurationItem(name, is, CIType.file,revision, "nouser"));//put(entry.getName(), is);
 			}
 			zos.close();
 
@@ -125,7 +156,9 @@ public class LocalFakeComClient implements ComClient {
 				+ ".zip";
 	}
 	
-	public RevisionID commit(String strProject, String strMessage, Map<String, InputStream> items) throws ComClientException {
+	@Override
+	public RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items) throws ComClientException 
+	{
 		// create a ZipOutputStream to zip the data to
 
 		ZipOutputStream zos;		
@@ -133,18 +166,18 @@ public class LocalFakeComClient implements ComClient {
 		RevisionID newRevision = RevisionID.generateNewRevision(this.getLastRevision().getNumber());
 		//RevisionID newRevision;
 		try {
-			zos = new ZipOutputStream(new FileOutputStream(pathConfig.getPath()
-					+ File.separatorChar + newRevision.toString() + ".zip"));
+			zos = new ZipOutputStream(new FileOutputStream(getPathOfRevision(newRevision)));
 
 			// assuming that there is a directory named inFolder (If there
 			// isn't create one) in the same directory as the one the code runs
 			// from,
 			// call the zipDir method
 
-			for (Map.Entry<String, InputStream> entry : items.entrySet()) {
-				zipInputStream(entry.getKey(), entry.getValue(), zos);
+			for (ConfigurationItem ci : items) {
+				zipInputStream(ci.getStringID(),ci.getItemAsInputStream(), zos);
 			}
 
+			properties.setProperty("LastRevision", RevisionID.generateNewRevision(getLastRevision().getNumber()).toString());
 			// close the stream
 			zos.close();
 
@@ -203,10 +236,24 @@ public class LocalFakeComClient implements ComClient {
 	 * @throws IOException
 	 *             zipping has a problem
 	 */
-	private void zipInputStream(String id, InputStream item, ZipOutputStream zos)
+	public static void zipInputStream(String id, InputStream item, ZipOutputStream zos)
 			throws IOException {
+
+		int i = 0;
+		for(; i < id.length(); i++)
+		{
+			if(id.charAt(i)== '/')
+			{
+				//faznada
+			}else
+			{
+				break;
+			}
+		}
+		String newId = id.substring(i);
+		
 		// create a new zip entry
-		ZipEntry anEntry = new ZipEntry(id);
+		ZipEntry anEntry = new ZipEntry(newId);
 
 		// place the zip entry in the ZipOutputStream object
 		zos.putNextEntry(anEntry);
@@ -270,12 +317,17 @@ public class LocalFakeComClient implements ComClient {
 	}
 
 	@Override
-	public void close() {
-		//nothing
+	public void close() {		
 	}
 
 	@Override
 	public void init(String strProject) {
-				
+		//fazNada pq ignora conceito de projeto
+	}
+
+	@Override
+	public RevisionID getLastRevision(String strProject) 
+	{
+		return getLastRevision();
 	}
 }

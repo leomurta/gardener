@@ -4,14 +4,17 @@ package br.uff.ic.gardener.comm.local;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.io.*;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -33,34 +36,40 @@ public class LocalComClient implements ComClient {
 	}
 	
 	@Override
-	public void checkout(RevisionID revision, Map<String, InputStream> items)
+	public void checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
 			throws ComClientException {
-		//Server.getInstance().checkout()
+		throw new ComClientException("Not implemented","checkout", null, null );
 		
 	}
 
 	@Override
-	public RevisionID commit(String strProject, String strMessage, Map<String, InputStream> items)
+	public RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items)
 			throws ComClientException {
-		//transforma tudo em arquivo temporário
+		
 		File pathTemp = null;
 		try {
 			pathTemp = FileHelper.createTemporaryRandomPath();
-			
 			ArrayList<File> listFiles = new ArrayList<File>();
-			for(Map.Entry<String, InputStream> p: items.entrySet())
+			for(ConfigurationItem p: items)
 			{
-				File file = FileHelper.createFile(pathTemp, p.getKey());
-				UtilStream.copy(p.getValue(), new FileOutputStream(file));
+				File file = FileHelper.createFile(pathTemp, p.getStringID());
+				UtilStream.copy(p.getItemAsInputStream(), new FileOutputStream(file));
 				listFiles.add(file);
 			}
-		
-			//Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
+
+			ArrayList<ConfigurationItem> list = null;
+			if(items instanceof ArrayList)
+				list = (ArrayList<ConfigurationItem>) items;
+			else
+			{
+				list = new ArrayList<ConfigurationItem>();
+				list.addAll(items);
+			}
+			
+			Server.getInstance().ckeckIn(strProject, "", (new Date()).toString(), strMessage, list);
 			Server.getInstance().commitCheckin(strProject);
 			FileHelper.deleteDirTree(pathTemp);
-			
-		}catch(IOException e)
-		{
+		} catch (IOException e) {
 			if(pathTemp != null)
 				FileHelper.deleteDirTree(pathTemp);
 			throw new ComClientException("Não foi possível transformar os inputstreams para files temporários", "commit", getURIServ(), e);
@@ -77,15 +86,16 @@ public class LocalComClient implements ComClient {
 	}
 
 	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-		
+	public void close() {	
 	}
 
 	@Override
-	public void init(String strProject) {
-		// TODO Auto-generated method stub
-		
+	public void init(String strProject) {	
+	}
+
+	@Override
+	public RevisionID getLastRevision(String strProject) {
+		return RevisionID.ZERO_REVISION;
 	}
 	
 	

@@ -7,9 +7,9 @@ package br.uff.ic.gardener.util;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 /**
@@ -20,13 +20,14 @@ public class TextHelper {
 
     /**
      * Method description
+     * @param <T>
      *
      *
      * @param list
      *
      * @return
      */
-    public static String toString( LinkedList list ) {
+    public static <T> String toString( Iterable<T> list ) {
         return toString( list, true );
     }
 
@@ -83,6 +84,7 @@ public class TextHelper {
 
     /**
      * Method description
+     * @param <T>
      *
      *
      * @param list
@@ -90,7 +92,7 @@ public class TextHelper {
      *
      * @return
      */
-    public static String toString( LinkedList list, boolean linebreak ) {
+    public static <T> String toString( Iterable<T> list, boolean linebreak ) {
         StringBuilder text = new StringBuilder();
 
         if (linebreak) {
@@ -158,6 +160,18 @@ public class TextHelper {
 		}
 		
 		return sb.toString();
+	}
+
+	public static String randomString(int size) 
+	{	
+		char[] c = new char[size];
+		Random r = new Random();
+		for(int i = 0; i < size; i++)
+		{
+			c[i] = (char) ('a' + r.nextInt('z' - 'a'));
+		}
+		
+		return new String(c);
 	}
 }
 

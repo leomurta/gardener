@@ -1,6 +1,7 @@
 package br.uff.ic.gardener.workspace;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
+import br.uff.ic.gardener.util.NotFilenameFilter;
 import br.uff.ic.gardener.workspace.WorkspaceOperation;
 import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
@@ -255,5 +257,21 @@ public class WorkspaceConfigParser
 	public static boolean isConfigFile(File path, File f)
 	{
 		return STR_FILE_OPERATION.equals(f.getName()) || STR_FILE_PROFILE.equals(f.getName());
+	}
+
+	/**
+	 * Verify if the path contain the files for workspace configuration.
+	 * @param path
+	 * @return
+	 */
+	public boolean isWorkspaceDir(File path) {
+		File fProfile 	= new File(directory, STR_FILE_PROFILE);
+		File fOp 		= new File(directory, STR_FILE_OPERATION);
+		return fProfile.exists() && fOp.exists();
+	}
+
+	static public FileFilter getNotFileConfigFilter()
+	{
+		return new NotFilenameFilter(STR_FILE_PROFILE, STR_FILE_OPERATION); 
 	}
 }

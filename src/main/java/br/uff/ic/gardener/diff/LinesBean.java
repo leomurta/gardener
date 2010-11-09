@@ -16,6 +16,11 @@ public class LinesBean {
         this.line = line;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return ((this.line.compareTo(((LinesBean) o).line)) == 0);
+    }
+
     public LinesBean(String line, Situation situation) {
         this.line = line;
         this.situation = situation;

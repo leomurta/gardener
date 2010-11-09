@@ -139,4 +139,15 @@ public class Server {
 
     }
 
+    /**
+     * Criei este método pq preciso de algo parecido para o checkin
+     * @autor Marcos Côrtes
+     * @param strProject
+     * @return
+     */
+	public long getLastRevision(String strProject) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
