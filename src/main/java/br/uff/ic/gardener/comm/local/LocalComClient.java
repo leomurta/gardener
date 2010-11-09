@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.io.*;
 
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
@@ -54,7 +55,7 @@ public class LocalComClient implements ComClient {
 				listFiles.add(file);
 			}
 		
-			Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
+			//Server.getInstance().checkIn(strProject, "", (new Date()).toString(), strMessage, "", listFiles);
 			Server.getInstance().commitCheckin(strProject);
 			FileHelper.deleteDirTree(pathTemp);
 			
@@ -65,7 +66,7 @@ public class LocalComClient implements ComClient {
 			throw new ComClientException("Não foi possível transformar os inputstreams para files temporários", "commit", getURIServ(), e);
 		}
 		
-		long r = Server.getInstance().getLastRevision(strProject);
+		long r = 0;//Server.getInstance().getLastRevision(strProject);
 		return new RevisionID(r);
 	}
 

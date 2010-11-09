@@ -1,6 +1,5 @@
 package br.uff.ic.gardener.database;
 
-import br.uff.ic.gardener.server.*;
 import br.uff.ic.gardener.versioning.*;
 
 import com.mongodb.*;
@@ -10,15 +9,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
-import java.io.*;
-import java.io.FileInputStream.*;
+import java.io.FileInputStream;
 import java.io.DataInputStream.*;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.util.*;
 
 /**
@@ -37,9 +32,9 @@ public class Database {
     private DB conn;
 
     /**
-     * Verifica sistema operacional para definir raiz do projeto
+     * Verifica sistema operacional para definir raiz do repeto
      *
-     * @return      retorna a raiz do projeto, de acordo com o sistema operacional
+     * @return      retorna a raiz do repeto, de acordo com o sistema operacional
      */
     private String getRoot()
     {
@@ -57,13 +52,15 @@ public class Database {
      * @param serv
      * @return      retorna a conexao com o BD
      */
-    public DB Connection(ConfigurationServer serv, Project proj)
+    public DB Connection(Repository rep)
     {
             try
 		{
 
+                    ConfigurationBD serv = new ConfigurationBD(27017, "localhost");
+
                     Mongo connect = new Mongo(serv.getServer(), serv.getPort());
-                    conn = connect.getDB(proj.getProject());
+                    conn = connect.getDB(rep.getRepository());
                     return conn;
 
 		}
@@ -79,32 +76,16 @@ public class Database {
      *
      * @param serv
      */
-    public void createDirRepository(Project proj)
+    public void createRepository(Repository rep)
     {
        File root =  new File(getRoot());
        if (!root.exists()) root.mkdir();
 
-       File dir = new File(getRoot() + proj.getProject());
+       File dir = new File(getRoot() + rep.getRepository());
+       File dirOutStanding = new File(getRoot() + rep.getRepository() + "/fileOutStanding");
+
        dir.mkdir();
-
-       try{
-
-            FileOutputStream newFile = new FileOutputStream(getRoot() + proj.getProject() + "/configVersion.conf");
-            newFile.close();
-
-            FileReader fr = new FileReader(getRoot() + proj.getProject() + "/configVersion.conf");
-            BufferedReader buff = new BufferedReader(fr);
-
-            buff.close();
-
-            FileWriter fw = new FileWriter(getRoot() + proj.getProject() + "/configVersion.conf", false);
-            fw.write("0");//First Revision
-            fw.close();
-
-        }catch(Exception err)
-            {
-              System.out.println("Erro: " + err.getMessage());
-            }
+       dirOutStanding.mkdir();
 
     }
 
@@ -114,40 +95,9 @@ public class Database {
      * @param serv
      * @param vers
      */
-    public void storeDirRepository(ConfigurationServer serv, Project proj, Version vers)
+    public void save(Repository rep, Version vers, Item item)
     {
 
-        try
-        {
-
-            boolean dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber()).mkdir();
-            if (dir == true) {
-
-                this.storeMetadata(serv, vers, proj);
-
-            }
-
-        }catch(Exception err)
-         {
-             System.out.println("Erro: " + err.getMessage());
-         }
-
-    }
-
-    /**
-     * Armazena um arquivo de revisao em uma determinada versao de um projeto
-     *
-     * @param serv
-     * @param vers
-     * @param stgFileSource arquivo a ser armazenado
-     * @param fileName      nome do arquivo armazenado
-     */
-    public void storeFileRepository(Version vers
-                                  , Project proj
-                                  , String stgFileSource
-                                  , String fileName)
-    {
-        //streams
         FileInputStream source;
         FileOutputStream target;
 
@@ -155,58 +105,57 @@ public class Database {
         FileChannel fcTarget;
 
         try
-        {
-            source = new FileInputStream(stgFileSource);
-            target = new FileOutputStream(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber() + "/" + fileName);
+        {           
 
-            fcSource  = source.getChannel();
-            fcTarget = target.getChannel();
+                boolean dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber()).mkdir();                
 
-            fcSource.transferTo(0, fcSource.size(), fcTarget);
+                this.conn =  Connection(rep);
+                DBCollection collection = this.conn.getCollection(rep.getRepository());
 
-         }catch(Exception err)
+                BasicDBObject revision = new BasicDBObject();
+
+                revision.put("version", vers.getVersionNumber());
+                revision.put("date", vers.getDate());
+                revision.put("messagelog", vers.getMessageLog());
+                revision.put("user", vers.getUser());
+                revision.put("path", getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
+
+                source = (FileInputStream)item.getItemAsInputStream();
+                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + item.getNameItem());
+
+                fcSource  = source.getChannel();
+                fcTarget = target.getChannel();
+
+                fcSource.transferTo(0, fcSource.size(), fcTarget);
+
+                collection.insert(revision);
+
+                fcSource.close();
+                fcTarget.close();
+
+
+        }catch(Exception err)
          {
              System.out.println("Erro: " + err.getMessage());
          }
 
-    }
-
-    /**
-     * Armazena o metadado no BD
-     */
-    private void storeMetadata(ConfigurationServer serv, Version vers, Project proj)
-    {
-
-        this.conn =  Connection(serv, proj);
-        DBCollection collection = this.conn.getCollection(proj.getProject());
-
-        BasicDBObject revision = new BasicDBObject();
-
-        revision.put("revision", vers.getRevisionNumber());
-        revision.put("date", vers.getDate());
-        revision.put("messagelog", vers.getMessageLog());
-        revision.put("user", vers.getUser());
-        revision.put("path", getRoot() + proj.getProject() + "/" + vers.getRevisionNumber());
-
-        collection.insert(revision);
-
-    }
+    }    
 
     /**
      * Consulta o metadado
      *
      * @param serv
      * @param vers
-     * @return  retorna o metadado do projeto
+     * @return  retorna o metadado do repeto
      */
-    public ArrayList queryMetadata(ConfigurationServer serv, Project proj, Version vers)
+    public ArrayList queryMetadata(Repository rep, Version vers)
     {
 
-        this.conn =  Connection(serv, proj);
-        DBCollection collection = this.conn.getCollection(proj.getProject());
+        this.conn =  Connection(rep);
+        DBCollection collection = this.conn.getCollection(rep.getRepository());
 
         BasicDBObject revision = new BasicDBObject();
-        revision.put("revision", vers.getRevisionNumber());
+        revision.put("revision", vers.getVersionNumber());
 
         DBCursor resultCollection = collection.find();
         resultCollection = collection.find(revision);
@@ -233,69 +182,16 @@ public class Database {
         return resultQuery;
 
     }
-
     /**
-     * Atualiza revisao de uma revisao de um projeto
-     *
-     * @param serv
-     * @param vers
-     */
-    public void updateRevision(Project proj, Version vers)
-    {
-        try
-        {
-            FileWriter fw = new FileWriter(getRoot() + proj.getProject() + "/configVersion.conf", false);
-            fw.write(vers.getRevisionNumber());
-
-            fw.close();
-
-         }
-         catch(Exception err)
-         {
-             System.out.println("Erro: " + err.getMessage());
-         }
-
-    }
-
-    /**
-     * retorna a ultima revisao de um projeto
-     *
-     * @param serv
-     * @return              numero da revisao
-     */
-    public int lastRevision(Project proj)
-    {
-        try
-        {
-
-            int tempRevision;
-            FileReader fr = new FileReader(getRoot() + proj.getProject() + "/configVersion.conf");
-            BufferedReader buff = new BufferedReader(fr);
-
-            tempRevision = Integer.parseInt(buff.readLine());
-
-            buff.close();
-
-            return tempRevision;
-
-        }
-         catch(Exception err)
-         {
-             return -1;
-         }
-
-    }
-
-    /**
-     * Lista arquivos de uma revisao de um projeto
+     * Lista arquivos de uma revisao de um repeto
      *
      * @param pServ
      * @param pVers
      * @return              lista de arquivos
      */
-    public File[] listFiles(Project proj, Version vers)
+    public File[] listFiles(Repository rep, Version vers)
     {
-            File dir = new File(getRoot() + proj.getProject() + "/" + vers.getRevisionNumber());
+            File dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
             File[] listFile = dir.listFiles();
 
             return listFile;

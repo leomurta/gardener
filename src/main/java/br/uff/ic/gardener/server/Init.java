@@ -5,6 +5,9 @@
 
 package br.uff.ic.gardener.server;
 
+import br.uff.ic.gardener.database.*;
+import java.util.*;
+
 
 /**
  *
@@ -25,8 +28,12 @@ public class Init extends Command {
 
              if (logCommand.commandOutStanding(this.getClass().getSimpleName(), project).equals("FALSE"))
              {
+
+                 ArrayList<String> item = new ArrayList<String>();
+                 ArrayList<String> tp = new ArrayList<String>();
+
                  logCommand.addLog(this.getClass().getSimpleName(), user, project);
-                 logCommand.addOutStanding(this.getClass().getSimpleName(), project, " ", " ", " ", " ", null);
+                 logCommand.addOutStanding(this.getClass().getSimpleName(), project, "", "", "", tp, item);
 
                  this.setState(1);
 
@@ -41,6 +48,7 @@ public class Init extends Command {
     @Override
         public void unExecute(String project)
         {
+
             LogCommandServer logComm = LogCommandServer.getInstance();
 
             this.setState(3);
@@ -56,6 +64,11 @@ public class Init extends Command {
         public void commit(String project)
         {
             LogCommandServer logCommand = LogCommandServer.getInstance();
+
+            Database db = new Database();
+            Repository rep = new Repository(project);
+
+            db.createRepository(rep);
 
             this.setState(2);
 

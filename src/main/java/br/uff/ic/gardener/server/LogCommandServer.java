@@ -289,8 +289,8 @@ public class LogCommandServer {
                       , String user
                       , String date
                       , String message
-                      , String path
-                      , ArrayList itens) {
+                      , ArrayList<String> type
+                      , ArrayList<String> item) {
 
             try{                
 
@@ -304,40 +304,51 @@ public class LogCommandServer {
 
                 Element dateOut = doc.createElement("date");
                 Element userOut = doc.createElement("user");
-                Element messageOut = doc.createElement("message");
-                Element pathOut = doc.createElement("path");
+                Element messageOut = doc.createElement("message");                
                 Element projectOut = doc.createElement("project");
                 
                 Text valueDate = doc.createTextNode(date);
                 Text valueUser = doc.createTextNode(user);
-                Text valueMessage = doc.createTextNode(message);
-                Text valuePath = doc.createTextNode(path);
+                Text valueMessage = doc.createTextNode(message);                
                 Text valueProject = doc.createTextNode(project);
 
                 dateOut.appendChild(valueDate);
                 userOut.appendChild(valueUser);
-                messageOut.appendChild(valueMessage);
-                pathOut.appendChild(valuePath);
+                messageOut.appendChild(valueMessage);                
                 projectOut.appendChild(valueProject);
 
                 Element configurationItens = doc.createElement("configurationItens");
+
+                if (item.size()==0)
                 
-                for (int i = 0; i < itens.size(); i++)
                 {
-                     Element file = doc.createElement("file");
-                     file.setAttribute("id", Integer.toString(i+1));
+                    Element file = doc.createElement("file");
+                    file.setAttribute("id", Integer.toString(1));
 
-                     Text valueIten = doc.createTextNode(itens.get(i).toString());
-                     file.appendChild(valueIten);
+                    Text valueIten = doc.createTextNode("");
+                    file.appendChild(valueIten);
 
-                     configurationItens.appendChild(file);
+                    configurationItens.appendChild(file);
 
-                 }
+                }else
+                {
+
+                   for (int i = 0; i < item.size(); i++)
+                   {
+                        Element file = doc.createElement("file");
+                        file.setAttribute("id", Integer.toString(i));
+                        file.setAttribute("type", type.get(i).toString());
+
+                        Text valueIten = doc.createTextNode(item.get(i).toString());
+                        file.appendChild(valueIten);
+
+                        configurationItens.appendChild(file);
+                   }
+                }                 
                 
                 elementOut.appendChild(dateOut);
                 elementOut.appendChild(userOut);
-                elementOut.appendChild(messageOut);
-                elementOut.appendChild(pathOut);
+                elementOut.appendChild(messageOut);                
                 elementOut.appendChild(projectOut);
                 elementOut.appendChild(configurationItens);
 
@@ -396,13 +407,9 @@ public class LogCommandServer {
                         NodeList listMessage = elementCommand.getElementsByTagName("message");
                         Node message = listMessage.item(0).getFirstChild();
 
-                        NodeList listPath = elementCommand.getElementsByTagName("path");
-                        Node path = listPath.item(0).getFirstChild();                        
-
                         reg.add(user.getNodeValue().toString());
                         reg.add(date.getNodeValue().toString());
-                        reg.add(message.getNodeValue().toString());
-                        reg.add(path.getNodeValue().toString());                        
+                        reg.add(message.getNodeValue().toString());                                        
 
                         break;
                     }
@@ -418,60 +425,7 @@ public class LogCommandServer {
                 return regReturn;
 
             }
-      }
-
-
-    public ArrayList regFileOutStanding(String command, String project){
-
-        try{
-
-                ArrayList file= new ArrayList();
-
-                DocumentBuilderFactory logServer = DocumentBuilderFactory.newInstance();
-                DocumentBuilder docBuilder = logServer.newDocumentBuilder();
-                Document doc = docBuilder.parse(new File("/gardener/dataOutStanding.xml"));
-
-                Element root = doc.getDocumentElement();
-
-                NodeList listCommand = root.getElementsByTagName(command);
-
-                for (int i =listCommand.getLength()-1; i >=0 ; i--){
-
-                    //como cada elemento do NodeList é um nó, precisamos fazer o cast
-                    Element elementCommand = (Element) listCommand.item(i);
-
-                    NodeList listProject = elementCommand.getElementsByTagName("project");
-                    Node proj = listProject.item(0).getFirstChild();
-
-                    if (proj.getNodeValue().toString().equals(project))
-                    {
-
-                        NodeList listConfigurationItens = elementCommand.getElementsByTagName("configurationItens");
-
-                        Element elementConfigurationItem = (Element) listConfigurationItens.item(0);
-                        NodeList configurationItem = elementConfigurationItem.getElementsByTagName("file");
-
-                        for (int itens = 0; itens < configurationItem.getLength();itens++)
-                        {
-                            Node item = configurationItem.item(itens);
-                            file.add(item.getTextContent().toString());
-                        }
-                        
-                    }
-                    break;
-
-                }
-                return file;
-
-            }catch(Exception err){
-
-                ArrayList regReturn = new ArrayList();
-
-                regReturn.add(err.getMessage());
-                return regReturn;
-
-            }
-      }
+      }       
 
 
     }

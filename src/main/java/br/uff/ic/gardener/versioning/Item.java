@@ -4,15 +4,18 @@
  */
 
 package br.uff.ic.gardener.versioning;
-//
+
+import java.io.*;
+
 
 /**
  *
  * @author Evaldo de Oliveira
  */
-public class ConfigurationItem {
+public class Item {
 
-    String nameConfigurationItem;    
+    private String nameItem;
+    private InputStream item;
 
     /**
     *
@@ -23,22 +26,22 @@ public class ConfigurationItem {
     */
    public void createConfigurationItem(String project
                       , int currentVersion
-                      , int nextVersion
+                      , int nextVersion                      
                       , String user
                       , String date
-                      , String message
-                      , String path
+                      , String message                      
                       , String nameConfigurationItem)
        {
-            Version vers = new Version();
+            Version vers = new Version();           
+
             vers.createVersion(nameConfigurationItem
                              , project
                              , currentVersion
                              , nextVersion
+                             , nameConfigurationItem
                              , user
                              , date
-                             , message
-                             , path);
+                             , message);
 
        }
 
@@ -70,6 +73,29 @@ public class ConfigurationItem {
        Version vers = new Version();
        return vers.getCurrentVersionProject(project);
 
+   }
+
+   public void setNameItem(String nameItem)
+   {
+
+       this.nameItem = nameItem;
+
+   }
+
+   public String getNameItem()
+   {
+
+       return this.nameItem;
+
+   }
+
+
+   public void setItemAsInputStream(InputStream item) {
+          this.item = item;
+   }
+
+   public InputStream getItemAsInputStream() {
+            return item;
    }
 
 }

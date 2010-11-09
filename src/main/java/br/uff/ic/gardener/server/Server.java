@@ -5,7 +5,8 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.versioning.*;
+import br.uff.ic.gardener.versioning.Version;
+import br.uff.ic.gardener.*;
 import java.util.*;
 
 /**
@@ -85,14 +86,18 @@ public class Server {
     public String ckeckIn(String project
                       , String user
                       , String date
-                      , String message
-                      , String path
-                      , ArrayList itens){
+                      , String message                      
+                      , ArrayList<ConfigurationItem> item){
 
-        Checkin ck = new Checkin();
-        ck.execute(project, user, date, message, path, itens);
+        try{
+            Checkin ck = new Checkin();           
         
-        return this.commitCheckin(project);
+            ck.execute(project, user, date, message, item);
+        
+            return this.commitCheckin(project);
+        }catch(Exception err){
+            return err.getMessage();
+        }
 
     }    
 

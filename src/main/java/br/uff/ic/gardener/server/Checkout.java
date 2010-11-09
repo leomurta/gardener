@@ -5,8 +5,6 @@
 
 package br.uff.ic.gardener.server;
 
-import br.uff.ic.gardener.versioning.*;
-
 /**
  *
  * @author Evaldo de Oliveira, Alessandreia e Fernanda

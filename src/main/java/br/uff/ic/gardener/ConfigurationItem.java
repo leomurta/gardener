@@ -29,8 +29,8 @@ public class ConfigurationItem {
 	/**TODO: Fazer a conversão da forma apropriada e não meramente ilustrativa*/
 	//public void setItemFromFile(File item){
 	//	this.item = item. 
-	//}
-	
+	//}        
+
 	public CIType getType() {
 		return type;
 	}
@@ -56,13 +56,13 @@ public class ConfigurationItem {
 	}
 	public void setUri(URI _uri) {
 		this.uri = _uri;
-	}
-	
+	}        
+
 	public ConfigurationItem(URI _uri, InputStream _item, CIType _type, RevisionID _revision, String _user)
 	{
 		item 	= _item;
 		uri 	= _uri;
 		type 	= _type;
-		user 	= _user;
+		user 	= _user;                
 	}
 }

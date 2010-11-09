@@ -27,7 +27,8 @@ public class Version {
    private String versionNumber;
    private String date;
    private String message;
-   private String user;   
+   private String user;
+   private String name;
   
    /**
     *
@@ -38,10 +39,10 @@ public class Version {
                       , String project
                       , int currentVersion
                       , int nextVersion
+                      , String name
                       , String user
                       , String date
-                      , String message
-                      , String path)
+                      , String message)
    {
         try{                
 
@@ -59,15 +60,14 @@ public class Version {
 
                 Element newVersion = doc.createElement("version");
                 
-                newVersion.setAttribute("pathVersion", path);
+                newVersion.setAttribute("nameItem", name);
                 newVersion.setAttribute("numberVersion", "1");                
 
                 Element newTransactionVersion = doc.createElement("transaction");
 
                 newTransactionVersion.setAttribute("dateVersion", date);
                 newTransactionVersion.setAttribute("message", message);
-                newTransactionVersion.setAttribute("userTransaction", user);
-                newTransactionVersion.setAttribute("typeTransaction", "ci");
+                newTransactionVersion.setAttribute("userTransaction", user);                
 
                 newVersion.appendChild(newTransactionVersion);
 
@@ -80,8 +80,7 @@ public class Version {
 
                     newVersion.setAttribute("numberVersion", Integer.toString(currentVersion));
 
-                    configurationItem.setAttribute("stateConfigurationItem", "ci");
-                    configurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
+                    configurationItem.setAttribute("stateConfigurationItem", "ci");                    
 
                     configurationItem.appendChild(newVersion);
 
@@ -112,9 +111,8 @@ public class Version {
                     newConfigurationItem = doc.createElement(nameConfigurationItem);                   
 
                     if (nodeProjectVersion.getLength() > 0)
-                    {                       
+                    {
 
-                        newConfigurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
                         newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
@@ -129,10 +127,8 @@ public class Version {
 
                     }else{                      
 
-
                         newProjectVersion = doc.createElement(project);                        
-
-                        newConfigurationItem.setAttribute("nameConfiguration", nameConfigurationItem);
+                        
                         newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
                         newConfigurationItem.appendChild(newVersion);
@@ -158,7 +154,7 @@ public class Version {
             }
 
    }
-//
+
 
    public String getCurrentVersionProject(String project)
    {
@@ -263,6 +259,23 @@ public class Version {
        return this.user;
    }
 
+    /**
+    *
+    * @param path
+    */
+   public void setNameItem(String name)
+   {
+       this.name = name;
+   }
+
+   /**
+    *
+    * @return
+    */
+   public String getNameItem()
+   {
+       return this.name;
+   }
 
 }
 

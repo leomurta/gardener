@@ -1,6 +1,5 @@
 package br.uff.ic.gardener.server;
-
-import br.uff.ic.gardener.versioning.*;
+import br.uff.ic.gardener.*;
 
 import java.util.*;
 
@@ -43,8 +42,7 @@ public abstract class Command {
                       , String user
                       , String date
                       , String message
-                      , String path
-                      , ArrayList itens){
+                      , ArrayList<ConfigurationItem> item){
 
         };
 
