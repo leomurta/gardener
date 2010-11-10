@@ -95,7 +95,7 @@ public class Database {
      * @param serv
      * @param vers
      */
-    public void save(Repository rep, Version vers, Item item)
+    public void save(Version vers)
     {
 
         FileInputStream source;
@@ -105,7 +105,8 @@ public class Database {
         FileChannel fcTarget;
 
         try
-        {           
+        {
+                Repository rep = new Repository(vers.item.projectItem.getNameProject());
 
                 boolean dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber()).mkdir();                
 
@@ -115,13 +116,13 @@ public class Database {
                 BasicDBObject revision = new BasicDBObject();
 
                 revision.put("version", vers.getVersionNumber());
-                revision.put("date", vers.getDate());
-                revision.put("messagelog", vers.getMessageLog());
-                revision.put("user", vers.getUser());
+                revision.put("date", vers.transaction.getDate());
+                revision.put("messagelog", vers.transaction.getMessage());
+                revision.put("user", vers.transaction.user.getUserName());
                 revision.put("path", getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
 
-                source = (FileInputStream)item.getItemAsInputStream();
-                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + item.getNameItem());
+                source = (FileInputStream)vers.item.getItemAsInputStream();
+                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + vers.item.getNameItem());
 
                 fcSource  = source.getChannel();
                 fcTarget = target.getChannel();

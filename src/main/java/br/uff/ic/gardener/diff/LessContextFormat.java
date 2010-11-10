@@ -9,8 +9,8 @@ package br.uff.ic.gardener.diff;
  * to-file-line...
  *
  * ‘!’ A line that is part of a group of one or more lines that changed between the two files. There is a corresponding group of lines marked with ‘!’ in the part of this hunk for the other file.
- * ‘+’ An “inserted” line in the second file that corresponds to nothing in the first file.
- * ‘-’ A “deleted” line in the first file that corresponds to nothing in the second file.
+ * ‘+’ An "inserted" line in the second file that corresponds to nothing in the first file.
+ * ‘-’ A "deleted" line in the first file that corresponds to nothing in the second file.
  * -------------------------------------------------------------------
  */
 

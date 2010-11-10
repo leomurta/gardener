@@ -45,7 +45,7 @@ public class FileHelperTest {
 		} catch (IOException e) {
 			fail("Cannot execute FileHelper.createTemporaryRandomFile()");
 		}
-		
+
 		URI uri;
 		File two = null;
 		try {
@@ -54,13 +54,13 @@ public class FileHelperTest {
 		} catch (URISyntaxException e) {
 			fail("Cannot execute new URI(");
 		}
-		
+
 		assertEquals(file, two);
-		
+
 		file.delete();
-		
+
 		//////////////////
-		
+
 		try {
 			uri = new URI("http://www.gmail.com//");
 			file = FileHelper.getFileFromURI(uri);
@@ -68,7 +68,7 @@ public class FileHelperTest {
 		} catch (URISyntaxException e) {
 			fail("Exception not expected");
 		}
-		
+
 		assertEquals(file, null);
 	}
 

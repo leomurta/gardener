@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package br.uff.ic.gardener.versioning;
 
@@ -16,6 +12,7 @@ public class Item {
 
     private String nameItem;
     private InputStream item;
+    public Project projectItem;
 
     /**
     *
@@ -24,7 +21,7 @@ public class Item {
     * @param fileSource
     * @param fileName
     */
-   public void createConfigurationItem(String project
+   public void createItem(String project
                       , int currentVersion
                       , int nextVersion                      
                       , String user
@@ -32,17 +29,19 @@ public class Item {
                       , String message                      
                       , String nameConfigurationItem)
        {
-            Version vers = new Version();           
+            Version vers = new Version();
+            User userVers = new User(user);
+            Transaction trans = new Transaction(message, date, "ci");
+
+            projectItem = new Project(project);
 
             vers.createVersion(nameConfigurationItem
-                             , project
+                             , projectItem
                              , currentVersion
                              , nextVersion
                              , nameConfigurationItem
-                             , user
-                             , date
-                             , message);
-
+                             , userVers
+                             , trans);
        }
 
    /**
@@ -52,7 +51,7 @@ public class Item {
     * @return
     */   
 
-   public String nextVersionItem(String project)
+   public String nextVersionItem(String projectItem)
    {
 
        int currentVersion;
@@ -60,18 +59,18 @@ public class Item {
 
        Version vers = new Version();
 
-       currentVersion = Integer.parseInt(vers.getCurrentVersionProject(project)) + 1;
+       currentVersion = Integer.parseInt(vers.getCurrentVersionProject(projectItem)) + 1;
        nextVersion = currentVersion + 1;
 
        return Integer.toString(nextVersion);
 
    }
 
-   public String currentVersionItem(String project)
+   public String currentVersionItem(String projectItem)
    {
 
        Version vers = new Version();
-       return vers.getCurrentVersionProject(project);
+       return vers.getCurrentVersionProject(projectItem);
 
    }
 

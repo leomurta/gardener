@@ -24,11 +24,9 @@ import java.io.File;
 
 public class Version {
    
-   private String versionNumber;
-   private String date;
-   private String message;
-   private String user;
-   private String name;
+   private String versionNumber;   
+   public  Transaction transaction;
+   public  Item item;
   
    /**
     *
@@ -36,15 +34,19 @@ public class Version {
     */
 
    public void createVersion(String nameConfigurationItem
-                      , String project
+                      , Project projectItem
                       , int currentVersion
                       , int nextVersion
                       , String name
-                      , String user
-                      , String date
-                      , String message)
+                      , User user
+                      , Transaction trans)
    {
-        try{                
+        try{
+
+                item = new Item();
+                item.setNameItem(name);
+
+                transaction = trans;
 
                 Element newConfigurationItem = null;
                 Element newProjectVersion = null;
@@ -55,19 +57,19 @@ public class Version {
 
                 Element root = doc.getDocumentElement();                
 
-                NodeList nodeConfigurationItem = root.getElementsByTagName(nameConfigurationItem);
-                NodeList nodeProjectVersion = root.getElementsByTagName(project);                
+                NodeList nodeConfigurationItem = root.getElementsByTagName(item.getNameItem());
+                NodeList nodeProjectVersion = root.getElementsByTagName(projectItem.getNameProject());
 
                 Element newVersion = doc.createElement("version");
                 
-                newVersion.setAttribute("nameItem", name);
+                newVersion.setAttribute("nameItem", item.getNameItem());
                 newVersion.setAttribute("numberVersion", "1");                
 
                 Element newTransactionVersion = doc.createElement("transaction");
 
-                newTransactionVersion.setAttribute("dateVersion", date);
-                newTransactionVersion.setAttribute("message", message);
-                newTransactionVersion.setAttribute("userTransaction", user);                
+                newTransactionVersion.setAttribute("dateVersion", transaction.getDate());
+                newTransactionVersion.setAttribute("message", transaction.getMessage());
+                newTransactionVersion.setAttribute("userTransaction", user.getUserName());
 
                 newVersion.appendChild(newTransactionVersion);
 
@@ -96,7 +98,7 @@ public class Version {
 
                     }else{
 
-                        newProjectVersion = doc.createElement(project);
+                        newProjectVersion = doc.createElement(projectItem.getNameProject());
 
                         newProjectVersion.setAttribute("currentVersion", Integer.toString(currentVersion));
                         newProjectVersion.setAttribute("nextVersion",  Integer.toString(nextVersion));
@@ -127,7 +129,7 @@ public class Version {
 
                     }else{                      
 
-                        newProjectVersion = doc.createElement(project);                        
+                        newProjectVersion = doc.createElement(projectItem.getNameProject());
                         
                         newConfigurationItem.setAttribute("stateConfigurationItem", "ci");
 
@@ -156,7 +158,7 @@ public class Version {
    }
 
 
-   public String getCurrentVersionProject(String project)
+   public String getCurrentVersionProject(String projectItem)
    {
        
        String currentVersion;
@@ -170,7 +172,7 @@ public class Version {
 
             Element root = doc.getDocumentElement();
 
-            NodeList listProject = root.getElementsByTagName(project);
+            NodeList listProject = root.getElementsByTagName(projectItem);
 
             if (listProject.getLength() > 0)
             {
@@ -204,79 +206,7 @@ public class Version {
    {
         return this.versionNumber;
    }
-
-   /**
-    *
-    * @param date
-    */
-   public void setDate(String date)
-   {
-       this.date = date;
-   }
-
-   /**
-    *
-    * @return
-    */
-   public String getDate()
-   {
-       return this.date;
-   }
-
-   /**
-    *
-    * @param messageLog
-    */
-   public void setMessageLog(String message)
-   {
-       this.message = message;
-   }
-
-   /**
-    *
-    * @return
-    */
-   public String getMessageLog()
-   {
-       return this.message;
-   }
-
-   /**
-    *
-    * @param user
-    */
-   public void setUser(String user)
-   {
-       this.user = user;
-   }
-
-   /**
-    *
-    * @return
-    */
-   public String getUser()
-   {
-       return this.user;
-   }
-
-    /**
-    *
-    * @param path
-    */
-   public void setNameItem(String name)
-   {
-       this.name = name;
-   }
-
-   /**
-    *
-    * @return
-    */
-   public String getNameItem()
-   {
-       return this.name;
-   }
-
+  
 }
 
 

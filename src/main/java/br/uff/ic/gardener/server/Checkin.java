@@ -1,11 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package br.uff.ic.gardener.server;
 
 import br.uff.ic.gardener.versioning.Item;
+import br.uff.ic.gardener.versioning.Project;
+import br.uff.ic.gardener.versioning.Transaction;
+import br.uff.ic.gardener.versioning.User;
 import br.uff.ic.gardener.versioning.Version;
 import br.uff.ic.gardener.database.*;
 import br.uff.ic.gardener.*;
@@ -126,13 +125,12 @@ public class Checkin extends Command {
             try{
                 ArrayList outStanding;                
 
-                Version vers = new Version();
                 LogCommandServer logCommand = LogCommandServer.getInstance();
-                Item ci = new Item();
+                Version vers = new Version();                
                 Database db = new Database();
-                Repository rep = new Repository(project);                               
+                Item ci = new Item();                
 
-                outStanding = logCommand.regOutStanding(this.getClass().getSimpleName(), project);                
+                outStanding = logCommand.regOutStanding(this.getClass().getSimpleName(), project);
 
                 File dir = new File("/gardener/" + project + "/fileOutStanding/");
                 File[] listFile = dir.listFiles();
@@ -143,7 +141,7 @@ public class Checkin extends Command {
                 for (i = 0; i < listFile.length; i++)
                 {
 
-                    ci.createConfigurationItem(
+                    ci.createItem(
                             project
                           , currentVersion
                           , nextVersion
@@ -151,16 +149,21 @@ public class Checkin extends Command {
                           , outStanding.get(1).toString()
                           , outStanding.get(2).toString()
                           , project+"-"+listFile[i].getName().toString());
-
-                          vers.setUser(outStanding.get(0).toString());
-                          vers.setDate(outStanding.get(1).toString());
-                          vers.setMessageLog(outStanding.get(2).toString());
-                          vers.setVersionNumber(Integer.toString(currentVersion));
+                          
+                          Transaction trans = new Transaction(outStanding.get(2).toString(), outStanding.get(1).toString(), "ci");
+                          User user = new User(outStanding.get(0).toString());
+                          Project proj = new Project(project);
 
                           ci.setNameItem(listFile[i].getName().toString());
                           ci.setItemAsInputStream(new FileInputStream(listFile[i].getAbsolutePath()));
+                    
+                          vers.transaction = trans;
+                          vers.transaction.user = user;
+                          vers.setVersionNumber(Integer.toString(currentVersion));
+                          vers.item = ci;
+                          vers.item.projectItem = proj;
 
-                          db.save(rep, vers, ci);                          
+                          db.save(vers);                          
 
                 }                                                                               
 

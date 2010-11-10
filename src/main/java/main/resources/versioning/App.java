@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package main.resources.versioning;
 
@@ -29,7 +25,7 @@ public class App{
 
     String returnCommitCk;
     String returnCommitInit;
-    String project="ufjf";
+    String project="uff";
     
     URI uri_1 = new URI(project+"/e-mails2.txt");
     URI uri_2 = new URI(project+"/git_shell_ext_debug.txt");

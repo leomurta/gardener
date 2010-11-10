@@ -260,6 +260,7 @@ public class LogCommandServer {
                         if (proj.getNodeValue().toString().equals(project))
                         {
                             valueReturn = "TRUE";
+                            break;
                         }
 
                     }
@@ -398,11 +399,11 @@ public class LogCommandServer {
                     if (proj.getNodeValue().toString().equals(project))
                     {
 
-                        NodeList listDate = elementCommand.getElementsByTagName("date");
-                        Node date = listDate.item(0).getFirstChild();
-
                         NodeList listUser = elementCommand.getElementsByTagName("user");
                         Node user = listUser.item(0).getFirstChild();
+
+                        NodeList listDate = elementCommand.getElementsByTagName("date");
+                        Node date = listDate.item(0).getFirstChild();                       
 
                         NodeList listMessage = elementCommand.getElementsByTagName("message");
                         Node message = listMessage.item(0).getFirstChild();
