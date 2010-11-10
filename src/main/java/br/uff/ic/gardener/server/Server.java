@@ -140,9 +140,10 @@ public class Server {
      * @param strProject
      * @return
      */
-	public long getLastRevision(String strProject) {
-		// TODO Auto-generated method stub
-		return 0;
+	public long getLastRevision(String project) {
+            
+                Version vers = new Version();
+		return Long.parseLong(vers.getCurrentVersionProject(project));
 	}
 
 }
