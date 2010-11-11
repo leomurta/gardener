@@ -13,8 +13,6 @@ import br.uff.ic.gardener.patch.Patch.Type;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
-import com.mongodb.io.StreamUtil;
-import com.mongodb.util.Util;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -32,8 +30,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
