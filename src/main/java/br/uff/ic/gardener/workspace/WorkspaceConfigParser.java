@@ -13,13 +13,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import br.uff.ic.gardener.RevisionID;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.util.NotFilenameFilter;
-import br.uff.ic.gardener.workspace.WorkspaceOperation;
-import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 
 /**
@@ -55,13 +56,12 @@ public class WorkspaceConfigParser
 	
 	/**
 	 * Carrega o arquivo de configurações
-	 * @param collIC O arquivo de configurações possui uma lista de ICs contidos na revisão corrente, então ele as carrega nesta coleção
+	 * @param listICContent O arquivo de configurações possui uma lista de ICs contidos na revisão corrente, então ele as carrega nesta coleção
 	 * @throws WorkspaceConfigParserException Caso haja algum problema de parser ele carrrega aqui
 	 */
-	public void loadProfile(Collection<URI> collIC) throws WorkspaceConfigParserException
+	public void loadProfile(Collection<CIWorkspace> listICContent) throws WorkspaceConfigParserException
 	{
-		
-		collIC.clear();
+		listICContent.clear();
 		/**
 		 * Guarda o profile do workspace
 		 */
@@ -123,10 +123,9 @@ public class WorkspaceConfigParser
 				{
 					String next = twq.nextToken();
 					try {
-						collIC.add(new URI(next));
+						listICContent.add(new CIWorkspace(new URI(next)));
 					} catch (URISyntaxException e) 
 					{
-									
 						throw new WorkspaceConfigParserException(
 							String.format("Não foi possível interpretar %s com valor %s", s,next),
 							s, e);
@@ -153,7 +152,7 @@ public class WorkspaceConfigParser
 	 * @param list the list that receive operations
 	 * @throws WorkspaceConfigParserException
 	 */
-	public void loadOperations(List<WorkspaceOperation> list) throws WorkspaceConfigParserException
+	public void loadOperations(Collection<CIWorkspaceStatus> list) throws WorkspaceConfigParserException
 	{
 		list.clear();
 		InputStream inputStreamProfile;
@@ -163,21 +162,63 @@ public class WorkspaceConfigParser
 			TokenizerWithQuote twq = new TokenizerWithQuote(inputStreamProfile);
 			while(twq.hasMoreTokens())
 			{
+				try
+				{
 				token = twq.nextToken();
-				if(Operation.ADD_FILE.getLabel().equals(token))
+				if(Status.ADD.isLabel(token))
 				{
 					String strFile = twq.nextToken();
-					list.add(new WorkspaceOperation(Operation.ADD_FILE, strFile));					
+					list.add(
+							new CIWorkspaceStatus(
+									new URI(strFile), 
+									new FileInputStream(
+											new File(
+													FileHelper.getRelative(
+															directory.toURI(), 
+															new URI(strFile)
+														)
+												)
+											),
+									Status.ADD));					
 				}
-				else if(Operation.REMOVE_FILE.getLabel().equals(token))
+				else if(Status.REM.isLabel(token))
 				{
 					String strFile = twq.nextToken();
-					list.add(new WorkspaceOperation(Operation.REMOVE_FILE, strFile));
-				}else if(Operation.RENAME_FILE.getLabel().equals(token))
+					list.add(
+							new CIWorkspaceStatus(
+									new URI(strFile), 
+									null,
+									Status.REM	
+									)
+							);
+				}else if(Status.RENAME.isLabel(token))
 				{
 					String strFile1 = twq.nextToken();
 					String strFile2 = twq.nextToken();
-					list.add(new WorkspaceOperation(Operation.RENAME_FILE, strFile1, strFile2));
+					
+						list.add(
+								new CIWorkspaceStatus(
+										new URI(strFile1), 
+										new FileInputStream(
+												new File(
+														FileHelper.getRelative(
+																directory.toURI(), 
+																new URI(strFile1)
+															)
+													)
+												),
+										Status.ADD,
+										workspace.getCheckoutTime(),
+										new URI(strFile2)
+										)
+								);
+					
+				}else
+				{
+					throw new WorkspaceConfigParserException("token is not a valid status", token, null);
+				}
+				} catch (URISyntaxException e) {
+					throw new WorkspaceConfigParserException("Cannot interpret token", token, e);
 				}
 			}
 			
@@ -193,7 +234,7 @@ public class WorkspaceConfigParser
 	 * @param list the list of operations to append in the file
 	 * @throws WorkspaceConfigParserException
 	 */
-	public void appendOperations(List<WorkspaceOperation> list) throws WorkspaceConfigParserException
+	public void appendOperations(Collection<CIWorkspaceStatus> list) throws WorkspaceConfigParserException
 	{
 		OutputStream outputStream;
 		String token = "";
@@ -202,9 +243,9 @@ public class WorkspaceConfigParser
 		
 		PrintStream ps = new PrintStream(outputStream, true);
 		
-		for(WorkspaceOperation wo: list)
+		for(CIWorkspace wo: list)
 		{
-			ps.println(wo.toString());
+			ps.println(wo.getStringID());
 		}
 		ps.close();
 		} catch (FileNotFoundException e) {
@@ -242,10 +283,10 @@ public class WorkspaceConfigParser
 	/**
 	 * Save content of father workspace in the directory 
 	 */
-	public void save() throws WorkspaceConfigParserException
+	public void save(List<CIWorkspaceStatus> list) throws WorkspaceConfigParserException
 	{
 		saveProfile();
-		appendOperations(this.workspace.getNewOperationList());
+		appendOperations(list);
 	}
 
 	/**
@@ -269,9 +310,42 @@ public class WorkspaceConfigParser
 		File fOp 		= new File(directory, STR_FILE_OPERATION);
 		return fProfile.exists() && fOp.exists();
 	}
+	
 
 	static public FileFilter getNotFileConfigFilter()
 	{
 		return new NotFilenameFilter(STR_FILE_PROFILE, STR_FILE_OPERATION); 
+	}
+	
+
+	public void loadRealICContent(Collection<CIWorkspaceStatus> collReal) throws WorkspaceConfigParserException {
+		Queue<File> list = new LinkedList<File>();
+		list.add(this.directory);
+		while(list.size() > 0)
+		{
+			File current = list.remove();
+			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
+			for(File f: files)
+			{
+				if(f.isDirectory())
+					list.add(f);
+				else if(f.isFile())
+				{
+					try {
+						collReal.add(
+								new CIWorkspaceStatus(
+										FileHelper.getRelative(directory, f),
+										new FileInputStream(f),
+										Status.UNVER,
+										new Date(f.lastModified()),
+										null
+									)
+								);
+					} catch (FileNotFoundException e) {
+						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
+					}
+				}
+			}
+		}
 	}
 }

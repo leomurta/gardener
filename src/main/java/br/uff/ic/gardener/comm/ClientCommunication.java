@@ -4,7 +4,6 @@
  */
 package br.uff.ic.gardener.comm;
 
-import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import java.io.BufferedReader;
 import java.io.IOException;

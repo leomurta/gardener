@@ -4,7 +4,6 @@ package br.uff.ic.gardener.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +49,7 @@ public class UtilStream {
 	 * Preenche um arquivo com várias linhas de String
 	 * @param file o arquivo a ser preenchido
 	 * @param strVec as linhas que o preencherão
+	 * @deprecated não usar pq ela será removida daqui, não deve haver file aqui nesta classe
 	 */
 	public static void fillFile(File file, String... strVec)throws IOException
 	{
@@ -124,6 +124,7 @@ public class UtilStream {
      * @param strVec
      *
      * @throws IOException
+     * @deprecated não usar pq ela será removida daqui, não deve haver file aqui nesta classe
      */
     public static void fillFile( String strFile, String... strVec ) throws IOException {
         fillFile( new File( strFile ), strVec );

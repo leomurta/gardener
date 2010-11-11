@@ -9,16 +9,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.WorkspaceOperation;
 
 public class Workspace {
 
@@ -37,19 +39,19 @@ public class Workspace {
 	/**
 	 * Lista que irá conter as transações especificadas no workspace. Ela nunca altera de tamanho 
 	 */
-	private ArrayList<WorkspaceOperation> listOperations = new ArrayList<WorkspaceOperation>();
+	private ArrayList<CIWorkspaceStatus> listOperations = new ArrayList<CIWorkspaceStatus>();
 	
 	/**
 	 * Lista que receberá as novas operações do workspace para serem gravadas em um commit
 	 */
-	private LinkedList<WorkspaceOperation> listNewOperations = new LinkedList<WorkspaceOperation>();
+	private LinkedList<CIWorkspaceStatus> listNewOperations = new LinkedList<CIWorkspaceStatus>();
 	
 	private WorkspaceConfigParser parser = null;
 	
 	/**
 	 * Lista com os itens contidos no workspace. (carregados do arquivo de configuração)
 	 */
-	private ArrayList<URI> listICContent = new ArrayList<URI>();
+	private ArrayList<CIWorkspace> listICContent = new ArrayList<CIWorkspace>();
 	
 	/**
 	 * The current revisionID of workspace
@@ -61,13 +63,19 @@ public class Workspace {
 	
 	private URI servSource = null;
 
+	/**
+	 * @deprecated it should use a URI because workspace not should know file access.
+	 * @return
+	 */
 	public File getPath() {
 		return path;
 	}
 
+	/*
+	 * 
 	public void setPath(File path) {
 		this.path = path;
-	}
+	}*/
 
 	/**
 	 * get APIClient of application
@@ -94,7 +102,7 @@ public class Workspace {
 		currentRevision = revision;
 	}
 	
-	public final List<WorkspaceOperation> getOperationList()
+	private final List<CIWorkspaceStatus> getOperationList()
 	{
 		return listOperations;
 	}
@@ -103,7 +111,7 @@ public class Workspace {
 	 * Retorna lista de novas operações a serem manipuladas
 	 * @return
 	 */
-	public final List<WorkspaceOperation> getNewOperationList()
+	private final List<CIWorkspaceStatus> getNewOperationList()
 	{
 		return this.listNewOperations;
 	}
@@ -142,6 +150,7 @@ public class Workspace {
 		{
 			try {
 				parser.loadProfile(listICContent);
+				Collections.sort(listICContent);
 			} catch (WorkspaceConfigParserException e) {
 				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
 			}
@@ -265,9 +274,8 @@ public class Workspace {
 		return servSource;
 	}
 
-	public void removeFiles(Collection<File> listFiles) throws WorkspaceException {
-	
-		URI basePath = getPath().toURI();
+	public void removeFiles(Collection<File> listFiles) throws WorkspaceException 
+	{
 		//número de itens adicionados na lista
 		int qtdRemove = 0;
 		
@@ -276,12 +284,10 @@ public class Workspace {
 			{
 				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
 				{				
-					URI uri = containItem(f);
-					if(uri != null)
+					CIWorkspace ci = containItem(f);
+					if(ci != null)
 					{
-						uri = f.toURI();
-						uri = basePath.relativize(uri);
-						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.REMOVE_FILE, uri.toString() ));
+						listNewOperations.add(new CIWorkspaceStatus(ci.getURI(), null, Status.REM));
 						f.delete();
 						qtdRemove ++;
 					}else
@@ -307,7 +313,6 @@ public class Workspace {
 	
 	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
 	{
-		URI basePath = getPath().toURI();
 		//número de itens adicionados na lista nesta operação de add
 		int qtdAdd = 0;
 		
@@ -317,12 +322,11 @@ public class Workspace {
 			{
 				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
 				{
-					URI uri = containItem(f);
-					if(uri == null)
-					{
-						uri = f.toURI();
-						uri = basePath.relativize(uri);
-						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, uri.toString() ));
+					CIWorkspace ci = containItem(f);
+					if(ci == null)
+					{;
+						URI uri = FileHelper.getRelative(getPath(), f);
+						listNewOperations.add(new CIWorkspaceStatus(uri, null, Status.ADD));
 						qtdAdd ++;
 					}else
 					{
@@ -351,23 +355,23 @@ public class Workspace {
 	 * @return uma URI para o arquivo que está sendo modificado
 	 * @throws URISyntaxException
 	 */
-	private URI containItem(File f) throws URISyntaxException 
+	private CIWorkspace containItem(File f) throws URISyntaxException 
 	{
 		
 		URI uri = f.toURI();
 		uri = path.toURI().relativize(uri);
-		URI wo = containItem(this.listOperations, uri);
-		if(wo != null)
-			return wo;
+		CIWorkspace ci = containItem(this.listOperations, uri);
+		if(ci != null)
+			return ci;
 		
-		wo = containItem(this.listNewOperations, uri);
-		if(wo != null)
-			return wo;
+		ci = containItem(this.listNewOperations, uri);
+		if(ci != null)
+			return ci;
 		
-		for(URI uriIC: this.listICContent)
+		for(CIWorkspace ciFor: this.listICContent)
 		{
-			if(uriIC.equals(uri))
-				return uriIC;
+			if(ciFor.getURI().equals(uri))
+				return ciFor;
 		}
 		return null;
 		
@@ -381,19 +385,14 @@ public class Workspace {
 	 * @return the operation that references the URI.
 	 * @throws URISyntaxException 
 	 */
-	private static URI containItem(Collection<WorkspaceOperation> coll, URI uri) throws URISyntaxException
+	private static CIWorkspace containItem(Collection<CIWorkspaceStatus> coll, URI uri) throws URISyntaxException
 	{
 		
-		for(WorkspaceOperation op: coll)
+		for(CIWorkspace op: coll)
 		{
-			if((op.getParamQtd() > 0))
-			{				
-				String str = op.getParamAt(0);
-				
-				URI uriColl = new URI(str);
-				if(uriColl.equals(uri))
-					return uriColl;
-			}
+			URI uriColl = op.getURI();
+			if(uriColl.equals(uri))
+				return op;
 		}
 		
 		return null;
@@ -426,34 +425,185 @@ public class Workspace {
 	{
 		try
 		{
-			parser.save();
+			parser.save(getNewOperationList());
 		}catch(WorkspaceConfigParserException e)
 		{
 			throw new WorkspaceException(null, "Error in the save workspace", e);
 		}
 	}
 
+	public void getStatus(Collection<CIWorkspaceStatus> coll ) throws WorkspaceException
+	{
+		processStatus(this.getPath(), coll);
+	}
+	
+	private boolean[] processStatusFunctionMachine(Collection<CIWorkspaceStatus> coll, CIWorkspace or, CIWorkspaceStatus mod, CIWorkspaceStatus real, boolean [] bReturn)
+	{	
+		for(int i = 0; i < bReturn.length; i++)
+			bReturn[i] = false;
+		
+		if(or == null)
+			or = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
+		
+		if(mod == null)
+			mod = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
+		
+		if(real == null)
+			real = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
+		
+		//caso acabou tudo
+		if((or == mod) && (or == real) && (or == CIWorkspaceStatus.NEVER_EQUAL_STATUS))
+			return bReturn;
+		
+		if(or.equals(mod))
+		{
+			if(mod.equals(real))
+			{
+				//3 equal
+				bReturn[0]= bReturn[1] = bReturn[2] = true;
+				coll.add(new CIWorkspaceStatus(mod));
+			}else
+			{
+				//or == mod
+				bReturn[0]=bReturn[1]=true;
+				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+			}
+		}else if(mod.equals(real))
+		{
+			//mod == real
+			bReturn[1]=bReturn[2]=true;
+			coll.add(new CIWorkspaceStatus(mod));
+		}else if(or.equals(real))
+		{
+			//or == real
+			bReturn[1]=bReturn[2]=true;
+			if(real.getDateModified().compareTo(this.getCheckoutTime()) > 0)
+			{
+				coll.add(new CIWorkspaceStatus(real, Status.VER));
+			}else
+			{
+				coll.add(new CIWorkspaceStatus(real, Status.MOD));
+			}
+		}else
+		{
+			//pega o mínimo
+			CIWorkspaceStatus ciw = (CIWorkspaceStatus) min((CIWorkspace)or, (CIWorkspace)mod, (CIWorkspace)real);
+			if(ciw == or)
+			{
+				bReturn[0] = true;
+				coll.add(new CIWorkspaceStatus(real, Status.VER_MISSED));
+			}
+			else if(ciw == mod)
+			{
+				bReturn[1] = true;
+				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+			}
+			else
+			{
+				bReturn[2] = true;
+				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
+			}
+		}
+		
+		return bReturn;
+	}
+
+	private static <T extends Comparable<T>> T min(T... args)
+	{
+		T minItem = args[0];
+		for(int i = 1; i< args.length; i++)
+		{
+			int value = minItem.compareTo(args[i]);
+			if(value >=0)
+				minItem = args[i];
+		}
+		
+		return minItem;
+	}
+	
+	/**
+	 * Internal generate status operation
+	 * @param currentPath the path inpected now
+	 * @param coll the collection witch receives the CIStatus
+	 * @throws WorkspaceException 
+	 */
+	private Collection<CIWorkspaceStatus> processStatus(File currentPath, Collection<CIWorkspaceStatus> coll) throws WorkspaceException {
+	
+	
+		Collection<CIWorkspace> collOriginal = this.getOriginalCIContent();//já ordenado
+		
+		PriorityQueue<CIWorkspaceStatus> queueNew = new PriorityQueue<CIWorkspaceStatus>();
+		
+		for(CIWorkspaceStatus ciw: this.getOperationList())
+		{
+			queueNew.add(ciw);
+		}
+		
+		for(CIWorkspaceStatus ciw: this.getNewOperationList())
+		{
+			queueNew.add(ciw);
+		}
+		
+		PriorityQueue<CIWorkspaceStatus> queueReal = new PriorityQueue<CIWorkspaceStatus>();
+		
+		try {
+			parser.loadRealICContent(queueReal);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível verificar o conteúdo atual do workspace", e);
+		}
+		
+		Iterator<CIWorkspace> itOr = collOriginal.iterator();
+		Iterator<CIWorkspaceStatus> itMod = queueNew.iterator();
+		Iterator<CIWorkspaceStatus> itReal = queueReal.iterator();
+		
+		boolean[] bNext = {itOr.hasNext(), itMod.hasNext(), itReal.hasNext()};
+		CIWorkspace or = itOr.next();
+		CIWorkspaceStatus mod = itMod.next();
+		CIWorkspaceStatus real = itReal.next();
+		do
+		{
+			bNext = this.processStatusFunctionMachine(coll, or, mod, real, bNext);
+			if(bNext[0])
+				or = itOr.next();
+			
+			if(bNext[1])
+				mod = itMod.next();
+			if(bNext[2])
+				real = itReal.next();
+				
+		}while(bNext[0] == bNext[1] == bNext[2] == false);
+		
+		
+		return coll;
+	}
+	
+	private Collection<CIWorkspace> getOriginalCIContent()
+	{
+		return this.listICContent;
+	}
+
 	static public FileFilter getNotFileConfigFilter() {
 		return WorkspaceConfigParser.getNotFileConfigFilter();
 	}
+	
+	
 
+	/*
 	/**
 	 * Generate ConfigurationItens representing the new revision configured in the workspace 
 	 * @param list
-	 */
+	 *
 	public void generateCheckin(List<ConfigurationItem> list) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	/**
+	**
 	 * process operations with reflect a new version
-	 */
-	public void processOperations() {
-		// TODO Auto-generated method stub
-		
-	}
-	
+	 *
+	public void processOperations() 
+	{
+	}*/	
 
 }
 
