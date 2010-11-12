@@ -583,19 +583,6 @@ public class CLI {
 			
 			throw new TransationException(str.toString());
 		}
-			
-		/*
-		 *   case 'c': //CONTEXT-FORMAT
-                return getContextFormatter();
-            case 'l': // LESS-CONTEXT-FORMAT
-                return getLessContextFormatter();
-            case 'f': //FULL-CONTEXT-FORMAT
-                return getFullContextFormatter();
-            case 'n':  //NORMAL-FORMAT
-                return getNormalFormatter();
-            case 'u':  //UNIFIED-FORMAT
-                return getUnifiedFormatter();
-		 */
 		Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
         diff.setOutputFormat();
         
@@ -611,6 +598,19 @@ public class CLI {
 		bDiffUnifiedFormat = false;
 	}
 
+	
+	/**Return the format for diff
+	 *   case 'c': //CONTEXT-FORMAT
+            return getContextFormatter();
+        case 'l': // LESS-CONTEXT-FORMAT
+            return getLessContextFormatter();
+        case 'f': //FULL-CONTEXT-FORMAT
+            return getFullContextFormatter();
+        case 'n':  //NORMAL-FORMAT
+            return getNormalFormatter();
+        case 'u':  //UNIFIED-FORMAT
+            return getUnifiedFormatter();
+	 */
 	private char getContextFormat() {
 		if(bDiffUnifiedFormat)
 			return 'u';

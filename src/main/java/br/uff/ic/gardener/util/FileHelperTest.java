@@ -9,33 +9,31 @@ import java.net.URISyntaxException;
 
 import org.junit.Test;
 
+import br.uff.ic.gardener.workspace.WorkspaceTest;
+
 public class FileHelperTest {
 
 	@Test
 	public void testDeleteDirTree() {
-		fail("Not yet implemented");
+		File path = null;
+		try {
+			path = FileHelper.createTemporaryRandomPath();
+			WorkspaceTest.createWorkspaceStructDirAndFiles(path, 4, 4, 4, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("Cannot create temporary path and create dummy paths");
+		} 
+		
+		FileHelper.deleteDirTree(path);
+		
+		assertTrue(!path.exists());
 	}
 
 	@Test
-	public void testCreateTemporaryRandomFile() {
-		fail("Not yet implemented");
+	public void testCreateTemporaryRandomFile() throws IOException {
+		File f = FileHelper.createTemporaryRandomFile();
+		assertTrue(f.exists());
 	}
-
-	@Test
-	public void testCreateFile() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testFindFiles() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testCreateTemporaryRandomPath() {
-		fail("Not yet implemented");
-	}
-
 
 	@Test
 	public void testGetFileFromURI() {

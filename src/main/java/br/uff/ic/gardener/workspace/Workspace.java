@@ -18,7 +18,6 @@ import java.util.PriorityQueue;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
@@ -29,12 +28,15 @@ public class Workspace {
 	 */
 	private File path = null;
 	
+	/**
+	 * Project name of workspace
+	 */
 	private String strProjectName = null;
 	
 	/**
 	 * reference to the client aplication
 	 */
-	private APIClient client = null;
+	//private APIClient client = null;
 	
 	/**
 	 * Lista que irá conter as transações especificadas no workspace. Ela nunca altera de tamanho 
@@ -46,6 +48,10 @@ public class Workspace {
 	 */
 	private LinkedList<CIWorkspaceStatus> listNewOperations = new LinkedList<CIWorkspaceStatus>();
 	
+
+	/**
+	 * Instance of parser
+	 */
 	private WorkspaceConfigParser parser = null;
 	
 	/**
@@ -58,9 +64,14 @@ public class Workspace {
 	 */
 	private RevisionID currentRevision = RevisionID.ZERO_REVISION;
 	
-	
+	/**
+	 * Date of checkout currentVersion
+	 */
 	private Date checkoutTime = new Date();
 	
+	/**
+	 * Serv source of this workspace
+	 */
 	private URI servSource = null;
 
 	/**
@@ -70,22 +81,7 @@ public class Workspace {
 	public File getPath() {
 		return path;
 	}
-
-	/*
-	 * 
-	public void setPath(File path) {
-		this.path = path;
-	}*/
-
-	/**
-	 * get APIClient of application
-	 * 
-	 */
-	private APIClient getClient() {
-		return client;
-	}
-
-
+	
 	public Date getCheckoutTime() {
 		return checkoutTime;
 	}
@@ -148,18 +144,7 @@ public class Workspace {
 		
 		if(parser.isWorkspaceDir(path))
 		{
-			try {
-				parser.loadProfile(listICContent);
-				Collections.sort(listICContent);
-			} catch (WorkspaceConfigParserException e) {
-				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
-			}
-			
-			try {
-				parser.loadOperations(this.listOperations);
-			} catch (WorkspaceConfigParserException e) {
-				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
-			}
+			loadConfig();
 		}
 	}
 
@@ -172,6 +157,56 @@ public class Workspace {
 		}
 
 	}
+	
+	
+	/**
+	 * Verifica se um arquivo já sofreu operação neste workspace
+	 * @param f O arquivo que está sendo procurado
+	 * @return uma URI para o arquivo que está sendo modificado
+	 * @throws URISyntaxException
+	 */
+	private CIWorkspace containItem(File f) throws URISyntaxException 
+	{
+		
+		URI uri = f.toURI();
+		uri = path.toURI().relativize(uri);
+		CIWorkspace ci = containItem(this.listOperations, uri);
+		if(ci != null)
+			return ci;
+		
+		ci = containItem(this.listNewOperations, uri);
+		if(ci != null)
+			return ci;
+		
+		for(CIWorkspace ciFor: this.listICContent)
+		{
+			if(ciFor.getURI().equals(uri))
+				return ciFor;
+		}
+		return null;
+		
+		
+	}
+	
+	/**
+	 * Return a operation of add in container coll
+	 * @param coll Container
+	 * @param uri Relative URI
+	 * @return the operation that references the URI.
+	 * @throws URISyntaxException 
+	 */
+	private static CIWorkspace containItem(Collection<CIWorkspaceStatus> coll, URI uri) throws URISyntaxException
+	{
+		
+		for(CIWorkspace op: coll)
+		{
+			URI uriColl = op.getURI();
+			if(uriColl.equals(uri))
+				return op;
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Commita as alterações Para isto ele pega os arquivos e diretórios do
@@ -181,35 +216,7 @@ public class Workspace {
 	 */
 	public Collection<ConfigurationItem> commit() throws WorkspaceException 
 	{
-		getClient();
-		//File files[] = path.listFiles(new NotInitDotFileFilter());
-
 		return new LinkedList<ConfigurationItem>();
-//		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-//
-//		try {
-//			for (File f : files) {
-//				InputStream is;
-//
-//				is = new FileInputStream(f);
-//
-//				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-//
-//				try {
-//					UtilStream.copy(is, outBuffer);
-//
-//				} catch (IOException e) {
-//					throw new WorkspaceException(f,
-//							"Erro ao gravar arquivo no buffer em memória", e);
-//				}
-//
-//				InputStream inputStream = new ByteArrayInputStream(
-//						outBuffer.toByteArray());
-//				map.put(f.getName(), inputStream);
-//			}
-//		} catch (FileNotFoundException e) {
-//			throw new WorkspaceException(path, "Arquivo não encontrado", e);
-//		}
 	}
 
 	/**
@@ -261,9 +268,10 @@ public class Workspace {
 
 	/**
 	 * Close the things
+	 * @throws WorkspaceException 
 	 */
-	public void close() {
-		// fecha o que venha a ser necess�rio fechar
+	public void close() throws WorkspaceException {
+		this.saveConfig();
 	}
 
 	public void setServSource(URI servSource) {
@@ -311,92 +319,62 @@ public class Workspace {
 		}
 	}
 	
+	/**
+	 * Do addiction of files
+	 * @param listFiles
+	 * @throws WorkspaceException
+	 */
 	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
 	{
+		addFiles(listFiles, false);
+	}
+	/**
+	 * Do addiction of files
+	 * @param listFiles File to add
+	 * @param ignoreConflict ignore conflict with others operations
+	 */
+	public void addFiles(Collection<File> listFiles, boolean ignoreConflict) throws WorkspaceException {
 		//número de itens adicionados na lista nesta operação de add
 		int qtdAdd = 0;
-		
-		try
+		for(File f: listFiles)
 		{
-			for(File f: listFiles)
+			if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
 			{
-				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
+				try
 				{
 					CIWorkspace ci = containItem(f);
 					if(ci == null)
-					{;
+					{
+						
 						URI uri = FileHelper.getRelative(getPath(), f);
+						
 						listNewOperations.add(new CIWorkspaceStatus(uri, null, Status.ADD));
 						qtdAdd ++;
 					}else
 					{
-						while(qtdAdd > 0)
+						if(!ignoreConflict)
 						{
-							listNewOperations.removeLast();
-							qtdAdd--;
+							while(qtdAdd > 0)
+							{
+								listNewOperations.removeLast();
+								qtdAdd--;
+							}
+							throw new WorkspaceException(f, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
 						}
-						throw new WorkspaceException(f, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
 					}
+				} catch (URISyntaxException e) {
+					while(qtdAdd > 0)
+					{
+						listNewOperations.removeLast();
+						qtdAdd--;
+					}
+					throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
 				}
 			}
-		} catch (URISyntaxException e) {
-			while(qtdAdd > 0)
-			{
-				listNewOperations.removeLast();
-				qtdAdd--;
-			}
-			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
-		}
-	}
-	
-	/**
-	 * Verifica se um arquivo já sofreu operação neste workspace
-	 * @param f O arquivo que está sendo procurado
-	 * @return uma URI para o arquivo que está sendo modificado
-	 * @throws URISyntaxException
-	 */
-	private CIWorkspace containItem(File f) throws URISyntaxException 
-	{
-		
-		URI uri = f.toURI();
-		uri = path.toURI().relativize(uri);
-		CIWorkspace ci = containItem(this.listOperations, uri);
-		if(ci != null)
-			return ci;
-		
-		ci = containItem(this.listNewOperations, uri);
-		if(ci != null)
-			return ci;
-		
-		for(CIWorkspace ciFor: this.listICContent)
-		{
-			if(ciFor.getURI().equals(uri))
-				return ciFor;
-		}
-		return null;
-		
-		
-	}
-	
-	/**
-	 * Return a operation of add in container coll
-	 * @param coll Container
-	 * @param uri Relative URI
-	 * @return the operation that references the URI.
-	 * @throws URISyntaxException 
-	 */
-	private static CIWorkspace containItem(Collection<CIWorkspaceStatus> coll, URI uri) throws URISyntaxException
-	{
-		
-		for(CIWorkspace op: coll)
-		{
-			URI uriColl = op.getURI();
-			if(uriColl.equals(uri))
-				return op;
 		}
 		
-		return null;
 	}
+
 
 	public void renameFile(File fileSource, String strNewName) throws WorkspaceException
 	{
@@ -416,6 +394,28 @@ public class Workspace {
 		}
 	}
 	
+	/**
+	 * Load data of workspace
+	 * @throws WorkspaceException
+	 */
+	private void loadConfig() throws WorkspaceException
+	{
+		listICContent.clear();
+		listOperations.clear();
+		listNewOperations.clear();
+		try {
+			parser.loadProfile(listICContent);
+			Collections.sort(listICContent);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
+		}
+		
+		try {
+			parser.loadOperations(this.listOperations);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
+		}
+	}
 	
 	/**
 	 * Save workspace content in the config files in the directory
@@ -426,6 +426,8 @@ public class Workspace {
 		try
 		{
 			parser.save(getNewOperationList());
+			listOperations.addAll(listNewOperations);
+			listNewOperations.clear();
 		}catch(WorkspaceConfigParserException e)
 		{
 			throw new WorkspaceException(null, "Error in the save workspace", e);
@@ -436,99 +438,14 @@ public class Workspace {
 	{
 		processStatus(this.getPath(), coll);
 	}
+
 	
-	/*private boolean[] processStatusFunctionMachine(Collection<CIWorkspaceStatus> coll, CIWorkspace or, CIWorkspaceStatus mod, CIWorkspaceStatus real, boolean [] bReturn)
-	{	
-		
-		if(or.equals(mod) && mod.equals(real))
-		{
-			
-		}else if(or.equals(mod))
-		{
-			
-		}else if (mod.equals(real))
-		{
-			
-		}else if(or.equals(real))
-		{
-			
-		}
-		else
-		{
-			
-		}
-		
-		return bReturn;*/
-		/*for(int i = 0; i < bReturn.length; i++)
-			bReturn[i] = false;
-		
-		if(or == null)
-			or = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
-		
-		if(mod == null)
-			mod = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
-		
-		if(real == null)
-			real = CIWorkspaceStatus.NEVER_EQUAL_STATUS;
-		
-		//caso acabou tudo
-		if((or == mod) && (or == real) && (or == CIWorkspaceStatus.NEVER_EQUAL_STATUS))
-			return bReturn;
-		
-		if(or.equals(mod))
-		{
-			if(mod.equals(real))
-			{
-				//3 equal
-				bReturn[0]= bReturn[1] = bReturn[2] = true;
-				coll.add(new CIWorkspaceStatus(mod));
-			}else
-			{
-				//or == mod
-				bReturn[0]=bReturn[1]=true;
-				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
-			}
-		}else if(mod.equals(real))
-		{
-			//mod == real
-			bReturn[1]=bReturn[2]=true;
-			coll.add(new CIWorkspaceStatus(mod));
-		}else if(or.equals(real))
-		{
-			//or == real
-			bReturn[1]=bReturn[2]=true;
-			if(real.getDateModified().compareTo(this.getCheckoutTime()) > 0)
-			{
-				coll.add(new CIWorkspaceStatus(real, Status.VER));
-			}else
-			{
-				coll.add(new CIWorkspaceStatus(real, Status.MOD));
-			}
-		}else
-		{
-			//pega o mínimo
-			CIWorkspaceStatus ciw = (CIWorkspaceStatus) min((CIWorkspace)or, (CIWorkspace)mod, (CIWorkspace)real);
-			if(ciw == or)
-			{
-				bReturn[0] = true;
-				coll.add(new CIWorkspaceStatus(real, Status.VER_MISSED));
-			}
-			else if(ciw == mod)
-			{
-				bReturn[1] = true;
-				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
-			}
-			else
-			{
-				bReturn[2] = true;
-				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
-			}
-		}
-		
-		return bReturn;
-	}*/
-	
-	
+	/**
+	 * Pop item from a iterator. If do not have item in the iterator, return null;
+	 * @param <T>
+	 * @param it
+	 * @return
+	 */
 	private static <T> T pop(Iterator<T> it)
 	{
 		if(it.hasNext())
@@ -536,8 +453,46 @@ public class Workspace {
 		else
 			return null;
 	}
+	
+	/**
+	 * Return the min value of two itens
+	 * null is greater than anything	
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private static <T extends Comparable<T>> boolean minus(T a, T b)
+	{
+		if(a== null)
+		{
+				return false;
+		}else
+		{
+			if(b==null)
+				return true;
+			else {
+				return a.compareTo(b) < 0;
+			}
+				
+		}
+	}
+	
 	/**
 	 * Internal generate status operation
+	 * 	
+	 * It need list of Original itens, modified items and real itens (non-versioned)
+	 * Begin with a iterator for init of tree lists and does a "merge" of them.
+	 * for each situation in the merge, the algorith should add a operation in the return list
+	 * Algorithm table: (O = original, M = Modified, R = Real)
+	 * equal value 	| Operation
+	 * OMR 			| pop(O,M,R), add(M), status(M)
+	 * OM			| pop(O,M)	, add(M), status(missed(M))
+	 * MR			| pop(M,R)	, add(M), status(M)
+	 * OR			| pop(O,R)	, add(R), status(Versioned or Modified)
+	 * O			| pop(O)	, add(O), status(missed(O))
+	 * M			| pop(M)	, add(M), status(missed(M))
+	 * R			| pop(R)	, add(R), status(unversioned)
+	 * 
 	 * @param currentPath the path inpected now
 	 * @param coll the collection witch receives the CIStatus
 	 * @throws WorkspaceException 
@@ -582,12 +537,12 @@ public class Workspace {
 				//5 caso, só 1
 				coll.add(new CIWorkspaceStatus(or, Status.VER_MISSED));
 				or 	= pop(itOr);
-			}else if(minus(mod, or) && minus(mod, real))
+			}else if(minus(mod, or) && minus((CIWorkspace)mod, real))
 			{
 				//6 caso só 1
 				coll.add(new CIWorkspaceStatus(mod, Status.VER_MISSED));
 				mod	= pop(itMod);
-			}else if(minus(real, or) && minus(real,mod))
+			}else if(minus(real, or) && minus((CIWorkspace)real,mod))
 			{
 				//7 caso só 1
 				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
@@ -629,65 +584,9 @@ public class Workspace {
 		
 		
 		return coll;
-		/*CIWorkspace[] listMin = {or, mod,real};
-		Arrays.sort(listMin);
-		CIWorkspace min = null;
-		for(int pos = 0; pos < listMin.length; i++)
-		{
-			if(listMin[pos] != null)
-			{ 
-				min = listMin[pos];
-				break;
-			}				
-		}
-		
-		if(min != null)
-		{
-			if(min == )
-		}*/
-		/*
-		
-		boolean[] bNext = {itOr.hasNext(), itMod.hasNext(), itReal.hasNext()};
-		CIWorkspace or = itOr.hasNext()?itOr.next():null;
-		CIWorkspaceStatus mod = itMod.hasNext()?itMod.next():null;
-		CIWorkspaceStatus real = itReal.hasNext()?itReal.next():null;
-		do
-		{
-			bNext = this.processStatusFunctionMachine(coll, or, mod, real, bNext);
-			if(bNext[0])
-				or = itOr.next();
-			
-			if(bNext[1])
-				mod = itMod.next();
-			
-			if(bNext[2])
-				real = itReal.next();
-				
-		}while(bNext[0] == bNext[1] == bNext[2] == false);
-		
-		*/
 	}
 	
-	/**
-	 * null is greater than anything	
-	 * @param a
-	 * @param b
-	 * @return
-	 */
-	private static boolean minus(CIWorkspace a, CIWorkspace b)
-	{
-		if(a== null)
-		{
-				return false;
-		}else
-		{
-			if(b==null)
-				return true;
-			else
-				return a.compareTo(b) < 0;
-				
-		}
-	}
+
 	
 	private static boolean equals(CIWorkspace a, CIWorkspace b) {
 		if(a == null)
@@ -719,25 +618,5 @@ public class Workspace {
 		listOperations.clear();
 		listNewOperations.clear();		
 	}
-	
-	
-
-	/*
-	/**
-	 * Generate ConfigurationItens representing the new revision configured in the workspace 
-	 * @param list
-	 *
-	public void generateCheckin(List<ConfigurationItem> list) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	**
-	 * process operations with reflect a new version
-	 *
-	public void processOperations() 
-	{
-	}*/	
-
 }
 

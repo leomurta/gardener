@@ -77,8 +77,6 @@ public class APIClient {
 		{
 			throw new APIClientException("Can not create Workspace", e);
 		}
-		
-	//	uriServ = workspace.getServSource();
 	}
 	/**Constructor that Sets Workspace URI and initialize the workspace attribute
 	 * @param uriWorkspace
@@ -130,10 +128,7 @@ public class APIClient {
 			throw new TransationException("Error retrieving files from server", e);
 		} catch (APIClientException e) {
 			throw new TransationException("Error in APIClient ", e);
-		}
-		
-		//set checkout to Workspace
-		
+		}		
 	}
 
 	/**
@@ -146,10 +141,6 @@ public class APIClient {
 	 */
 	public RevisionID commit(String msg) throws TransationException
 	{
-		//List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
-		//getWorkspace().generateCheckin(list);
-	//	getComClient().commit("", msg, list);
-		//getWorkspace().processOperations();
 		return RevisionID.ZERO_REVISION;
 	}
 
@@ -161,7 +152,7 @@ public class APIClient {
 			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
-			throw e;//new APIClientException("Do not add files in the workspace", e);
+			throw e;
 		}
 	}
 
@@ -215,11 +206,9 @@ public class APIClient {
 		try {
 			getComClient().checkout("", getComClient().getLastRevision(""), list);
 		} catch (ComClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new TransationException("Cannot realize update transation", e);
 		} catch (APIClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new TransationException("Cannot realize update transation", e);
 		}
 		
 	}
