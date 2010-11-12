@@ -74,8 +74,31 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 		return inputStream;
 	}
 	@Override
-	public int compareTo(CIWorkspace arg0) {
-		return this.getURI().compareTo(arg0.getURI());
+	public int compareTo(CIWorkspace arg0)
+	{
+		if(this == null)
+		{
+			if(arg0 == null)
+				return 0;
+			else
+				return -1;
+		}else
+		{
+			if(arg0 == null)
+				return 1;
+		}
+		
+		if(getURI() != null && arg0.getURI() != null)
+			return this.getURI().getPath().compareTo(arg0.getURI().getPath());
+		else
+		{
+			if(getURI() != null)
+				return 1;
+			else if(arg0.getURI() != null)
+				return -1;
+			else
+				return 0;
+		}
 	}
 	
 	public Date getDateModified()
@@ -86,15 +109,8 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 	public boolean equals(Object obj)
 	{
 		if(obj instanceof CIWorkspace)
-		{
-			CIWorkspace ciw = (CIWorkspace)obj;
-			if(ciw.getURI() == null && ciw.getInputStream()==null)
-				return false;//neverEqual
-			else
-				return getURI().equals(ciw.getURI());
-		}else
-		{
+			return compareTo((CIWorkspace)obj) == 0;
+		else
 			return false;
-		}
 	}
 }

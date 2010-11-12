@@ -1,13 +1,19 @@
 package br.uff.ic.gardener.workspace;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,7 +21,6 @@ import org.junit.Test;
 
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.TestWithTemporaryPath;
-import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 
@@ -49,9 +54,8 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 		psProfile.println("REVISION " + RevisionID.ZERO_REVISION.toString());
 		psProfile.println("LAST_TIMESTAMP_CHECKOUT       \t\t\t \"4234\"");
 		psProfile.close();
-		
-		ArrayList<URI> array = new ArrayList<URI>();
-		wParser.loadProfile(array);
+		LinkedList<CIWorkspace> list = new LinkedList<CIWorkspace>();
+		wParser.loadProfile(list);
 		
 		Assert.assertEquals("Carregamento de arquivo não foi bem sucedido", new Date(4234), workspace.getCheckoutTime());
 		Assert.assertEquals("Carregamento de arquivo não foi bem sucedido", null, workspace.getServSource());
@@ -59,24 +63,29 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 	}
 	
 	@Test
-	public void testLoadOperations() throws WorkspaceConfigParserException, FileNotFoundException
+	public void testLoadOperations() throws WorkspaceConfigParserException, FileNotFoundException, URISyntaxException
 	{
 		File pathWorkspace = this.folder.newFolder("workspace");
 		OutputStream os = new FileOutputStream(new File(pathWorkspace, WorkspaceConfigParser.STR_FILE_OPERATION));
 		PrintStream ps = new PrintStream(os, true);
-		ps.println("+++ a.txt");
-		ps.println("+++ b.txt");
-		ps.println("--- c.txt");
-		ps.println("+-RRR d.txt e.txt");
+		
+		List<CIWorkspaceStatus> list = new LinkedList<CIWorkspaceStatus>();
+		
+		list.add(new CIWorkspaceStatus(new URI("a.txt"), null, Status.ADD));
+		list.add(new CIWorkspaceStatus(new URI("b.txt"), null, Status.ADD));
+		list.add(new CIWorkspaceStatus(new URI("c.txt"), null, Status.REM));
+		list.add(new CIWorkspaceStatus(new URI("d.txt"), null, Status.RENAME, null, new URI("e.txt")));
+		
+		for(CIWorkspaceStatus ci: list)
+		{
+			ps.println(ci.toString());
+		}
 		ps.close();
+	
+		List<CIWorkspaceStatus> list2 = new LinkedList<CIWorkspaceStatus>();
+		wParser.loadOperations(list2);
 		
-		ArrayList<WorkspaceOperation> list = new ArrayList<WorkspaceOperation>();
-		wParser.loadOperations(list);
-		
-		Assert.assertEquals(list.get(0), new WorkspaceOperation(Operation.ADD_FILE, "a.txt"));
-		Assert.assertEquals(list.get(1), new WorkspaceOperation(Operation.ADD_FILE, "b.txt"));
-		Assert.assertEquals(list.get(2), new WorkspaceOperation(Operation.REMOVE_FILE, "c.txt"));
-		Assert.assertEquals(list.get(3), new WorkspaceOperation(Operation.RENAME_FILE, "d.txt", "e.txt"));
+		Assert.assertEquals(list, list2);
 	}
 	
 	@Test
@@ -84,31 +93,59 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 	{
 		File pathWorkspace = folder.newFolder("workspace");
 		OutputStream os = new FileOutputStream(new File(pathWorkspace, WorkspaceConfigParser.STR_FILE_OPERATION));
+		
+		CIWorkspaceStatus[] array = null;
+		try {
+		array = new CIWorkspaceStatus[]{
+		/*0*/	new CIWorkspaceStatus(new URI("a.bat"), null,Status.ADD),
+		/*1*/	new CIWorkspaceStatus(new URI("b.bat"), null,Status.ADD),
+		/*2*/	new CIWorkspaceStatus(new URI("c.bat"), null,Status.REM),
+		/*3*/	new CIWorkspaceStatus(new URI("d.bat"), null,Status.RENAME, new Date(), new URI("e.txt")),
+		/*4*/	new CIWorkspaceStatus(new URI("x.bat"), null,Status.ADD),
+		/*5*/	new CIWorkspaceStatus(new URI("y.bat"), null,Status.ADD),
+		/*6*/	new CIWorkspaceStatus(new URI("w.bat"), null,Status.REM),
+		/*7*/	new CIWorkspaceStatus(new URI("z.bat"), null,Status.REM),
+		/*8*/	new CIWorkspaceStatus(new URI("z.bat"), null,Status.RENAME, new Date(), new URI("q.bat"))
+		};
+		
 		PrintStream ps = new PrintStream(os, true);
-		ps.println("+++ a.txt");
-		ps.println("+++ b.txt");
-		ps.println("--- c.txt");
-		ps.println("+-RRR d.txt e.txt");
+		for(int i = 0; i < 4; i++)
+		{
+			ps.println(array[i].toString());
+		}
 		ps.close();
 		
-		ArrayList<WorkspaceOperation> list = new ArrayList<WorkspaceOperation>();
-		list.add(new WorkspaceOperation(Operation.ADD_FILE, "x.bat"));
-		list.add(new WorkspaceOperation(Operation.ADD_FILE, "y.bat"));
-		list.add(new WorkspaceOperation(Operation.REMOVE_FILE, "w.bat"));
-		list.add(new WorkspaceOperation(Operation.REMOVE_FILE, "z.bat"));
-		list.add(new WorkspaceOperation(Operation.RENAME_FILE, "p.bat", "q.bat"));
-		wParser.appendOperations(list);
+		ArrayList<CIWorkspaceStatus> list = new ArrayList<CIWorkspaceStatus>();
 		
-		wParser.loadOperations(list);
-		Assert.assertEquals(list.get(0), new WorkspaceOperation(Operation.ADD_FILE, "a.txt"));
-		Assert.assertEquals(list.get(1), new WorkspaceOperation(Operation.ADD_FILE, "b.txt"));
-		Assert.assertEquals(list.get(2), new WorkspaceOperation(Operation.REMOVE_FILE, "c.txt"));
-		Assert.assertEquals(list.get(3), new WorkspaceOperation(Operation.RENAME_FILE, "d.txt", "e.txt"));
-		Assert.assertEquals(list.get(4), new WorkspaceOperation(Operation.ADD_FILE, "x.bat"));
-		Assert.assertEquals(list.get(5), new WorkspaceOperation(Operation.ADD_FILE, "y.bat"));
-		Assert.assertEquals(list.get(6), new WorkspaceOperation(Operation.REMOVE_FILE, "w.bat"));
-		Assert.assertEquals(list.get(7), new WorkspaceOperation(Operation.REMOVE_FILE, "z.bat"));
-		Assert.assertEquals(list.get(8), new WorkspaceOperation(Operation.RENAME_FILE, "p.bat", "q.bat"));		
+			for(int i = 4; i < array.length; i++ )
+			{
+				list.add(array[i]);
+			}
+			wParser.appendOperations(list);
+			wParser.loadOperations(list);
+			
+			for(int i = 0; i < array.length; i++)
+			{
+				Assert.assertEquals(array[i], list.get(i));
+			}
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			fail("Cannot parse URI");
+		}
+	}
+	
+	@Test
+	public void loadRealICContentTest() throws IOException, WorkspaceConfigParserException
+	{
+		WorkspaceTest.createWorkspaceStructDirAndFiles(workspace.getPath(), 3, 3, 3, true);
 		
+		LinkedList<CIWorkspaceStatus> list  =  new LinkedList<CIWorkspaceStatus>();
+		wParser.loadRealICContent(list);
+		
+		for(CIWorkspaceStatus ci: list)
+		{
+			File f = new File(workspace.getPath(), ci.getStringID());
+			Assert.assertTrue("Expected file not found: " + f.toString(),f.exists());
+		}
 	}
 }

@@ -165,51 +165,39 @@ public class WorkspaceConfigParser
 				try
 				{
 				token = twq.nextToken();
+				String strFile = twq.nextToken();
+				String strFileOld = twq.nextToken();
 				if(Status.ADD.isLabel(token))
 				{
-					String strFile = twq.nextToken();
 					list.add(
 							new CIWorkspaceStatus(
 									new URI(strFile), 
-									new FileInputStream(
-											new File(
-													FileHelper.getRelative(
-															directory.toURI(), 
-															new URI(strFile)
-														)
-												)
-											),
-									Status.ADD));					
+									generateInputStream(strFile),
+									Status.ADD,
+									workspace.getCheckoutTime(),
+									null));					
 				}
 				else if(Status.REM.isLabel(token))
 				{
-					String strFile = twq.nextToken();
 					list.add(
 							new CIWorkspaceStatus(
 									new URI(strFile), 
 									null,
-									Status.REM	
+									Status.REM,
+									workspace.getCheckoutTime(),
+									null
 									)
 							);
 				}else if(Status.RENAME.isLabel(token))
 				{
-					String strFile1 = twq.nextToken();
-					String strFile2 = twq.nextToken();
 					
 						list.add(
 								new CIWorkspaceStatus(
-										new URI(strFile1), 
-										new FileInputStream(
-												new File(
-														FileHelper.getRelative(
-																directory.toURI(), 
-																new URI(strFile1)
-															)
-													)
-												),
+										new URI(strFile), 
+										generateInputStream(strFile),
 										Status.ADD,
 										workspace.getCheckoutTime(),
-										new URI(strFile2)
+										new URI(strFileOld)
 										)
 								);
 					
@@ -229,6 +217,17 @@ public class WorkspaceConfigParser
 		}
 		
 	}
+	private InputStream generateInputStream(String strFile) {
+		File file = new File(directory, strFile);
+		try
+		{
+			return new FileInputStream(file);
+		}catch(FileNotFoundException e)
+		{
+			return null;
+		}
+	}
+
 	/**
 	 * Append operations in the operation file
 	 * @param list the list of operations to append in the file
@@ -245,7 +244,7 @@ public class WorkspaceConfigParser
 		
 		for(CIWorkspace wo: list)
 		{
-			ps.println(wo.getStringID());
+			ps.println(wo.toString());
 		}
 		ps.close();
 		} catch (FileNotFoundException e) {

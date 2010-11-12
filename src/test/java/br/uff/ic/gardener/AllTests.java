@@ -12,16 +12,16 @@ import br.uff.ic.gardener.util.FileHelperTest;
 import br.uff.ic.gardener.util.TokenizerWithQuoteTest;
 import br.uff.ic.gardener.patch.PatchTest;
 
-@RunWith(Suite.class)
-@SuiteClasses({ 
-	WorkspaceTest.class, 
-	CLITest.class,  
-	ClientFactoryTest.class,  
-	WorkspaceTest.class, 
-	WorkspaceConfigParserTest.class,
-	PatchTest.class, 
-	TokenizerWithQuoteTest.class,
-	ConfigurationItemTest.class,
-	FileHelperTest.class})
+//@RunWith(Suite.class)
+//@SuiteClasses({ 
+//	WorkspaceTest.class, 
+//	CLITest.class,  
+//	ClientFactoryTest.class,  
+//	WorkspaceTest.class, 
+//	WorkspaceConfigParserTest.class,
+//	PatchTest.class, 
+//	TokenizerWithQuoteTest.class,
+//	ConfigurationItemTest.class,
+//	FileHelperTest.class})
 public class AllTests {
 }

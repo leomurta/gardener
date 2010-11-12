@@ -12,6 +12,7 @@ import java.io.FileFilter;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
+import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 import br.uff.ic.gardener.ConfigurationItem;
@@ -220,6 +221,11 @@ public class APIClient {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+	}
+
+	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {
+		getWorkspace().getStatus(coll);
 		
 	}
 

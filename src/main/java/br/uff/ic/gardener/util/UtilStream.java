@@ -45,24 +45,6 @@ public class UtilStream {
 		}
 	}
 	
-	/**
-	 * Preenche um arquivo com várias linhas de String
-	 * @param file o arquivo a ser preenchido
-	 * @param strVec as linhas que o preencherão
-	 * @deprecated não usar pq ela será removida daqui, não deve haver file aqui nesta classe
-	 */
-	public static void fillFile(File file, String... strVec)throws IOException
-	{
-		FileWriter fw;
-		fw = new FileWriter(file);
-		PrintWriter pw = new PrintWriter(fw);
-
-		for (String str : strVec) {
-			pw.append(str + getLineSeperator());
-		}
-		pw.close();
-	
-	}
 	
 	
 	
@@ -116,20 +98,7 @@ public class UtilStream {
         }
     }
 
-    /**
-     * Method description
-     *
-     *
-     * @param strFile
-     * @param strVec
-     *
-     * @throws IOException
-     * @deprecated não usar pq ela será removida daqui, não deve haver file aqui nesta classe
-     */
-    public static void fillFile( String strFile, String... strVec ) throws IOException {
-        fillFile( new File( strFile ), strVec );
-    }
-
+   
 
     /**
      * Convert InputStream to String (only support UTF-8).

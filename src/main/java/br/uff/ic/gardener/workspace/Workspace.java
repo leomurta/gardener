@@ -111,7 +111,7 @@ public class Workspace {
 	 * Retorna lista de novas operações a serem manipuladas
 	 * @return
 	 */
-	private final List<CIWorkspaceStatus> getNewOperationList()
+	final List<CIWorkspaceStatus> getNewOperationList()
 	{
 		return this.listNewOperations;
 	}
@@ -437,9 +437,29 @@ public class Workspace {
 		processStatus(this.getPath(), coll);
 	}
 	
-	private boolean[] processStatusFunctionMachine(Collection<CIWorkspaceStatus> coll, CIWorkspace or, CIWorkspaceStatus mod, CIWorkspaceStatus real, boolean [] bReturn)
+	/*private boolean[] processStatusFunctionMachine(Collection<CIWorkspaceStatus> coll, CIWorkspace or, CIWorkspaceStatus mod, CIWorkspaceStatus real, boolean [] bReturn)
 	{	
-		for(int i = 0; i < bReturn.length; i++)
+		
+		if(or.equals(mod) && mod.equals(real))
+		{
+			
+		}else if(or.equals(mod))
+		{
+			
+		}else if (mod.equals(real))
+		{
+			
+		}else if(or.equals(real))
+		{
+			
+		}
+		else
+		{
+			
+		}
+		
+		return bReturn;*/
+		/*for(int i = 0; i < bReturn.length; i++)
 			bReturn[i] = false;
 		
 		if(or == null)
@@ -506,21 +526,16 @@ public class Workspace {
 		}
 		
 		return bReturn;
-	}
-
-	private static <T extends Comparable<T>> T min(T... args)
-	{
-		T minItem = args[0];
-		for(int i = 1; i< args.length; i++)
-		{
-			int value = minItem.compareTo(args[i]);
-			if(value >=0)
-				minItem = args[i];
-		}
-		
-		return minItem;
-	}
+	}*/
 	
+	
+	private static <T> T pop(Iterator<T> it)
+	{
+		if(it.hasNext())
+			return it.next();
+		else
+			return null;
+	}
 	/**
 	 * Internal generate status operation
 	 * @param currentPath the path inpected now
@@ -556,10 +571,86 @@ public class Workspace {
 		Iterator<CIWorkspaceStatus> itMod = queueNew.iterator();
 		Iterator<CIWorkspaceStatus> itReal = queueReal.iterator();
 		
+		CIWorkspace or = itOr.hasNext()?itOr.next():null;
+		CIWorkspaceStatus mod = itMod.hasNext()?itMod.next():null;
+		CIWorkspaceStatus real = itReal.hasNext()?itReal.next():null;
+		
+		while(or != null || mod != null || real != null)
+		{
+			if(minus(or, mod) && minus(or, real))
+			{
+				//5 caso, só 1
+				coll.add(new CIWorkspaceStatus(or, Status.VER_MISSED));
+				or 	= pop(itOr);
+			}else if(minus(mod, or) && minus(mod, real))
+			{
+				//6 caso só 1
+				coll.add(new CIWorkspaceStatus(mod, Status.VER_MISSED));
+				mod	= pop(itMod);
+			}else if(minus(real, or) && minus(real,mod))
+			{
+				//7 caso só 1
+				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
+				real= pop(itReal);
+			}
+			else if(equals(or, mod) && equals(mod, real))
+			{
+				//1 caso
+				
+				coll.add(new CIWorkspaceStatus(mod));
+				or 	= pop(itOr);
+				mod	= pop(itMod);
+				real= pop(itReal);
+			}else if(equals(or, mod))
+			{
+				//2 caso
+				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+				or 	= pop(itOr);
+				mod	= pop(itMod);
+			}else if(equals(mod, real))
+			{
+				//3 caso
+				coll.add(new CIWorkspaceStatus(mod));
+				mod	= pop(itMod);
+				real= pop(itReal);
+			}
+			else if(equals(or, real))
+			{
+				//4 caso
+				if(real.getDateModified().compareTo(this.getCheckoutTime()) > 0)
+					coll.add(new CIWorkspaceStatus(real, Status.MOD));
+				else
+					coll.add(new CIWorkspaceStatus(real, Status.VER));
+				or	= pop(itOr);
+				real= pop(itReal);
+			}
+		}
+		
+		
+		
+		return coll;
+		/*CIWorkspace[] listMin = {or, mod,real};
+		Arrays.sort(listMin);
+		CIWorkspace min = null;
+		for(int pos = 0; pos < listMin.length; i++)
+		{
+			if(listMin[pos] != null)
+			{ 
+				min = listMin[pos];
+				break;
+			}				
+		}
+		
+		if(min != null)
+		{
+			if(min == )
+		}*/
+		/*
+		
 		boolean[] bNext = {itOr.hasNext(), itMod.hasNext(), itReal.hasNext()};
-		CIWorkspace or = itOr.next();
-		CIWorkspaceStatus mod = itMod.next();
-		CIWorkspaceStatus real = itReal.next();
+		CIWorkspace or = itOr.hasNext()?itOr.next():null;
+		CIWorkspaceStatus mod = itMod.hasNext()?itMod.next():null;
+		CIWorkspaceStatus real = itReal.hasNext()?itReal.next():null;
 		do
 		{
 			bNext = this.processStatusFunctionMachine(coll, or, mod, real, bNext);
@@ -568,15 +659,52 @@ public class Workspace {
 			
 			if(bNext[1])
 				mod = itMod.next();
+			
 			if(bNext[2])
 				real = itReal.next();
 				
 		}while(bNext[0] == bNext[1] == bNext[2] == false);
 		
-		
-		return coll;
+		*/
 	}
 	
+	/**
+	 * null is greater than anything	
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private static boolean minus(CIWorkspace a, CIWorkspace b)
+	{
+		if(a== null)
+		{
+				return false;
+		}else
+		{
+			if(b==null)
+				return true;
+			else
+				return a.compareTo(b) < 0;
+				
+		}
+	}
+	
+	private static boolean equals(CIWorkspace a, CIWorkspace b) {
+		if(a == null)
+		{
+			if(b == null)
+				return true;
+			else
+				return false;
+		}else
+		{
+			if(b != null)
+				return a.equals(b);
+			else
+				return false;
+		}
+	}
+
 	private Collection<CIWorkspace> getOriginalCIContent()
 	{
 		return this.listICContent;
@@ -584,6 +712,12 @@ public class Workspace {
 
 	static public FileFilter getNotFileConfigFilter() {
 		return WorkspaceConfigParser.getNotFileConfigFilter();
+	}
+
+	void clearOperations() 
+	{
+		listOperations.clear();
+		listNewOperations.clear();		
 	}
 	
 	

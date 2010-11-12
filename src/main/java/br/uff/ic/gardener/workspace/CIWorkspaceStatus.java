@@ -12,7 +12,6 @@ import java.util.Date;
  */
 public class CIWorkspaceStatus extends CIWorkspace
 {		
-	public static CIWorkspaceStatus NEVER_EQUAL_STATUS = new CIWorkspaceStatus(null, null, null);
 	
 	/**
 	 * Status of CI
@@ -30,6 +29,14 @@ public class CIWorkspaceStatus extends CIWorkspace
 		super(ciw);
 		oldURI = ciw.getOldURI();
 		status = ciw.getStatus();
+	}
+	
+
+	public CIWorkspaceStatus(CIWorkspace ciw, Status s) 
+	{
+		super(ciw);
+		oldURI = null;
+		status = s;
 	}
 	
 	public CIWorkspaceStatus(CIWorkspaceStatus ciw, Status otherStatus) 
@@ -51,7 +58,6 @@ public class CIWorkspaceStatus extends CIWorkspace
 		
 	}
 
-	
 	public Status getStatus()
 	{
 		return status;
@@ -60,5 +66,17 @@ public class CIWorkspaceStatus extends CIWorkspace
 	public URI getOldURI()
 	{
 		return oldURI;
+	}
+	
+	@Override
+	public String toString()
+	{
+		if(this.getURI() == null && this.getInputStream() == null)
+			return "NeverEqual";
+		
+		return String.format("%s \"%s\" \"%s\"", 
+					getStatus().getLabel()!=null?getStatus().getLabel():"null", 
+					getURI()!=null?getURI():"null",
+					this.getOldURI()!=null?getOldURI():"null");
 	}
 }

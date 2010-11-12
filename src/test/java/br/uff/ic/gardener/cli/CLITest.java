@@ -8,14 +8,11 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
@@ -24,14 +21,10 @@ import java.util.zip.ZipOutputStream;
 
 
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.localfake.LocalFakeComClient;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TextHelper;
@@ -255,8 +248,8 @@ public class CLITest {
 		{
 			File fileA = FileHelper.createTemporaryRandomFile();
 			File fileB = FileHelper.createTemporaryRandomFile();
-			UtilStream.fillFile(fileA, "1", "2", "3");
-			UtilStream.fillFile(fileB, "1", "2", "4");
+			FileHelper.fillFile(fileA, "1", "2", "3");
+			FileHelper.fillFile(fileB, "1", "2", "4");
 			CLI.doMain(String.format("diff %s %s", fileA.toString(), fileB.toString()));
 			fileA.delete();
 			fileB.delete();
@@ -284,9 +277,9 @@ public class CLITest {
 		
 		
 		//cria arquivos
-		File fa = FileHelper.createFile(pathWS, "a.txt"); UtilStream.fillFile(fa, "a", "b", "c", "d");
-		File fb = FileHelper.createFile(pathWS, "b.txt"); UtilStream.fillFile(fb, "x", "y", "w", "z");
-		File fc = FileHelper.createFile(pathWS, "c.txt"); UtilStream.fillFile(fc, "1", "2", "3", "4");
+		File fa = FileHelper.createFile(pathWS, "a.txt"); FileHelper.fillFile(fa, "a", "b", "c", "d");
+		File fb = FileHelper.createFile(pathWS, "b.txt"); FileHelper.fillFile(fb, "x", "y", "w", "z");
+		File fc = FileHelper.createFile(pathWS, "c.txt"); FileHelper.fillFile(fc, "1", "2", "3", "4");
 		
 		CLI.doMain("add -w\"%s\" **", pathWS.toString());
 		
