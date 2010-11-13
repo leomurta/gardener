@@ -9,21 +9,47 @@
 
   <name>gardener</name>
   <url>http://maven.apache.org</url>
-  <!--For netbeans users -->
+  
   <build>
     <plugins>
       <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>2.0.2</version>
-      <configuration>
-        <source>1.6</source>
-        <target>1.6</target>
-      </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
       </plugin>
-    </plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/test-classes</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/test/java</directory>
+                  <filtering>false</filtering>
+                  <excludes>
+                    <exclude> **/*.java </exclude>
+                  </excludes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>    
   </build>
-  <!--For netbeans users /-->
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
