@@ -106,7 +106,7 @@ public class Database {
 
         try
         {
-                Repository rep = new Repository(vers.item.projectItem.getNameProject());
+                Repository rep = new Repository(vers.getItemVersion().getProjectItem().getNameProject());
 
                 boolean dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber()).mkdir();                
 
@@ -116,13 +116,13 @@ public class Database {
                 BasicDBObject revision = new BasicDBObject();
 
                 revision.put("version", vers.getVersionNumber());
-                revision.put("date", vers.transaction.getDate());
-                revision.put("messagelog", vers.transaction.getMessage());
-                revision.put("user", vers.transaction.user.getUserName());
+                revision.put("date", vers.getTransactionVersion().getDate());
+                revision.put("messagelog", vers.getTransactionVersion().getMessage());
+                revision.put("user", vers.getTransactionVersion().getUserTransaction().getUserName());
                 revision.put("path", getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
 
-                source = (FileInputStream)vers.item.getItemAsInputStream();
-                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + vers.item.getNameItem());
+                source = (FileInputStream)vers.getItemVersion().getItemAsInputStream();
+                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + vers.getItemVersion().getNameItem());
 
                 fcSource  = source.getChannel();
                 fcTarget = target.getChannel();

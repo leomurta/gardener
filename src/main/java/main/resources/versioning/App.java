@@ -30,12 +30,14 @@ public class App{
     URI uri_1 = new URI(project+"/e-mails2.txt");
     URI uri_2 = new URI(project+"/git_shell_ext_debug.txt");
     URI uri_3 = new URI(project+"/README.txt");
-    URI uri_4 = new URI(project+"/THANKS.txt"); 
+    URI uri_4 = new URI(project+"/THANKS.txt");
+    URI uri_5 = new URI(project+"/mod_memorial.pdf");
 
     ConfigurationItem ci1 = new ConfigurationItem(uri_1, new FileInputStream("/e-mails.txt"), CIType.file, null, "evaldo");
     ConfigurationItem ci2 = new ConfigurationItem(uri_2, new FileInputStream("/git_shell_ext_debug.txt"), CIType.file, null, "evaldo");
     ConfigurationItem ci3 = new ConfigurationItem(uri_3, new FileInputStream("/README.txt"), CIType.file, null, "evaldo");
     ConfigurationItem ci4 = new ConfigurationItem(uri_4, new FileInputStream("/THANKS.txt"), CIType.file, null, "evaldo");
+    ConfigurationItem ci5 = new ConfigurationItem(uri_5, new FileInputStream("/mod_memorial.pdf"), CIType.file, null, "evaldo");
 
     ArrayList<ConfigurationItem> listItens = new ArrayList<ConfigurationItem>();
 
@@ -43,6 +45,7 @@ public class App{
     listItens.add(ci2);
     listItens.add(ci3);
     listItens.add(ci4);
+    listItens.add(ci5);
     
     returnCommitInit = svr.init(project, "evaldo");
     System.out.println(returnCommitInit);

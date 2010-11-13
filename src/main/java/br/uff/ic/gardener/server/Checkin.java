@@ -154,14 +154,16 @@ public class Checkin extends Command {
                           User user = new User(outStanding.get(0).toString());
                           Project proj = new Project(project);
 
+                          trans.setUserTransaction(user);
+
                           ci.setNameItem(listFile[i].getName().toString());
                           ci.setItemAsInputStream(new FileInputStream(listFile[i].getAbsolutePath()));
+
+                          ci.setProjectItem(proj);
                     
-                          vers.transaction = trans;
-                          vers.transaction.user = user;
+                          vers.setTransationVersion(trans);
                           vers.setVersionNumber(Integer.toString(currentVersion));
-                          vers.item = ci;
-                          vers.item.projectItem = proj;
+                          vers.setItemVersion(ci);
 
                           db.save(vers);                          
 

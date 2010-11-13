@@ -9,7 +9,7 @@ public class Transaction {
     private String message;
     private String date;
     private String tpTrans;
-    public User user;
+    private User user;
 
     public Transaction(String message, String date, String tpTrans)
     {
@@ -46,6 +46,17 @@ public class Transaction {
     public String getTpTrans()
     {
         return this.tpTrans;
+    }
+
+    public void setUserTransaction(User user)
+    {
+        this.user = user;
+    }
+
+    public User getUserTransaction(){
+
+        return this.user;
+
     }
 
 }

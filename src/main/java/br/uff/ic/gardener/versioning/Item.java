@@ -12,7 +12,7 @@ public class Item {
 
     private String nameItem;
     private InputStream item;
-    public Project projectItem;
+    private Project projectItem;
 
     /**
     *
@@ -95,6 +95,18 @@ public class Item {
 
    public InputStream getItemAsInputStream() {
             return item;
+   }
+
+   public void setProjectItem(Project project){
+
+       this.projectItem = project;
+
+   }
+
+   public Project getProjectItem(){
+
+       return this.projectItem;
+
    }
 
 }

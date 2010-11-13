@@ -25,8 +25,8 @@ import java.io.File;
 public class Version {
    
    private String versionNumber;   
-   public  Transaction transaction;
-   public  Item item;
+   private  Transaction transaction;
+   private  Item item;
   
    /**
     *
@@ -205,6 +205,30 @@ public class Version {
    public String getVersionNumber()
    {
         return this.versionNumber;
+   }
+
+   public void setItemVersion(Item item){
+
+       this.item = item;
+
+   }
+
+   public Item getItemVersion(){
+
+       return this.item;
+
+   }
+
+   public void setTransationVersion(Transaction trans){
+
+       this.transaction = trans;
+
+   }
+
+   public Transaction getTransactionVersion(){
+
+       return this.transaction;
+
    }
   
 }
