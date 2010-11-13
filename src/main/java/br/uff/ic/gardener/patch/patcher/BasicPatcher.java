@@ -5,14 +5,10 @@
  */
 package br.uff.ic.gardener.patch.patcher;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.Patch.Match;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,10 +43,10 @@ public class BasicPatcher {
      * @param delta
      * @param match
      */
-    protected void setup( InputStream input, Delta delta, Match match ) {
-        setInput( input );
-        setDelta( delta );
-        setMatch( match );
+    protected void setup(InputStream input, Delta delta, Match match) {
+        setInput(input);
+        setDelta(delta);
+        setMatch(match);
     }
 
     /**
@@ -63,7 +59,7 @@ public class BasicPatcher {
     /**
      * @param match the match to set
      */
-    protected void setMatch( Match match ) {
+    protected void setMatch(Match match) {
         this.match = match;
     }
 
@@ -74,7 +70,7 @@ public class BasicPatcher {
      * @return
      */
     protected boolean isCompleteMatch() {
-        return getMatch().equals( Match.Complete );
+        return getMatch().equals(Match.Complete);
     }
 
     /**
@@ -84,7 +80,7 @@ public class BasicPatcher {
      * @return
      */
     protected boolean isNoMatch() {
-        return getMatch().equals( Match.None );
+        return getMatch().equals(Match.None);
     }
 
     /**
@@ -97,7 +93,7 @@ public class BasicPatcher {
     /**
      * @param delta the delta to set
      */
-    protected void setDelta( Delta delta ) {
+    protected void setDelta(Delta delta) {
         this.delta = delta;
     }
 
@@ -111,7 +107,7 @@ public class BasicPatcher {
     /**
      * @param input the input to set
      */
-    protected void setInput( InputStream input ) {
+    protected void setInput(InputStream input) {
         this.input = input;
     }
 
@@ -125,7 +121,7 @@ public class BasicPatcher {
     /**
      * @param lastApplyResults the lastApplyResults to set
      */
-    public void setLastApplyResults( List<ApplyDeltaItemResult> lastApplyResults ) {
+    public void setLastApplyResults(List<ApplyDeltaItemResult> lastApplyResults) {
         this.lastApplyResults = lastApplyResults;
     }
 
@@ -137,10 +133,49 @@ public class BasicPatcher {
      *
      * @return
      *
-     * @throws IOException
+     *
+     * @throws PatcherException
      */
-    protected OutputStream toOutpuStream( LinkedList<String> text ) throws IOException {
-        return UtilStream.toOutputStream( TextHelper.toString( text ) );
+    protected OutputStream toOutpuStream(LinkedList<String> text) throws PatcherException {
+        try {
+            return UtilStream.toOutputStream(TextHelper.toString(text));
+        } catch (IOException ex) {
+            throw new PatcherException(ex);
+        }
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param input
+     *
+     * @return
+     *
+     * @throws PatcherException
+     */
+    protected LinkedList<String> getLines(InputStream input) throws PatcherException {
+        try {
+            return TextHelper.toList(UtilStream.toString(input));
+        } catch (Exception ex) {
+            throw new PatcherException(ex);
+        }
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param text
+     * @param index
+     * @param line
+     *
+     * @throws PatcherException
+     */
+    protected void verifyLineMatch(LinkedList<String> text, int index, String line) throws PatcherException {
+        if (!Matcher.isMatchingLine(text.get(index), line)) {
+            throw new PatcherException(PatcherException.MSG_MATCHERROR);
+        }
     }
 }
 

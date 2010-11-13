@@ -1,11 +1,7 @@
 package br.uff.ic.gardener.patch.parser;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.chunk.Chunk.Action;
 import br.uff.ic.gardener.patch.delta.Delta;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.io.InputStream;
 
@@ -21,18 +17,33 @@ public class NormalParser extends BasicParser implements Parser {
      *
      * @param deltas
      * @return
-     * @throws Exception
+     *
+     * @throws ParserException
      */
     @Override
-    public LinkedList<Result> parseDeltas(InputStream deltas) throws Exception {
+    public LinkedList<Result> parseDeltas(InputStream deltas) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @param delta
+     *
+     * @return
+     *
+     * @throws ParserException
+     */
     @Override
-    public Delta parseDelta(InputStream delta) throws Exception {
+    public Delta parseDelta(InputStream delta) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Method description
+     *
+     */
     @Override
     protected void setupSymbols() {
         super.setupSymbols();

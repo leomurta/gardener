@@ -1,10 +1,6 @@
 package br.uff.ic.gardener.patch.parser;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.delta.Delta;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.io.InputStream;
 
@@ -20,17 +16,21 @@ public interface Parser {
      * Parse stream containing deltas end return collection of Delta
      * @param deltas
      * @return
-     * @throws Exception
+     *
+     *
+     * @throws ParserException
      */
-    public LinkedList<Result> parseDeltas(InputStream deltas) throws Exception;
+    public LinkedList<Result> parseDeltas(InputStream deltas) throws ParserException;
 
     /**
      * Parse stream containing a delta end returns a delta
      * @param delta
      * @return
-     * @throws Exception
+     *
+     *
+     * @throws ParserException
      */
-    public Delta parseDelta(InputStream delta) throws Exception;
+    public Delta parseDelta(InputStream delta) throws ParserException;
 
     /**
      *
@@ -38,7 +38,6 @@ public interface Parser {
      * @return
      */
     public String toString(LinkedList<Delta> deltas);
-
 }
 
 

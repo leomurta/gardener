@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,10 +29,11 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * @param results
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws Exception {
+    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -45,14 +45,15 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * @param match
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, Delta delta, Match match) throws Exception {
+    public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException {
         setup(input, delta, match);
 
         // Convert input to text
-        LinkedList<String> text = TextHelper.toList(UtilStream.toString(input));
+        LinkedList<String> text = getLines(input);
 
         // Results of delta aplications
         List<ApplyDeltaItemResult> results = new ArrayList<ApplyDeltaItemResult>();
@@ -70,7 +71,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
             } else if (isCompleteMatch()) {
                 applyCompleteMatch(item, text, result);
             } else {
-                throw new Exception("Unsupported matching type");
+                throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
             }
 
             // adding result info
@@ -90,10 +91,11 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * @param match
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, InputStream patch, Match match) throws Exception {
+    public OutputStream patch(InputStream input, InputStream patch, Match match) throws PatcherException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -108,23 +110,24 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     private int applyNoMatch(DeltaItem item, LinkedList<String> text, ApplyDeltaItemResult result, int displacement)
-            throws Exception {
+            throws PatcherException {
 
         // Index is 0 based
         int index = displacement + item.getOriginalFileInfo().getStart() - 1;
 
         // Chunk start position incorrect
         if (index < 0) {
-            throw new Exception("Patching error: invalid line index");
+            throw new PatcherException(PatcherException.MSG_MATCHERROR);
         }
 
         // Applying chunks
         for (Chunk chunk : item.getChunks()) {
             if (!(chunk instanceof UnifiedChunk)) {
-                throw new Exception("Patching error: invalid instance");
+                throw new PatcherException();
             }
 
             UnifiedChunk uChunk = (UnifiedChunk) chunk;
@@ -133,18 +136,12 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
             if (uChunk.isContext()) {
 
                 // Confirms match
-                if (!Matcher.isMatchingLine(text.get(index), uChunk.getText())) {
-                    throw new Exception("Patching error: invalid test");
-                }
-
+                verifyLineMatch(text, index, uChunk.getText());
                 index++;
             } else if (uChunk.isDelete()) {
 
                 // Confirms match
-                if (!Matcher.isMatchingLine(text.get(index), uChunk.getText())) {
-                    throw new Exception("Patching error: invalid test");
-                }
-
+                verifyLineMatch(text, index, uChunk.getText());
                 text.remove(index);
                 displacement--;
             } else if (uChunk.isInsert()) {
@@ -152,7 +149,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
                 index++;
                 displacement++;
             } else {
-                throw new Exception("Patching error: Unsupported chunk action");
+                throw new PatcherException(PatcherException.MSG_INVALIDACTION);
             }
         }
 
@@ -171,10 +168,11 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * @param result
      *
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     private void applyCompleteMatch(DeltaItem item, LinkedList<String> text, ApplyDeltaItemResult result)
-            throws Exception {
+            throws PatcherException {
 
         // Index is 0 based
         int index = getCompleteMatchLine(item, text);
@@ -192,7 +190,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
         // Applying chunks
         for (Chunk chunk : item.getChunks()) {
             if (!(chunk instanceof UnifiedChunk)) {
-                throw new Exception("Patching error");
+                throw new PatcherException();
             }
 
             UnifiedChunk uChunk = (UnifiedChunk) chunk;
@@ -211,10 +209,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
                 bIgnoreContext = false;    // next context won´t be ignored
 
                 // Confirms match
-                if (!Matcher.isMatchingLine(text.get(index), uChunk.getText())) {
-                    throw new Exception("Matching error");
-                }
-
+                verifyLineMatch(text, index, uChunk.getText());
                 text.remove(index);
 
                 // displacement--;
@@ -225,7 +220,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
 
                 // displacement++;
             } else {
-                throw new Exception("Unsupported chunk action");
+                throw new PatcherException(PatcherException.MSG_INVALIDACTION);
             }
         }
 
@@ -243,15 +238,16 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
-    private int getCompleteMatchLine(DeltaItem item, LinkedList<String> text) throws Exception {
+    private int getCompleteMatchLine(DeltaItem item, LinkedList<String> text) throws PatcherException {
 
         // Corrects for 0 based
         int startLine = item.getOriginalFileInfo().getStart() - 1;
 
         if (startLine < 0) {
-            throw new Exception("Matching error");
+            throw new PatcherException(PatcherException.MSG_MATCHERROR);
         }
 
         // context of alterations
@@ -260,7 +256,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
         // Getter context lines
         for (Chunk chunk : item.getChunks()) {
             if (!(chunk instanceof UnifiedChunk)) {
-                throw new Exception("Patching error");
+                throw new PatcherException();
             }
 
             UnifiedChunk uChunk = (UnifiedChunk) chunk;

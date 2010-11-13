@@ -1,21 +1,27 @@
-package br.uff.ic.gardener.patch.patcher;
-
-//~--- non-JDK imports --------------------------------------------------------
+package br.uff.ic.gardener.patch;
 
 import br.uff.ic.gardener.patch.Patch;
+import br.uff.ic.gardener.patch.PatchException;
+import br.uff.ic.gardener.patch.patcher.BinaryPatcher;
+import br.uff.ic.gardener.patch.patcher.ContextPatcher;
+import br.uff.ic.gardener.patch.patcher.NormalPatcher;
+import br.uff.ic.gardener.patch.patcher.Patcher;
+import br.uff.ic.gardener.patch.patcher.UnifiedPatcher;
 
 /**
  *
  * @author Daniel
  */
 public class PatcherFactory {
+
     /**
      *
      * @param format
      * @return
-     * @throws Exception
+     *
+     * @throws PatchException
      */
-    public static Patcher get(Patch.Format format) throws Exception {
+    public static Patcher get(Patch.Format format) throws PatchException {
         if (format == Patch.Format.Binary) {
             return new BinaryPatcher();
         } else if (format == Patch.Format.Context) {
@@ -25,7 +31,7 @@ public class PatcherFactory {
         } else if (format == Patch.Format.Unified) {
             return new UnifiedPatcher();
         } else {
-            throw new Exception("Unsupported format: " + format.getClass());
+            throw new PatchException(PatchException.MSG_INVALIDFORMAT);
         }
     }
 }

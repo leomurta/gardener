@@ -9,7 +9,6 @@ import br.uff.ic.gardener.patch.delta.UnifiedDelta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItemInfo;
 import br.uff.ic.gardener.patch.deltaitem.UnifiedDeltaItem;
 import br.uff.ic.gardener.util.TextHelper;
-import br.uff.ic.gardener.util.UtilStream;
 
 import java.io.InputStream;
 
@@ -64,10 +63,11 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
     @Override
-    public LinkedList<Result> parseDeltas(InputStream delta) throws Exception {
+    public LinkedList<Result> parseDeltas(InputStream delta) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -79,16 +79,15 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
     @Override
-    public Delta parseDelta(InputStream delta) throws Exception {
-        String       sDelta    = UtilStream.toString(delta);
-        final String separator = "\n";
-        String[]     lines     = TextHelper.toArray(sDelta, separator);
+    public Delta parseDelta(InputStream delta) throws ParserException {
+        String[] lines = getLines(delta);
 
         if (lines.length < 2) {
-            throw new Exception("Invalid patch: header incomplete");
+            throw new ParserException(ParserException.MSG_INVALIDPATCHHEADER);
         }
 
         int currentLine = 0;    // current line
@@ -125,7 +124,7 @@ public class UnifiedParser extends BasicParser implements Parser {
             } else if (isChunkLine(line)) {
                 addChunk(item, line);
             } else if (!isMissingNewLine(line)) {
-                throw new Exception("Parsing error");
+                throw new ParserException(ParserException.MSG_INVALIDLINE);
             }
         }    // for
 
@@ -146,9 +145,10 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private boolean isInfoLine(String[] lines, int currentLine) throws Exception {
+    private boolean isInfoLine(String[] lines, int currentLine) throws ParserException {
         testLine(lines, currentLine);
 
         String line = lines[currentLine];
@@ -167,11 +167,12 @@ public class UnifiedParser extends BasicParser implements Parser {
      * @param lines
      * @param currentLine
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private void testLine(String[] lines, int currentLine) throws Exception {
+    private void testLine(String[] lines, int currentLine) throws ParserException {
         if (currentLine >= lines.length) {
-            throw new Exception("Invalid line");
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
     }
 
@@ -182,9 +183,10 @@ public class UnifiedParser extends BasicParser implements Parser {
      * @param delta
      * @param infoIndex
      * @return
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws Exception {
+    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
         String buffer;
 
         // verifies line
@@ -193,7 +195,7 @@ public class UnifiedParser extends BasicParser implements Parser {
         String tokens[] = lines[curLine].split("\t");
 
         if (tokens.length != 2) {
-            throw new Exception("Invalid line");
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
 
         FileInfo info = new FileInfo();
@@ -230,13 +232,10 @@ public class UnifiedParser extends BasicParser implements Parser {
      * @param item
      * @param line
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private void addChunk(UnifiedDeltaItem item, String line) throws Exception {
-        if (item == null) {
-            throw new Exception("Implementation error");
-        }
-
+    private void addChunk(UnifiedDeltaItem item, String line) throws ParserException {
         Chunk.Action action = getAction(line.substring(0, 1));
         String       sText  = line.substring(1);
         UnifiedChunk chunk  = new UnifiedChunk(action, sText);
@@ -252,9 +251,10 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private UnifiedDeltaItem setupDeltaItem(String line) throws Exception {
+    private UnifiedDeltaItem setupDeltaItem(String line) throws ParserException {
         UnifiedDeltaItem item = new UnifiedDeltaItem(null, null, null);
 
         // Remove markers and blanks
@@ -262,7 +262,7 @@ public class UnifiedParser extends BasicParser implements Parser {
         String infos[] = TextHelper.toArray(buffer, " ");
 
         if (infos.length != 2) {
-            throw new Exception("Parsing error");
+            throw new ParserException();
         }
 
         DeltaItemInfo info1 = getInfo(infos[0]);
@@ -284,13 +284,14 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private DeltaItemInfo getInfo(String text) throws Exception {
+    private DeltaItemInfo getInfo(String text) throws ParserException {
         String infos[] = TextHelper.toArray(text, ",");
 
         if (infos.length != 2) {
-            throw new Exception("Parsing error");
+            throw new ParserException();
         }
 
         // remove symbols + e -

@@ -5,6 +5,9 @@ import br.uff.ic.gardener.patch.chunk.Chunk.Action;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.util.MapHelper;
 import br.uff.ic.gardener.util.TextHelper;
+import br.uff.ic.gardener.util.UtilStream;
+
+import java.io.InputStream;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -17,7 +20,16 @@ import java.util.Map;
 public abstract class BasicParser {
 
     /** Missing new line marker */
+    protected static final String CR = "\n";
+
+    /** Missing new line marker */
+    protected static final String LF = "\r";
+
+    /** Missing new line marker */
     private static final String NEWLINE_HEADER = "\\";
+
+    /** Missing new line marker */
+    protected static final String LFCR = LF + CR;
 
     /** Field description */
     private Map<String, Chunk.Action> symbols;
@@ -79,11 +91,12 @@ public abstract class BasicParser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    protected Action getAction(String action) throws Exception {
+    protected Action getAction(String action) throws ParserException {
         if ((action == null) || (!getSymbols().containsKey(action))) {
-            throw new Exception("Implementation error");
+            throw new ParserException();
         }
 
         return getSymbols().get(action);
@@ -94,14 +107,19 @@ public abstract class BasicParser {
      * @param action
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    public String toString(Action action) throws Exception {
+    public String toString(Action action) throws ParserException {
         if ((action == null) || (!getSymbols().containsValue(action))) {
-            throw new Exception("Implementation error");
+            throw new ParserException();
         }
 
-        return (String) MapHelper.getKeyFromValue(getSymbols(), action);
+        try {
+            return (String) MapHelper.getKeyFromValue(getSymbols(), action);
+        } catch (Exception ex) {
+            throw new ParserException(ex);
+        }
     }
 
     /**
@@ -113,7 +131,7 @@ public abstract class BasicParser {
      * @return
      */
     protected String clearBreakLines(String text) {
-        return text.replace("\r", "").replace("\n", "");
+        return text.replace(LF, "").replace(CR, "");
     }
 
     /**
@@ -146,6 +164,28 @@ public abstract class BasicParser {
      */
     protected boolean isMissingNewLine(String line) {
         return (!line.isEmpty()) && line.startsWith(NEWLINE_HEADER);
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param delta
+     *
+     * @return
+     *
+     * @throws ParserException
+     */
+    protected String[] getLines(InputStream delta) throws ParserException {
+        String sDelta;
+
+        try {
+            sDelta = UtilStream.toString(delta);
+
+            return TextHelper.toArray(sDelta, CR);
+        } catch (Exception ex) {
+            throw new ParserException(ex);
+        }
     }
 }
 

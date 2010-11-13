@@ -1,11 +1,4 @@
-
-/*
-* To change this template, choose Tools | Templates
-* and open the template in the editor.
- */
 package br.uff.ic.gardener.patch.patcher;
-
-//~--- non-JDK imports --------------------------------------------------------
 
 import br.uff.ic.gardener.patch.deltaitem.DeltaItem;
 
@@ -27,9 +20,9 @@ public final class ApplyDeltaItemResult {
      *
      * @param item
      */
-    ApplyDeltaItemResult( DeltaItem item ) {
-        setItem( item );
-        setResult( false );
+    ApplyDeltaItemResult(DeltaItem item) {
+        setItem(item);
+        setResult(false);
     }
 
     /**
@@ -42,7 +35,7 @@ public final class ApplyDeltaItemResult {
     /**
      * @param item the item to set
      */
-    public void setItem( DeltaItem item ) {
+    public void setItem(DeltaItem item) {
         this.item = item;
     }
 
@@ -56,7 +49,7 @@ public final class ApplyDeltaItemResult {
     /**
      * @param result the result to set
      */
-    public void setResult( boolean result ) {
+    public void setResult(boolean result) {
         this.result = result;
     }
 }

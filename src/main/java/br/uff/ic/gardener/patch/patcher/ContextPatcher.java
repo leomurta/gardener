@@ -6,15 +6,11 @@ import br.uff.ic.gardener.patch.chunk.ContextChunk;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItem;
 import br.uff.ic.gardener.patch.parser.Result;
-import br.uff.ic.gardener.util.TextHelper;
-import br.uff.ic.gardener.util.UtilStream;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,10 +27,11 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      * @param results
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws Exception {
+    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -48,10 +45,11 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, InputStream patch, Match match) throws Exception {
+    public OutputStream patch(InputStream input, InputStream patch, Match match) throws PatcherException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -65,18 +63,19 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
     @Override
-    public OutputStream patch(InputStream input, Delta delta, Match match) throws Exception {
+    public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException {
         setup(input, delta, match);
 
         if (isNoMatch()) {
-            throw new Exception("Unsupported matching type");
+            throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
         }
 
         // Convert input to text
-        LinkedList<String> text = TextHelper.toList(UtilStream.toString(input));
+        LinkedList<String> text = getLines(input);
 
         // Results of delta aplications
         List<ApplyDeltaItemResult> results = new ArrayList<ApplyDeltaItemResult>();
@@ -94,7 +93,7 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
                     result.setResult(false);
                 }
             } else {
-                throw new Exception("Unsupported matching type");
+                throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
             }
 
             // adding result info
@@ -115,15 +114,16 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      * @param text
      *
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
-    private void applyCompleteMatch(DeltaItem item, LinkedList<String> text) throws Exception {
+    private void applyCompleteMatch(DeltaItem item, LinkedList<String> text) throws PatcherException {
 
         // Corrects for 0 based
         int index = item.getOriginalFileInfo().getStart() - 1;
 
         if (index < 0) {
-            throw new Exception("Matching error");
+            throw new PatcherException(PatcherException.MSG_MATCHERROR);
         }
 
         // context of alterations
@@ -136,7 +136,7 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
 
             // Verifies instances
             if (!(bChunk instanceof ContextChunk)) {
-                throw new Exception("Patching error");
+                throw new PatcherException();
             }
 
             ContextChunk chunk = (ContextChunk) bChunk;
@@ -168,10 +168,7 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
                 }
 
                 // Confirms match
-                if (!Matcher.isMatchingLine(text.get(index), chunk.getText())) {
-                    throw new Exception("Matching error");
-                }
-
+                verifyLineMatch(text, index, chunk.getText());
                 text.remove(index);
             } else if (chunk.isModified() && (!chunk.isOriginal())) {
                 if (readContext) {
@@ -190,13 +187,10 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
                 }
 
                 // Confirms match
-                if (!Matcher.isMatchingLine(text.get(index), chunk.getText())) {
-                    throw new Exception("Matching error");
-                }
-
+                verifyLineMatch(text, index, chunk.getText());
                 text.remove(index);
             } else {
-                throw new Exception("Unsupported chunk action");
+                throw new PatcherException(PatcherException.MSG_INVALIDACTION);
             }
         }
     }
@@ -213,13 +207,15 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws PatcherException
      */
-    private int getCompleteMatchLine(LinkedList<String> context, int index, LinkedList<String> text) throws Exception {
+    private int getCompleteMatchLine(LinkedList<String> context, int index, LinkedList<String> text)
+            throws PatcherException {
         index = Matcher.match(index, context, text);
 
         if (index < 0) {
-            throw new Exception("Matching error");
+            throw new PatcherException(PatcherException.MSG_MATCHERROR);
         }
 
         return index;

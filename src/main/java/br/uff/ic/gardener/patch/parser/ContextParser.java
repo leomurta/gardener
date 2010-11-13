@@ -11,9 +11,13 @@ import br.uff.ic.gardener.patch.deltaitem.DeltaItemInfo;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -64,10 +68,11 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
     @Override
-    public LinkedList<Result> parseDeltas(InputStream delta) throws Exception {
+    public LinkedList<Result> parseDeltas(InputStream delta) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -79,16 +84,15 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
     @Override
-    public Delta parseDelta(InputStream delta) throws Exception {
-        String       sDelta    = UtilStream.toString(delta);
-        final String separator = "\n";
-        String[]     lines     = TextHelper.toArray(sDelta, separator);
+    public Delta parseDelta(InputStream delta) throws ParserException {
+        String[] lines = getLines(delta);
 
         if (lines.length < 2) {
-            throw new Exception("Invalid patch: header incomplete");
+            throw new ParserException(ParserException.MSG_INVALIDPATCHHEADER);
         }
 
         int currentLine = 0;    // current line
@@ -127,7 +131,7 @@ public class ContextParser extends BasicParser implements Parser {
             } else if (isChunkLine(line)) {
                 addChunk(item, line, originalChunk);
             } else if (!isMissingNewLine(line)) {
-                throw new Exception("Parsing error");
+                throw new ParserException(ParserException.MSG_INVALIDLINE);
             }
         }
 
@@ -180,9 +184,10 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private boolean isInfoLine(String[] lines, int currentLine) throws Exception {
+    private boolean isInfoLine(String[] lines, int currentLine) throws ParserException {
         validateLine(lines, currentLine);
 
         return isDeltaItemInfoLine(lines[currentLine]);
@@ -195,11 +200,12 @@ public class ContextParser extends BasicParser implements Parser {
      * @param lines
      * @param currentLine
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private void validateLine(String[] lines, int currentLine) throws Exception {
+    private void validateLine(String[] lines, int currentLine) throws ParserException {
         if (currentLine >= lines.length) {
-            throw new Exception("Invalid line");
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
     }
 
@@ -210,9 +216,10 @@ public class ContextParser extends BasicParser implements Parser {
      * @param delta
      * @param infoIndex
      * @return
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws Exception {
+    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
         String buffer;
 
         // verifies line
@@ -221,7 +228,7 @@ public class ContextParser extends BasicParser implements Parser {
         String tokens[] = lines[curLine].split("\t");
 
         if (tokens.length != 2) {
-            throw new Exception("Invalid line");
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
 
         FileInfo info = new FileInfo();
@@ -259,13 +266,10 @@ public class ContextParser extends BasicParser implements Parser {
      * @param line
      * @param original
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private void addChunk(ContextDeltaItem item, String line, boolean original) throws Exception {
-        if (item == null) {
-            throw new Exception("Implementation error");
-        }
-
+    private void addChunk(ContextDeltaItem item, String line, boolean original) throws ParserException {
         Chunk.Action action = getAction(line.substring(0, 1));
         String       sText  = "";
 
@@ -284,9 +288,10 @@ public class ContextParser extends BasicParser implements Parser {
      * @param line
      * @param originalChunk
      *
-     * @throws Exception
+     *
+     * @throws ParserException
      */
-    private void setupDeltaItemInfo(ContextDeltaItem item, String line, boolean originalChunk) throws Exception {
+    private void setupDeltaItemInfo(ContextDeltaItem item, String line, boolean originalChunk) throws ParserException {
         String replace = (originalChunk)
                          ? ORIGINAL_SYMBOL
                          : NEW_SYMBOL;
@@ -304,7 +309,7 @@ public class ContextParser extends BasicParser implements Parser {
         } else if (infos.length == 1) {
             start = Integer.parseInt(infos[0]);
         } else {
-            throw new Exception("Parsing error");
+            throw new ParserException();
         }
 
         if (originalChunk) {

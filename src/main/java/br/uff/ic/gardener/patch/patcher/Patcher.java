@@ -5,15 +5,10 @@
  */
 package br.uff.ic.gardener.patch.patcher;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.Patch.Match;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.parser.Result;
 
-//~--- JDK imports ------------------------------------------------------------
-
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -30,24 +25,35 @@ public interface Patcher {
      * @param input
      * @param results
      * @return
+     *
+     *
+     * @throws PatcherException
      */
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws Exception;
+    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException;
 
     /**
      *
      * @param input
      * @param delta
+     * @param match
      * @return
+     *
+     *
+     * @throws PatcherException
      */
-    public OutputStream patch(InputStream input, Delta delta, Match match) throws Exception;
+    public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException;
 
     /**
      * SAX version
      * @param input
-     * @param results
+     * @param patch
+     * @param match
      * @return
+     *
+     *
+     * @throws PatcherException
      */
-    public OutputStream patch(InputStream input, InputStream patch, Match match) throws Exception;
+    public OutputStream patch(InputStream input, InputStream patch, Match match) throws PatcherException;
 }
 
 

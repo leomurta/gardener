@@ -1,11 +1,11 @@
 package br.uff.ic.gardener.patch.parser;
 
-//~--- non-JDK imports --------------------------------------------------------
+
 
 import br.uff.ic.gardener.patch.chunk.Chunk.Action;
 import br.uff.ic.gardener.patch.delta.Delta;
 
-//~--- JDK imports ------------------------------------------------------------
+
 
 import java.io.InputStream;
 
@@ -22,7 +22,7 @@ public class BinaryParser extends BasicParser implements Parser {
     }
 
     @Override
-    public Delta parseDelta(InputStream delta) throws Exception {
+    public Delta parseDelta(InputStream delta) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
