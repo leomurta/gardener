@@ -1,11 +1,7 @@
 package br.uff.ic.gardener.patch.chunk;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.chunk.Chunk.Action;
 import br.uff.ic.gardener.patch.parser.BasicParser;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +11,8 @@ import java.util.logging.Logger;
  * @author Daniel
  */
 public class BasicChunk {
+
+    /** Field description */
     private Action action;
 
     /**
@@ -41,18 +39,55 @@ public class BasicChunk {
         this.action = action;
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public boolean isModified() {
+        return (getAction() == Chunk.Action.MODIFIED);
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
     public boolean isInsert() {
         return (getAction() == Chunk.Action.ADDED);
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
     public boolean isDelete() {
         return (getAction() == Chunk.Action.DELETED);
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
     public boolean isContext() {
         return (getAction() == Chunk.Action.CONTEXT);
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @param action
+     * @param parser
+     *
+     * @return
+     */
     protected String toString(Action action, BasicParser parser) {
         try {
             return parser.toString(action);

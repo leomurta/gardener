@@ -5,7 +5,6 @@ package br.uff.ic.gardener.patch;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.parser.Parser;
 import br.uff.ic.gardener.patch.parser.ParserFactory;
-import br.uff.ic.gardener.patch.parser.Result;
 import br.uff.ic.gardener.patch.patcher.Patcher;
 import br.uff.ic.gardener.patch.patcher.PatcherFactory;
 
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import java.util.LinkedList;
 
 /**
  *

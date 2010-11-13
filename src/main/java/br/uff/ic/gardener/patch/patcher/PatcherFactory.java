@@ -3,12 +3,6 @@ package br.uff.ic.gardener.patch.patcher;
 //~--- non-JDK imports --------------------------------------------------------
 
 import br.uff.ic.gardener.patch.Patch;
-import br.uff.ic.gardener.patch.Patch;
-import br.uff.ic.gardener.patch.patcher.BinaryPatcher;
-import br.uff.ic.gardener.patch.patcher.ContextPatcher;
-import br.uff.ic.gardener.patch.patcher.NormalPatcher;
-import br.uff.ic.gardener.patch.patcher.Patcher;
-import br.uff.ic.gardener.patch.patcher.UnifiedPatcher;
 
 /**
  *
