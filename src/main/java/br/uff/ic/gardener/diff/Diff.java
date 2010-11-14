@@ -1,5 +1,4 @@
 package br.uff.ic.gardener.diff;
-
 import java.io.File;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class Diff {
      * @return Object IResultDiff
      */
     public IResultDiff compare() {
-        IDiff comparator = AlgorithmsFactory.getComparatorLcs();
+        IDiff comparator = AlgorithmsFactory.getComparator(fileVersionOne, fileVersionTwo);
         return comparator.diff(fileVersionOne, fileVersionTwo);
     }
 

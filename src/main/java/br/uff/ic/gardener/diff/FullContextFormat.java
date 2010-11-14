@@ -34,6 +34,7 @@ public class FullContextFormat implements IFormat {
                 outputWriter.println("+ " + line.getLine());
             } else {
                 outputWriter.println("  " + line.getLine());
+                line = (LinesBean) it.next();
             }
         }
         outputWriter.close();
