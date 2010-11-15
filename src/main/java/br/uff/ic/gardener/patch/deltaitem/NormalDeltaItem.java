@@ -1,10 +1,6 @@
 package br.uff.ic.gardener.patch.deltaitem;
 
-//~--- non-JDK imports --------------------------------------------------------
-
 import br.uff.ic.gardener.patch.chunk.Chunk;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.util.LinkedList;
 
@@ -13,53 +9,71 @@ import java.util.LinkedList;
  * @author Daniel
  */
 public class NormalDeltaItem extends BasicDeltaItem implements DeltaItem {
+
+    /** Field description */
+    private String operation;
+
     /**
      *
      * @param info1
      * @param info2
      * @param chunks
+     * @param operation
      */
-    public NormalDeltaItem(DeltaItemInfo info1, DeltaItemInfo info2, LinkedList<Chunk> chunks) {
-        super(info1, info2, chunks);
+    public NormalDeltaItem( DeltaItemInfo info1, DeltaItemInfo info2, LinkedList<Chunk> chunks, String operation ) {
+        super( info1, info2, chunks );
+        setOperation( operation );
     }
 
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder();
 
-        text.append("@@");
-        text.append(summaryToString(" -", this.getOriginalFileInfo()));
-        text.append(" ");
-        text.append(summaryToString(" +", this.getNewFileInfo()));
-        text.append(" @@");
-        text.append("\n");
+        text.append( summaryToString( this.getOriginalFileInfo() ) );
+        text.append( getOperation() );
+        text.append( summaryToString( this.getNewFileInfo() ) );
+        text.append( "\n" );
 
         return text.toString();
     }
 
     /**
      *
-     * @param sHeader
      * @param info
      * @return
      */
-    protected String summaryToString(String sHeader, DeltaItemInfo info) {
+    protected String summaryToString( DeltaItemInfo info ) {
         StringBuilder text = new StringBuilder();
 
-        text.append(sHeader);
-
         if (info.getLenght() == 0) {
-            text.append(info.getStart());
-            text.append(",0");
-        } else if (info.getLenght() == 1) {
-            text.append((info.getStart() + 1));
+            text.append( info.getStart() );
         } else {
-            text.append((info.getStart() + 1));
-            text.append(",");
-            text.append(info.getLenght());
+            text.append( info.getStart() );
+            text.append( "," );
+            text.append( info.getLenght() );
         }
 
         return text.toString();
+    }
+
+    /**
+     * @return the operation
+     */
+    public String getOperation() {
+        return operation;
+    }
+
+    /**
+     * @param operation the operation to set
+     */
+    public void setOperation( String operation ) {
+        this.operation = operation;
     }
 }
 

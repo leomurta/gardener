@@ -48,11 +48,11 @@ public class UnifiedParser extends BasicParser implements Parser {
     @Override
     protected void setupSymbols() {
         super.setupSymbols();
-        addSymbol("+", Action.ADDED);
-        addSymbol("-", Action.DELETED);
-        addSymbol("//", Action.MODIFIED);
-        addSymbol("m", Action.MOVED);
-        addSymbol(" ", Action.CONTEXT);
+        addSymbol( "+", Action.ADDED );
+        addSymbol( "-", Action.DELETED );
+        addSymbol( "//", Action.MODIFIED );
+        addSymbol( "m", Action.MOVED );
+        addSymbol( " ", Action.CONTEXT );
     }
 
     /**
@@ -67,8 +67,8 @@ public class UnifiedParser extends BasicParser implements Parser {
      * @throws ParserException
      */
     @Override
-    public LinkedList<Result> parseDeltas(InputStream delta) throws ParserException {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public LinkedList<Result> parseDeltas( InputStream delta ) throws ParserException {
+        throw new UnsupportedOperationException( "Not supported yet." );
     }
 
     /**
@@ -83,54 +83,54 @@ public class UnifiedParser extends BasicParser implements Parser {
      * @throws ParserException
      */
     @Override
-    public Delta parseDelta(InputStream delta) throws ParserException {
-        String[] lines = getLines(delta);
+    public Delta parseDelta( InputStream delta ) throws ParserException {
+        String[] lines = getLines( delta );
 
         if (lines.length < 2) {
-            throw new ParserException(ParserException.MSG_INVALIDPATCHHEADER);
+            throw new ParserException( ParserException.MSG_INVALIDPATCHHEADER );
         }
 
         int currentLine = 0;    // current line
 
         // jump first lines
-        while (!isInfoLine(lines, currentLine)) {
+        while (!isInfoLine( lines, currentLine )) {
             currentLine++;
         }
 
         UnifiedDelta newDelta = new UnifiedDelta();
 
-        currentLine = setInfo(lines, currentLine, newDelta, ORIGINAL_INDEX);
-        currentLine = setInfo(lines, currentLine, newDelta, NEW_INDEX);
+        currentLine = setInfo( lines, currentLine, newDelta, ORIGINAL_INDEX );
+        currentLine = setInfo( lines, currentLine, newDelta, NEW_INDEX );
 
         UnifiedDeltaItem item = null;
 
         for (int i = currentLine; i < lines.length; i++) {
-            String line = clearBreakLines(lines[i]);
+            String line = clearBreakLines( lines[i] );
 
             if (line.isEmpty()) {
                 continue;
             }
 
-            if (isDeltaItemLine(line)) {
+            if (isDeltaItemLine( line )) {
 
                 // store previous
                 if (item != null) {
-                    newDelta.addDeltaItens(item);
+                    newDelta.addDeltaItens( item );
                     item = null;
                 }
 
                 // creates initial item
-                item = setupDeltaItem(line);
-            } else if (isChunkLine(line)) {
-                addChunk(item, line);
-            } else if (!isMissingNewLine(line)) {
-                throw new ParserException(ParserException.MSG_INVALIDLINE);
+                item = setupDeltaItem( line );
+            } else if (isChunkLine( line )) {
+                addChunk( item, line );
+            } else if (!isMissingNewLine( line )) {
+                throw new ParserException( ParserException.MSG_INVALIDLINE );
             }
         }    // for
 
         // store last one
         if (item != null) {
-            newDelta.addDeltaItens(item);
+            newDelta.addDeltaItens( item );
         }
 
         return newDelta;
@@ -148,8 +148,8 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private boolean isInfoLine(String[] lines, int currentLine) throws ParserException {
-        testLine(lines, currentLine);
+    private boolean isInfoLine( String[] lines, int currentLine ) throws ParserException {
+        testLine( lines, currentLine );
 
         String line = lines[currentLine];
 
@@ -157,7 +157,7 @@ public class UnifiedParser extends BasicParser implements Parser {
             return false;
         }
 
-        return line.startsWith(NEW_IDENT) || line.startsWith(ORIGINAL_IDENT);
+        return line.startsWith( NEW_IDENT ) || line.startsWith( ORIGINAL_IDENT );
     }
 
     /**
@@ -170,9 +170,9 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private void testLine(String[] lines, int currentLine) throws ParserException {
+    private void testLine( String[] lines, int currentLine ) throws ParserException {
         if (currentLine >= lines.length) {
-            throw new ParserException(ParserException.MSG_INVALIDLINE);
+            throw new ParserException( ParserException.MSG_INVALIDLINE );
         }
     }
 
@@ -186,16 +186,16 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
+    private int setInfo( String[] lines, int curLine, Delta delta, int infoIndex ) throws ParserException {
         String buffer;
 
         // verifies line
-        testLine(lines, curLine);
+        testLine( lines, curLine );
 
-        String tokens[] = lines[curLine].split("\t");
+        String tokens[] = lines[curLine].split( "\t" );
 
         if (tokens.length != 2) {
-            throw new ParserException(ParserException.MSG_INVALIDLINE);
+            throw new ParserException( ParserException.MSG_INVALIDLINE );
         }
 
         FileInfo info = new FileInfo();
@@ -203,23 +203,23 @@ public class UnifiedParser extends BasicParser implements Parser {
         // Path
         // remove ident from line begining
         if (infoIndex == ORIGINAL_INDEX) {
-            buffer = tokens[0].replace(ORIGINAL_IDENT, "");
+            buffer = tokens[0].replace( ORIGINAL_IDENT, "" );
         } else {
-            buffer = tokens[0].replace(NEW_IDENT, "");
+            buffer = tokens[0].replace( NEW_IDENT, "" );
         }
 
         // Remove blanks
         buffer = buffer.trim();
-        info.setPath(buffer);
+        info.setPath( buffer );
 
         // Date
         buffer = tokens[1].trim();
-        info.setDate(buffer);
+        info.setDate( buffer );
 
         if (infoIndex == ORIGINAL_INDEX) {
-            delta.setOriginalFileInfo(info);
+            delta.setOriginalFileInfo( info );
         } else {
-            delta.setNewFileInfo(info);
+            delta.setNewFileInfo( info );
         }
 
         return curLine + 1;
@@ -235,12 +235,12 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private void addChunk(UnifiedDeltaItem item, String line) throws ParserException {
-        Chunk.Action action = getAction(line.substring(0, 1));
-        String       sText  = line.substring(1);
-        UnifiedChunk chunk  = new UnifiedChunk(action, sText);
+    private void addChunk( UnifiedDeltaItem item, String line ) throws ParserException {
+        Chunk.Action action = getAction( line.substring( 0, 1 ) );
+        String       sText  = line.substring( 1 );
+        UnifiedChunk chunk  = new UnifiedChunk( action, sText );
 
-        item.addChunk(chunk);
+        item.addChunk( chunk );
     }
 
     /**
@@ -254,26 +254,17 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private UnifiedDeltaItem setupDeltaItem(String line) throws ParserException {
-        UnifiedDeltaItem item = new UnifiedDeltaItem(null, null, null);
+    private UnifiedDeltaItem setupDeltaItem( String line ) throws ParserException {
 
         // Remove markers and blanks
-        String buffer  = line.replace(DELTAITEM_HEADER, "").trim();
-        String infos[] = TextHelper.toArray(buffer, " ");
+        String buffer  = line.replace( DELTAITEM_HEADER, "" ).trim();
+        String infos[] = TextHelper.toArray( buffer, " " );
 
         if (infos.length != 2) {
             throw new ParserException();
         }
 
-        DeltaItemInfo info1 = getInfo(infos[0]);
-
-        item.setOriginalFileInfo(info1);
-
-        DeltaItemInfo info2 = getInfo(infos[1]);
-
-        item.setNewFileInfo(info2);
-
-        return item;
+        return new UnifiedDeltaItem( getInfo( infos[0] ), getInfo( infos[1] ), null );
     }
 
     /**
@@ -287,20 +278,20 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private DeltaItemInfo getInfo(String text) throws ParserException {
-        String infos[] = TextHelper.toArray(text, ",");
+    private DeltaItemInfo getInfo( String text ) throws ParserException {
+        String infos[] = TextHelper.toArray( text, "," );
 
         if (infos.length != 2) {
             throw new ParserException();
         }
 
         // remove symbols + e -
-        infos[0] = infos[0].replace(ORIGINAL_SYMBOL, "").replace(NEW_SYMBOL, "");
+        infos[0] = infos[0].replace( ORIGINAL_SYMBOL, "" ).replace( NEW_SYMBOL, "" );
 
-        int start  = Integer.parseInt(infos[0]);
-        int lenght = Integer.parseInt(infos[1]);
+        int start  = Integer.parseInt( infos[0] );
+        int lenght = Integer.parseInt( infos[1] );
 
-        return new DeltaItemInfo(start, lenght);
+        return new DeltaItemInfo( start, lenght );
     }
 
     /**
@@ -311,12 +302,12 @@ public class UnifiedParser extends BasicParser implements Parser {
      *
      * @return
      */
-    private boolean isDeltaItemLine(String line) {
+    private boolean isDeltaItemLine( String line ) {
         line = line.trim();    // remove line breaks and blanks
 
-        boolean b = line.startsWith(DELTAITEM_HEADER);
+        boolean b = line.startsWith( DELTAITEM_HEADER );
 
-        b &= line.endsWith(DELTAITEM_HEADER);
+        b &= line.endsWith( DELTAITEM_HEADER );
 
         return b;
     }
