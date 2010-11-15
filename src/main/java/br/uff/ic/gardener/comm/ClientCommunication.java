@@ -4,16 +4,22 @@
  */
 package br.uff.ic.gardener.comm;
 
+import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -22,15 +28,15 @@ import java.util.Map;
 public class ClientCommunication extends Communication {
 
     Socket mySocket;
-    InputStream in;
-    OutputStream out;
+    //InputStream in;
+    //  OutputStream out;
 
     public ClientCommunication(String serverURL) throws IOException {
 
         mySocket = new Socket(serverURL, 50000);
 
-        in = mySocket.getInputStream();
-        out = mySocket.getOutputStream();
+        setIn(mySocket.getInputStream());
+        setOut(mySocket.getOutputStream());
 
         System.out.println("Connected");
 
@@ -110,7 +116,7 @@ public class ClientCommunication extends Communication {
     }
 
     public RevisionID getLastRevision(String project) throws IOException {
-    //TODO test
+        //TODO test
         String revN;
 
         sendMessage("LR");
@@ -128,9 +134,35 @@ public class ClientCommunication extends Communication {
 
         ClientCommunication comm = new ClientCommunication("localhost");
 
-        //  comm.doCheckout("172.16.0.240", new RevisionID(0));
-        // comm.doCheckout("192.168.0.101", new RevisionID(0));
-        comm.doCheckin("meuProjeto", "minha Mensagem", null);
+        try {
+
+            ArrayList<ConfigurationItem> itemsz = new ArrayList<ConfigurationItem>();
+
+            File file = new File("C:\\Users\\Cleyton\\Desktop\\Non ti  Scordar mai Di me.mp3");
+            FileInputStream finp = new FileInputStream(file);
+
+            ConfigurationItem item;
+
+            item = new ConfigurationItem(new URI("/foo/bar"), finp, CIType.file, new RevisionID(0), "cleyton");
+
+            itemsz.add(item);
+            itemsz.add(item);
+            itemsz.add(item);
+            itemsz.add(item);
+            itemsz.add(item);
+            itemsz.add(item);
+
+
+            RevisionID revID = comm.doCheckin("myProject", "myMessage", itemsz);
+
+            System.out.println("Created version no. : " + revID);
+
+
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(ClientCommunication.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
 
     }
 }

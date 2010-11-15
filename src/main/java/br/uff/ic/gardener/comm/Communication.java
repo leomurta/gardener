@@ -48,6 +48,7 @@ public class Communication {
             String revID = Long.toString(configItem.getRevision().getNumber());
             String itemType = configItem.getType().toString();
             InputStream item = configItem.getItemAsInputStream();
+
             //depois de pegar, é hora de enviar (e esperar ack's)
             sendMessage("ackCI");
 
@@ -62,21 +63,20 @@ public class Communication {
             // ID
             ack = receiveMessage();
             sendMessage(id);
-            //   sendMessage("ack");
+
 
             // REVID
             ack = receiveMessage();
             sendMessage(revID);
-            //   sendMessage("ack");
+
 
             // ITEMTYPE
             ack = receiveMessage();
             sendMessage(itemType);
-            //  sendMessage("ack");
+
 
             //ITEM
             ack = receiveMessage();
-            // String itemStr = item.toString();
 
             ByteArrayOutputStream bOut = new ByteArrayOutputStream();
             // byte array[] = new byte[6022386];
@@ -89,40 +89,6 @@ public class Communication {
             while ((readBytes = item.read(bytes)) > 0) {
                 bOut.write(bytes, 0, readBytes);
             }
-
-            // Convert the contents of the output stream into a byte array
-           // byte[] byteData = outputStream.toByteArray();
-
-
-//            int size = 0;
-//            while (a != -1) {
-//                bOut.write(a);
-//                size++;
-//                System.out.println("size " + size + " bytes");
-//                 bOut.flush();
-//                a = item.read();
-//            }
-//            System.out.println("finished reading");
-
-
-//            byte array[] = new byte[6022386];
-//            InputStream is = item;
-//            int bytesRead, current;
-//            //leia do inputstream até não existir mais bytes
-//            bytesRead = is.read(array, 0, array.length);
-//            current = bytesRead;
-//            do {
-//                //System.out.println("lendo");
-//                //leia e armazene em mybytearray
-//                bytesRead =   is.read(array, current, (array.length - current));
-//                //enquanto houver bytes ainda...
-//                if (bytesRead >= 0) {
-//                    current += bytesRead;
-//                }
-//                System.out.println("curent " + current);
-//                System.out.println("bytesRead " + bytesRead);
-//            } while (bytesRead > 0);
-
 
             //ENVIAR ISSO AQUI
             byte arr[] = bOut.toByteArray();
@@ -166,20 +132,21 @@ public class Communication {
             sendMessage("ack");
             // ITEMTYPE
             itemType = receiveMessage();
-            sendMessage("ack");
-            //ITEM
-            //  itemStr = receiveMessage();
-            //receieveing the item
+            sendMessage("ack"); //mensagem de ok, prossiga com o próximo passo
 
+            System.out.println(uriStr + " " + user + " " + id + " " + revID + " " + itemType);
+            //ITEM
             ByteArrayInputStream byteIn = new ByteArrayInputStream(receiveBytes());
-            sendMessage("ack");
+            //  sendMessage("ack"); //will this be the problem?
 
             //criar novo item de configuração e adicionar à lista
             ConfigurationItem configItem = new ConfigurationItem(URI.create(uriStr), byteIn, CIType.valueOf(itemType), RevisionID.fromString(revID), user);
 
             items.add(configItem);
             // verificando se existem mais itens
+
             ackCI = receiveMessage();
+            System.out.println("ACKCI HERE " + ackCI);
         } while (ackCI.compareTo("ackCI") == 0);
 
         return items; //i hope it's all
@@ -202,44 +169,13 @@ public class Communication {
 
     }
 
-    /**
-     * Not working.
-     * @return
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-//    private Object receiveObject() throws IOException, ClassNotFoundException {
-//
-//        Object obj = null;
-//
-//        ObjectInputStream objInp = new ObjectInputStream(getIn());
-//
-//        obj = objInp.readObject();
-//
-//        return obj;
-//    }
-//
-//    private void sendObject(Object obj) throws IOException {
-//        ObjectOutputStream objOut = new ObjectOutputStream(getOut());
-//
-//        objOut.writeObject(obj);
-//    }
     private byte[] receiveBytes() throws IOException {
 
-        int sizeBytes = Integer.parseInt(receiveMessage());
-        sendMessage("ack");
+        int sizeBytes = Integer.parseInt(receiveMessage()); //recebendo o tamanho do arquivo
 
-        //  System.out.println("receieving"+sizeBytes+"bytes");
-        InputStreamReader isr = new InputStreamReader(getIn());
+        sendMessage("ack"); //ok, prossiga
 
-        ByteArrayOutputStream byOut = new ByteArrayOutputStream();
         byte a[] = new byte[sizeBytes];
-        //int a = getIn().read();
-
-        // while (bytesRead < sizeBytes) {
-        // bytesRead = bytesRead + getIn().read(a, bytesRead, 65536);
-        // }
-        //  bytesRead = getIn().read(a, 0, a.length);
 
         int bytesRead = 0;
         int current;
@@ -260,94 +196,24 @@ public class Communication {
             System.out.println("bytesRead " + bytesRead);
         } while (bytesRead > 0);
 
-        // System.out.println("bytesRead = " + bytesRead);
-
-
-        // int size = 0;
-//        while (a != -1) {
-//            System.out.println(a);
-//            byOut.write(a);
-//            a = getIn().read();
-//            System.out.println(++size);
-//            //System.out.println(a);
-//        }
-        //    System.out.println("bytes received");
-        //    System.out.println(byOut.toByteArray().length + " bytes received");
-
-        // InputStream byIn = new ByteArrayInputStream(byOut.toByteArray());
-
-        //BufferedReader br = new BufferedReader(isr);
-        //String linha = br.readLine();
         System.out.println("sizeOfbytes = " + a.length);
         return a;
 
     }
 
     private void sendByteArray(byte[] arr) throws IOException {
-        sendMessage(String.valueOf(arr.length));
+        sendMessage(String.valueOf(arr.length)); // enviando o tamanho do arquivo
+
         System.out.println("sending " + arr.length + " bytes");
 
-        //if file is bigger than 65536 bytes, I must break the sending
-        //it feels like i'm doing something wrong...
-
-
         String ack = receiveMessage();
-        //  int sizeSent = 0;
-        // while (sizeSent > arr.length) {
+
         out.write(arr, 0, arr.length);
-        //      sizeSent = sizeSent + 65536;
-        //}
-        //  out.flush();
+
         System.out.println("sent array");
 
     }
 
-//    private File receiveFile() throws IOException {
-//        // TODO e se fizermos receber um arquivo zip sempre, facilitaria?
-//        int filesize = 6022386; //hardcoded
-//        File file = null;
-//        int bytesRead;
-//        int current;
-//
-//        //  receive file
-//        // criando o bytearray que vai receber o arquivo
-//        //  (eu poderia pedir o tamanho do arquivo no gardener
-//        byte[] mybytearray = new byte[filesize];
-//
-//        //pegando o inputstream, que vai receber o arquivo (o byte[])
-//        InputStream is = in;
-//
-//        //leia do inputstream até não existir mais bytes
-//        bytesRead = is.read(mybytearray, 0, mybytearray.length);
-//        current = bytesRead;
-//        do {
-//            //leia e armazene em mybytearray
-//            bytesRead =
-//                    is.read(mybytearray, current, (mybytearray.length - current));
-//            //enquanto houver bytes ainda...
-//            if (bytesRead >= 0) {
-//                current += bytesRead;
-//            }
-//        } while (bytesRead > -1);
-//
-//
-//        //jogue o lido para um InputStream e pronto!
-//
-//
-//        //escreva buffered output stream
-//        //TODO o nome do arquivo precisa ser informado de outra forma.
-//        // na verdade, precisamos só armazenar o array de bytes em algum lugar.
-//        FileOutputStream fos = new FileOutputStream("C:\\Users\\Cleyton\\Desktop\\file.txt");
-//        BufferedOutputStream bos = new BufferedOutputStream(fos);
-//        bos.write(mybytearray, 0, current);
-//        bos.flush();
-//        //TODO o nome do arquivo precisa ser informado de outra forma.
-//        file = new File("C:\\Users\\Cleyton\\Desktop\\file.txt");
-//        //  System.out.println("Sucesso! I guess so...");
-//
-//        bos.close();
-//        return file;
-//    }
     /**
      * @return the in
      */

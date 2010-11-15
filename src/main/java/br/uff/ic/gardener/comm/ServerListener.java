@@ -30,6 +30,8 @@ public class ServerListener extends Communication implements Runnable {
     Socket mySocket;
 
     public ServerListener() {
+
+
     }
 
     @Deprecated
@@ -234,11 +236,15 @@ public class ServerListener extends Communication implements Runnable {
         sendMessage("ack");
 
         //TODO receber itens
+
+        System.out.println(project+" "+message+" time to get the item");
+
         Collection<ConfigurationItem> configItems = receiveConfigurationItems();
 
         Server server = Server.getInstance();
-        result = server.ckeckIn(project, user, date, message, (ArrayList<ConfigurationItem>) configItems);
-        // result = server.ckeckIn(project, user, date, message, "", itens);
+        // result = server.ckeckIn(project, user, date, message, (ArrayList<ConfigurationItem>) configItems);
+        result = "20102";
+        
         return result;
     }
 
