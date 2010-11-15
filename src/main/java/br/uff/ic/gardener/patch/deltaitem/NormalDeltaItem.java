@@ -75,6 +75,36 @@ public class NormalDeltaItem extends BasicDeltaItem implements DeltaItem {
     public void setOperation( String operation ) {
         this.operation = operation;
     }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public boolean isAddOperation() {
+        return getOperation().equals( "a" );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public boolean isDelOperation() {
+        return getOperation().equals( "d" );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public boolean isChangeOperation() {
+        return getOperation().equals( "c" );
+    }
 }
 
 

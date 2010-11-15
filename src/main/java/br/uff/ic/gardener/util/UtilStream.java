@@ -1,10 +1,7 @@
 package br.uff.ic.gardener.util;
 
-//~--- JDK imports ------------------------------------------------------------
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,64 +10,92 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+
 import java.util.Random;
 
 /**
  * Classe para operações rotineiras de manipulação de Streams
  */
 public class UtilStream {
-	public static final int DEFAULT_BUFFER_SIZE = 2156;
 
-	private static byte[] BUFFER = new byte[DEFAULT_BUFFER_SIZE];
+    /** Field description */
+    public static final int DEFAULT_BUFFER_SIZE = 2156;
 
+    /** Field description */
+    private static byte[] BUFFER = new byte[DEFAULT_BUFFER_SIZE];
+
+    /** Field description */
     private static String ENCONDING = "UTF-8";
 
+    /** Field description */
     private static char[] CHARBUFFER = new char[DEFAULT_BUFFER_SIZE];
-	
-	public static void fillStream(OutputStream os, String... strVec)throws IOException
-	{
-		//PrintWriter pw = new PrintWriter(os, false);
-		PrintStream ps = new PrintStream (os);
-		for (String str : strVec) 
-		{
-			ps.format("%s%s", str, getLineSeperator());
-		}
-		ps.flush();
-	}
-	
-	public static void fillPrintStream(PrintStream ps, String... strVec)throws IOException
-	{
-		for (String str : strVec) 
-		{
-			ps.format("%s%s", str, getLineSeperator());
-		}
-	}
-	
-	/**
-	 * Preenche um arquivo com várias linhas de String
-	 * @param file o arquivo a ser preenchido
-	 * @param strVec as linhas que o preencherão
-	 */
-	public static void fillFile(File file, String... strVec)throws IOException
-	{
-		FileWriter fw;
-		fw = new FileWriter(file);
-		PrintWriter pw = new PrintWriter(fw);
 
-		for (String str : strVec) {
-			pw.append(str + getLineSeperator());
-		}
-		pw.close();
-	
-	}
-	
-	
-	
-	public static String getLineSeperator()
-	{
-		return System.getProperty("line.separator");
-	}
+    /**
+     * Method description
+     *
+     *
+     * @param os
+     * @param strVec
+     *
+     * @throws IOException
+     */
+    public static void fillStream( OutputStream os, String... strVec ) throws IOException {
 
+        // PrintWriter pw = new PrintWriter(os, false);
+        PrintStream ps = new PrintStream( os );
+
+        for (String str : strVec) {
+            ps.format( "%s%s", str, getLineSeperator() );
+        }
+
+        ps.flush();
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param ps
+     * @param strVec
+     *
+     * @throws IOException
+     */
+    public static void fillPrintStream( PrintStream ps, String... strVec ) throws IOException {
+        for (String str : strVec) {
+            ps.format( "%s%s", str, getLineSeperator() );
+        }
+    }
+
+    /**
+     * Preenche um arquivo com várias linhas de String
+     * @param file o arquivo a ser preenchido
+     * @param strVec as linhas que o preencherão
+     *
+     * @throws IOException
+     */
+    public static void fillFile( File file, String... strVec ) throws IOException {
+        FileWriter fw;
+
+        fw = new FileWriter( file );
+
+        PrintWriter pw = new PrintWriter( fw );
+
+        for (String str : strVec) {
+            pw.append( str + getLineSeperator() );
+        }
+
+        pw.close();
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @return
+     */
+    public static String getLineSeperator() {
+        return System.getProperty( "line.separator" );
+    }
 
     /**
      *
@@ -129,7 +154,6 @@ public class UtilStream {
         fillFile( new File( strFile ), strVec );
     }
 
-
     /**
      * Convert InputStream to String (only support UTF-8).
      * @param input
@@ -185,8 +209,7 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static OutputStream toOutputStream( String text ) throws IOException 
-    {
+    public static OutputStream toOutputStream( String text ) throws IOException {
         byte[]                stringByteArray = text.getBytes();
         ByteArrayOutputStream out             = new ByteArrayOutputStream( stringByteArray.length );
 
@@ -198,31 +221,33 @@ public class UtilStream {
 
     /**
      * Create random data to a OutputStream
-     * @param fileOutputStream
-     * @param i
-     * @throws IOException 
+     *
+     * @param out
+     * @param size
+     * @throws IOException
      */
-	public static void fillRandomData(OutputStream out, int size) throws IOException 
-	{
-		Random r = new Random();
-		while(size > 0)
-		{
-			out.write(r.nextInt());
-			size--;
-		}
-	}
-	
-	/**
-	 * Create content witch each line is it line number. 
-	 */
-	public static void fillLineNumber(OutputStream out, int lineCount )
-	{
-		PrintStream p = new PrintStream(out);
-		for(int i = 0 ; i < lineCount; i++)
-		{
-			p.printf("%d%s", i, UtilStream.getLineSeperator());
-		}
-	}
+    public static void fillRandomData( OutputStream out, int size ) throws IOException {
+        Random r = new Random();
+
+        while (size > 0) {
+            out.write( r.nextInt() );
+            size--;
+        }
+    }
+
+    /**
+     * Create content witch each line is it line number.
+     *
+     * @param out
+     * @param lineCount
+     */
+    public static void fillLineNumber( OutputStream out, int lineCount ) {
+        PrintStream p = new PrintStream( out );
+
+        for (int i = 0; i < lineCount; i++) {
+            p.printf( "%d%s", i, UtilStream.getLineSeperator() );
+        }
+    }
 }
 
 

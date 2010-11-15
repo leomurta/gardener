@@ -5,6 +5,7 @@ import br.uff.ic.gardener.patch.chunk.Chunk;
 import br.uff.ic.gardener.patch.chunk.NormalChunk;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItem;
+import br.uff.ic.gardener.patch.deltaitem.NormalDeltaItem;
 import br.uff.ic.gardener.patch.parser.Result;
 
 import java.io.InputStream;
@@ -80,7 +81,7 @@ public class NormalPatcher extends BasicPatcher implements Patcher {
             ApplyDeltaItemResult result = new ApplyDeltaItemResult( item );
 
             try {
-                displacement = applyChunk( item, text, displacement );
+                displacement = applyChunk( (NormalDeltaItem) item, text, displacement );
                 result.setResult( true );
             } catch (Exception e) {
                 result.setResult( false );
@@ -108,10 +109,22 @@ public class NormalPatcher extends BasicPatcher implements Patcher {
      * @return
      * @throws PatcherException
      */
-    private int applyChunk( DeltaItem item, LinkedList<String> text, int displacement ) throws PatcherException {
+    private int applyChunk( NormalDeltaItem item, LinkedList<String> text, int displacement ) throws PatcherException {
 
         // Corrects for 0 based
-        int index = (item.getOriginalFileInfo().getStart() - 1) + displacement;
+        int index = displacement - 1;
+
+        // Corrects index of add operation
+        if (item.isAddOperation()) {
+            index += item.getNewFileInfo().getStart();
+
+            // new line
+            if (item.getNewFileInfo().getStart() == item.getOriginalFileInfo().getStart()) {
+                index++;
+            }
+        } else {
+            index += item.getOriginalFileInfo().getStart();
+        }
 
         if (index < 0) {
             throw new PatcherException( PatcherException.MSG_MATCHERROR );

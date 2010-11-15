@@ -63,13 +63,33 @@ public class PatchTest {
      * @throws Exception
      */
     @Test
-    public void testApplyPatchToFile_UOC() throws Exception {
+    public void testApplyPatchToFile_UOC_1() throws Exception {
         Format       format = Format.Unified;
         Type         type   = Type.ObjectOriented;
         Match        match  = Match.Complete;
-        OutputStream result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
+        OutputStream result = null;
 
+        result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
         assertResult( inputTzu, result );
+        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
+        assertResult( inputNew, result );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_UOC_2() throws Exception {
+        Format       format = Format.Unified;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.Complete;
+        OutputStream result = null;
+
+        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
+        assertResult( inputNew, result );
     }
 
     /**
@@ -78,27 +98,13 @@ public class PatchTest {
      * @throws Exception
      */
     @Test
-    public void testApplyPatchToFile_UON() throws Exception {
+    public void testApplyPatchToFile_UON_1() throws Exception {
         Format       format = Format.Unified;
         Type         type   = Type.ObjectOriented;
         Match        match  = Match.None;
-        OutputStream result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
+        OutputStream result = null;
 
-        assertResult( inputTzu, result );
-    }
-
-    /**
-     * Test of applyPatchToFile method, of class Patch.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_COC() throws Exception {
-        Format       format = Format.Context;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.Complete;
-        OutputStream result = Patch.applyPatchToFile( inputLao, patchContext, format, match, type );
-
+        result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
         assertResult( inputTzu, result );
     }
 
@@ -109,16 +115,81 @@ public class PatchTest {
      * @throws Exception
      */
     @Test
-    public void testApplyPatchToFile_NON() throws Exception {
+    public void testApplyPatchToFile_UON_2() throws Exception {
+        Format       format = Format.Unified;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.None;
+        OutputStream result = null;
+
+        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
+        assertResult( inputNew, result );
+    }
+
+    /**
+     * Test of applyPatchToFile method, of class Patch.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_COC_1() throws Exception {
+        Format       format = Format.Context;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.Complete;
+        OutputStream result = null;
+
+        result = Patch.applyPatchToFile( inputLao, patchContext, format, match, type );
+        assertResult( inputTzu, result );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_COC_2() throws Exception {
+        Format       format = Format.Context;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.Complete;
+        OutputStream result = null;
+
+        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewContext, format, match, type );
+        assertResult( inputNew, result );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_NON_1() throws Exception {
         Format       format = Format.Normal;
         Type         type   = Type.ObjectOriented;
         Match        match  = Match.None;
         OutputStream result = null;
 
-        // result = Patch.applyPatchToFile( inputLao, patchNormal, format, match, type );
-        // assertResult( inputTzu, result );
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewNormal, format, match, type );
+        result = Patch.applyPatchToFile( inputLao, patchNormal, format, match, type );
         assertResult( inputTzu, result );
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_NON_2() throws Exception {
+        Format       format = Format.Normal;
+        Type         type   = Type.ObjectOriented;
+        Match        match  = Match.None;
+        OutputStream result = null;
+
+        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewNormal, format, match, type );
+        assertResult( inputNew, result );
     }
 
     /**
