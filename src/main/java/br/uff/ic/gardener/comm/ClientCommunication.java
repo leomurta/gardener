@@ -6,23 +6,20 @@ package br.uff.ic.gardener.comm;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 /**
  *
  * @author Cleyton
  */
-public class ClientCommunication {
+public class ClientCommunication extends Communication {
 
     Socket mySocket;
     InputStream in;
@@ -39,16 +36,14 @@ public class ClientCommunication {
 
     }
 
-    public Map<String, OutputStream> doCheckout(String project, RevisionID revision) throws IOException {
-
-
+    public Collection<ConfigurationItem> doCheckout(String project, RevisionID revision) throws IOException {
+        //TODO test!
         // 1 - envia mensagem ao servidor solicitando o checkout
         sendMessage("CO");
 
         String ack = receiveMessage();
 
         //envio o projeto de onde eu quero os itens
-
         sendMessage(project);
 
         ack = receiveMessage();
@@ -59,55 +54,12 @@ public class ClientCommunication {
         ack = receiveMessage();
 
         // recebe os arquivos
-        //TODO Criar método para receber os arquivos
+        Collection<ConfigurationItem> items = receiveConfigurationItems();
 
-        // organiza os arquivos e retorna
-        return null;
+        //preciso mandar um ack pro servidor voltar a escutar a porta?
 
+        return items;
 
-    }
-
-    private String receiveMessage() throws IOException {
-        InputStreamReader isr = new InputStreamReader(in);
-        BufferedReader br = new BufferedReader(isr);
-        String linha = br.readLine();
-
-        return linha;
-    }
-
-    private void sendMessage(String message) throws IOException {
-        System.out.println("sending message" + message);
-        //  PrintWriter pw = new PrintWriter(out, true);
-        PrintWriter pw = new PrintWriter(out, true);
-        pw.println(message);
-
-    }
-    /**
-     * Not working.
-     * @return
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    private Object receiveObject() throws IOException, ClassNotFoundException {
-
-        Object obj = null;
-
-        ObjectInputStream objInp = new ObjectInputStream(in);
-
-        obj = objInp.readObject();
-
-        return obj;
-    }
-
-    /**
-     * Not working.
-     * @param obj
-     * @throws IOException
-     */
-    private void sendObject(Object obj) throws IOException {
-        ObjectOutputStream objOut = new ObjectOutputStream(out);
-
-        objOut.writeObject(obj);
     }
 
     /**
@@ -119,43 +71,57 @@ public class ClientCommunication {
      * @return
      * @throws MalformedURLException
      */
-    public RevisionID doCheckin(Map<String, OutputStream> items, String user, String message) throws MalformedURLException, IOException {
+    public RevisionID doCheckin(String strProject, String strMessage, Collection<ConfigurationItem> items) throws MalformedURLException, IOException {
 
-        String project = "default";
+        //String project = "default";
         // 1 - enviar a solicitação de checkin e aguardar
-
         sendMessage("CI");
         String ack = receiveMessage();
 
         // 2 - depois da resposta, enviar nome do projeto (não há como pegar isso, ainda)
+        sendMessage(strProject);
+        ack = receiveMessage();
+
+        // 3 - enviar a msg
+        sendMessage(strMessage);
+        ack = receiveMessage();
+
+        // 4 - depois da confirmação enviar os itens
+        sendConfigurationItems(items);
+
+        //5 - por fim, receber o número da revisão
+        String revN = receiveMessage();
+
+        System.out.println("new Revision " + revN);
+
+        return new RevisionID(Long.parseLong(revN));
+    }
+
+    public void doInit(String project, String user) throws IOException {
+        //TODO test!
+        String ack = receiveMessage();
+
         sendMessage(project);
 
         ack = receiveMessage();
 
-        // 3 - enviar o usuário
         sendMessage(user);
 
-        ack = receiveMessage();
-
-        // 4 - enviar a msg
-        sendMessage(message);
-
-        ack = receiveMessage();
-
-        // 5 - depois da confirmação enviar os arquivos
-        //TODO send ConfigurationItems via ObjectInputStream
-
-        // por fim, receber o número da revisão
-        String worked = receiveMessage();
-
-        System.out.println("I hope " + worked);
-
-        return null;
     }
 
-    public void doInit(String serverURL) {
-        //TODO implement!
+    public RevisionID getLastRevision(String project) throws IOException {
+    //TODO test
+        String revN;
 
+        sendMessage("LR");
+
+        String ack = receiveMessage();
+
+        sendMessage(project);
+
+        revN = receiveMessage();
+
+        return new RevisionID(Long.parseLong(revN));
     }
 
     public static void main(String[] args) throws IOException {
@@ -164,7 +130,7 @@ public class ClientCommunication {
 
         //  comm.doCheckout("172.16.0.240", new RevisionID(0));
         // comm.doCheckout("192.168.0.101", new RevisionID(0));
-        comm.doCheckin(null, "cleyton", "I'm working!");
+        comm.doCheckin("meuProjeto", "minha Mensagem", null);
 
     }
 }
