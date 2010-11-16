@@ -1,7 +1,7 @@
 
 /*
-* To change this template, choose Tools | Templates
-* and open the template in the editor.
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
  */
 package br.uff.ic.gardener.patch;
 
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import org.junit.Before;
 
 /**
  *
@@ -28,34 +29,39 @@ import java.io.UnsupportedEncodingException;
 public class PatchTest {
 
     /** Field description */
-    private InputStream inputLao = getResourceFile( "lao.txt" );
-
+    private InputStream inputLao;
     /** Field description */
-    private InputStream inputTzu = getResourceFile( "tzu.txt" );
-
+    private InputStream inputTzu;
     /** Field description */
-    private InputStream patchUnified = getResourceFile( "unifiedFormat.txt" );
-
+    private InputStream patchUnified;
     /** Field description */
-    private InputStream patchOrigNewUnified = getResourceFile( "ori-new UnifiedFormat.txt" );
-
+    private InputStream patchOrigNewUnified;
     /** Field description */
-    private InputStream patchOrigNewNormal = getResourceFile( "ori-new NormalFormat.txt" );
-
+    private InputStream patchOrigNewNormal;
     /** Field description */
-    private InputStream patchOrigNewContext = getResourceFile( "ori-new ContextFormat.txt" );
-
+    private InputStream patchOrigNewContext;
     /** Field description */
-    private InputStream patchNormal = getResourceFile( "normalFormat.txt" );
-
+    private InputStream patchNormal;
     /** Field description */
-    private InputStream patchContext = getResourceFile( "contextFormat.txt" );
-
+    private InputStream patchContext;
     /** Field description */
-    private InputStream inputOriginal = getResourceFile( "original.txt" );
-
+    private InputStream inputOriginal;
     /** Field description */
-    private InputStream inputNew = getResourceFile( "new.txt" );
+    private InputStream inputNew;
+
+    @Before
+    public void setUp() throws Exception {
+        inputLao = getResourceFile("lao.txt");
+        inputTzu = getResourceFile("tzu.txt");
+        patchUnified = getResourceFile("unifiedFormat.txt");
+        patchOrigNewUnified = getResourceFile("ori-new UnifiedFormat.txt");
+        patchOrigNewNormal = getResourceFile("ori-new NormalFormat.txt");
+        patchOrigNewContext = getResourceFile("ori-new ContextFormat.txt");
+        patchNormal = getResourceFile("normalFormat.txt");
+        patchContext = getResourceFile("contextFormat.txt");
+        inputOriginal = getResourceFile("original.txt");
+        inputNew = getResourceFile("new.txt");
+    }
 
     /**
      * Test of applyPatchToFile method, of class Patch.
@@ -64,15 +70,15 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_UOC_1() throws Exception {
-        Format       format = Format.Unified;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.Complete;
+        Format format = Format.Unified;
+        Type type = Type.ObjectOriented;
+        Match match = Match.Complete;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
-        assertResult( inputTzu, result );
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
-        assertResult( inputNew, result );
+        result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
+        assertResult(inputTzu, result);
+        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
+        assertResult(inputNew, result);
     }
 
     /**
@@ -83,13 +89,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_UOC_2() throws Exception {
-        Format       format = Format.Unified;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.Complete;
+        Format format = Format.Unified;
+        Type type = Type.ObjectOriented;
+        Match match = Match.Complete;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
-        assertResult( inputNew, result );
+        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
+        assertResult(inputNew, result);
     }
 
     /**
@@ -99,13 +105,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_UON_1() throws Exception {
-        Format       format = Format.Unified;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.None;
+        Format format = Format.Unified;
+        Type type = Type.ObjectOriented;
+        Match match = Match.None;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputLao, patchUnified, format, match, type );
-        assertResult( inputTzu, result );
+        result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
+        assertResult(inputTzu, result);
     }
 
     /**
@@ -116,13 +122,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_UON_2() throws Exception {
-        Format       format = Format.Unified;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.None;
+        Format format = Format.Unified;
+        Type type = Type.ObjectOriented;
+        Match match = Match.None;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewUnified, format, match, type );
-        assertResult( inputNew, result );
+        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
+        assertResult(inputNew, result);
     }
 
     /**
@@ -132,13 +138,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_COC_1() throws Exception {
-        Format       format = Format.Context;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.Complete;
+        Format format = Format.Context;
+        Type type = Type.ObjectOriented;
+        Match match = Match.Complete;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputLao, patchContext, format, match, type );
-        assertResult( inputTzu, result );
+        result = Patch.applyPatchToFile(inputLao, patchContext, format, match, type);
+        assertResult(inputTzu, result);
     }
 
     /**
@@ -149,13 +155,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_COC_2() throws Exception {
-        Format       format = Format.Context;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.Complete;
+        Format format = Format.Context;
+        Type type = Type.ObjectOriented;
+        Match match = Match.Complete;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewContext, format, match, type );
-        assertResult( inputNew, result );
+        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewContext, format, match, type);
+        assertResult(inputNew, result);
     }
 
     /**
@@ -166,13 +172,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_NON_1() throws Exception {
-        Format       format = Format.Normal;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.None;
+        Format format = Format.Normal;
+        Type type = Type.ObjectOriented;
+        Match match = Match.None;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputLao, patchNormal, format, match, type );
-        assertResult( inputTzu, result );
+        result = Patch.applyPatchToFile(inputLao, patchNormal, format, match, type);
+        assertResult(inputTzu, result);
     }
 
     /**
@@ -183,13 +189,13 @@ public class PatchTest {
      */
     @Test
     public void testApplyPatchToFile_NON_2() throws Exception {
-        Format       format = Format.Normal;
-        Type         type   = Type.ObjectOriented;
-        Match        match  = Match.None;
+        Format format = Format.Normal;
+        Type type = Type.ObjectOriented;
+        Match match = Match.None;
         OutputStream result = null;
 
-        result = Patch.applyPatchToFile( inputOriginal, patchOrigNewNormal, format, match, type );
-        assertResult( inputNew, result );
+        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewNormal, format, match, type);
+        assertResult(inputNew, result);
     }
 
     /**
@@ -200,11 +206,12 @@ public class PatchTest {
      *
      * @return
      */
-    protected InputStream getResourceFile( String file ) {
-        String root = "/br/uff/ic/gardener/patch/resource/";
+    protected InputStream getResourceFile(String file) {
+        String root = "/patch/";
         String path = root + file;
-
-        return this.getClass().getResourceAsStream( path );
+        InputStream in = this.getClass().getResourceAsStream(path);
+        assertTrue(in != null);
+        return in;
     }
 
     /**
@@ -219,11 +226,13 @@ public class PatchTest {
      * @throws InterruptedException
      * @throws UnsupportedEncodingException
      */
-    protected OutputStream getFileOutputStream( String file )
+    protected OutputStream getFileOutputStream(String file)
             throws IOException, UnsupportedEncodingException, InterruptedException {
-        InputStream in = getResourceFile( file );
+        InputStream in = getResourceFile(file);
 
-        return UtilStream.toOutputStream( UtilStream.toString( in ) );
+        assertTrue(in != null);
+
+        return UtilStream.toOutputStream(UtilStream.toString(in));
     }
 
     /**
@@ -237,17 +246,14 @@ public class PatchTest {
      * @throws InterruptedException
      * @throws UnsupportedEncodingException
      */
-    private void assertResult( InputStream input, OutputStream result )
+    private void assertResult(InputStream input, OutputStream result)
             throws UnsupportedEncodingException, IOException, InterruptedException {
-        String sText   = UtilStream.toString( input );
-        String sResult = UtilStream.toString( (ByteArrayOutputStream) result );
+        String sText = UtilStream.toString(input);
+        String sResult = UtilStream.toString((ByteArrayOutputStream) result);
 
         // normalize breaks
-        sText   = TextHelper.normalizeBreakLine( sText );
-        sResult = TextHelper.normalizeBreakLine( sResult );
-        assertTrue( sText.compareTo( sResult ) == 0 );
+        sText = TextHelper.normalizeBreakLine(sText);
+        sResult = TextHelper.normalizeBreakLine(sResult);
+        assertTrue(sText.compareTo(sResult) == 0);
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com
