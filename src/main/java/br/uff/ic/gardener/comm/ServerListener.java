@@ -5,19 +5,25 @@
 package br.uff.ic.gardener.comm;
 
 //import br.uff.ic.gardener.server.Project;
+import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.server.Server;
+import br.uff.ic.gardener.util.FileHelper;
+import br.uff.ic.gardener.util.UtilStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import java.util.zip.*;
 
 /**
  *
@@ -30,55 +36,6 @@ public class ServerListener extends Communication implements Runnable {
     Socket mySocket;
 
     public ServerListener() {
-
-
-    }
-
-    @Deprecated
-    public void listenPort() {
-        //  long start = System.currentTimeMillis();
-//        mySocket = new Socket();
-//        int bytesRead;
-//        int current = 0;
-//        try {
-//            //abrindo a conexão...
-//            serverSocket = new ServerSocket(20102);
-//            //System.out.println("InetAdress: " + serverSocket.getInetAddress());
-//
-//            // esperado alguém conectar: podemos criar uma thread para permitir múltiplas conexões
-//            mySocket = serverSocket.accept();
-//            //imprime o endereço do socket aberto
-//            System.out.println("InetAdress: " + mySocket.getInetAddress() + " porta: " + mySocket.getPort());
-//
-//            //BufferedReader br = new BufferedReader(new InputStreamReader(mySocket.getInputStream()));
-//
-//            // System.out.println("Connecting...");
-//            InputStream is = mySocket.getInputStream();
-//
-//            ZipInputStream zis = new ZipInputStream(is);
-//
-//
-//            //ZipInputStream zis = new ZipInputStream(is);
-//
-//            ZipEntry zipEntry = zis.getNextEntry();
-//
-//            zipEntry.isDirectory();
-//
-//
-//            ZipOutputStream zos = new ZipOutputStream(mySocket.getOutputStream());
-//            byte[] a = new byte[filesize];
-//            FileOutputStream fos = new FileOutputStream("c:\text.txt");
-//
-//        } catch (IOException ex) {
-//            Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                mySocket.close();
-//                serverSocket.close();
-//            } catch (IOException ex) {
-//                Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
     }
 
     /**
@@ -108,7 +65,6 @@ public class ServerListener extends Communication implements Runnable {
                         }
                     }
                 }
-
             }
         }
     }
@@ -117,41 +73,47 @@ public class ServerListener extends Communication implements Runnable {
     public void run() {
 
         mySocket = new Socket();
-
         try {
-            //1- abrir o servidor socket
             serverSocket = new ServerSocket(50000);
-            System.out.println("InetAdress: " + serverSocket.getInetAddress().getHostAddress() + " Port: " + serverSocket.getLocalPort());
-
-            // 2- aguardar uma conexão
-            mySocket = serverSocket.accept();
-            //2.1 - depois de aberto, imprimir o endereço da conexão originária
-            System.out.println("Conectado a InetAdress: " + mySocket.getInetAddress() + " porta: " + mySocket.getPort());
-
-            setIn(mySocket.getInputStream());
-            setOut(mySocket.getOutputStream());
-
-            /*
-             * Pelo procotolo, vamos esperar uma mensagem dizendo o que é que vai ser feito:
-             *  CO, CI ou LS
-             */
-            //3 - pegando a intenção
-            String intent = receiveMessage();
-
-            //4 - de acordo com cada opção, uma operação vai ser executada
-            doOperation(intent);
-            //nota: por enquanto, elefaz uma operação e para, mas podemos
-            //colocar a execução num looping para esperar a próxima solicitação.
-
-
         } catch (IOException ex) {
             Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+        }
+        System.out.println("InetAdress: " + serverSocket.getInetAddress().getHostAddress() + " Port: " + serverSocket.getLocalPort());
+
+        while (true) {
             try {
-                mySocket.close();
-                serverSocket.close();
+                //1- abrir o servidor socket
+                System.out.println("Aguardando conexão...");
+                // 2- aguardar uma conexão
+                mySocket = serverSocket.accept();
+                //2.1 - depois de aberto, imprimir o endereço da conexão originária
+                System.out.println("Conectado a InetAdress: " + mySocket.getInetAddress() + " porta: " + mySocket.getPort());
+
+                setIn(mySocket.getInputStream());
+                setOut(mySocket.getOutputStream());
+
+                /*
+                 * Pelo procotolo, vamos esperar uma mensagem dizendo o que é que vai ser feito:
+                 *  CO, CI (funcionando), LS, LR (TODO)
+                 */
+                //3 - pegando a intenção
+                String intent = receiveMessage();
+
+                //4 - de acordo com cada opção, uma operação vai ser executada
+                doOperation(intent);
+                //nota: por enquanto, elefaz uma operação e para, mas podemos
+                //colocar a execução num looping para esperar a próxima solicitação.
+
             } catch (IOException ex) {
                 Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    System.out.println("Fechando conexão");
+                    mySocket.close();
+                    //  serverSocket.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -164,9 +126,7 @@ public class ServerListener extends Communication implements Runnable {
      */
     private void sendCheckout() throws IOException {
 
-        String projectName = null;
-        String revisionNumber = null;
-        Server servidor = Server.getInstance();
+        //Server servidor = Server.getInstance();
 
         //1 - servidor precisa dar um "ack" para continuar o processo de envio de informações
         sendMessage("ack");
@@ -181,28 +141,31 @@ public class ServerListener extends Communication implements Runnable {
         // envio os arquivos
         //TODO precisa chamar o checkout do servidor (que não está implementado)
         ArrayList<ConfigurationItem> items = new ArrayList<ConfigurationItem>();
+
+
+        // TESTS PURPOSES
+         //ArrayList<ConfigurationItem> itemsz = new ArrayList<ConfigurationItem>();
+
+            File file = FileHelper.createTemporaryRandomFile();
+            FileOutputStream finp = new FileOutputStream(file);
+
+            UtilStream.fillRandomData(finp, 34);
+            finp.close();
+
+            ConfigurationItem item;
+            InputStream in = new FileInputStream(file);
+        try {
+            item = new ConfigurationItem(new URI("/foo/bar"), in, CIType.file, new RevisionID(0), "cleyton");
+            items.add(item);
+            items.add(item);
+
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // TESTS PURPOSES
+
         sendConfigurationItems(items);
-
-
-        //2 - servidor precisa receber informações de checkout
-        // para facilitar, o cliente vai construir um arquivo que terá 2 linhas:
-        // uma contendo o nome do arquivo e outra contendo a revisão (dados que eu estou precisando agora)
-
-        //TODO fazer um método que já jogue essas informações em um arquivo de projeto...
-        // aqui, apenas estamos recebendo um arquivo qualquer. Talvez essa não seja a melhor forma,
-        // e talvez tenhamos que pegar informação por informação (nome do projeto e revisão)
-        // File configFile = receiveFile();
-
-        // Project project = new Project(projectName);
-        // String project  = "";
-        //ArrayList metadataArray = servidor.ckeckout(null, project, revisionNumber);
-
-        //assim que receber os dados de versão do servidor, preciso pegar os arquivos associados àquela revisão.
-
-        //  File[] files = servidor.ckeckoutFile(project, revisionNumber);
-
-        //3 - após pegar os arquivos, enviá-los ao cliente que solicitou. ele
-        // será responsável por tratar os arquivos
 
 
     }
@@ -237,14 +200,14 @@ public class ServerListener extends Communication implements Runnable {
 
         //TODO receber itens
 
-        System.out.println(project+" "+message+" time to get the item");
+        System.out.println(project + " " + message + " time to get the item");
 
         Collection<ConfigurationItem> configItems = receiveConfigurationItems();
 
         Server server = Server.getInstance();
-        // result = server.ckeckIn(project, user, date, message, (ArrayList<ConfigurationItem>) configItems);
+        //result = server.ckeckIn(project, user, date, message, (ArrayList<ConfigurationItem>) configItems);
         result = "20102";
-        
+
         return result;
     }
 
@@ -275,9 +238,10 @@ public class ServerListener extends Communication implements Runnable {
         String user = receiveMessage();
 
         //criar a parada
-        Server server = Server.getInstance();
+        // Server server = Server.getInstance();
 
-        server.init(project, project);
+        // server.init(project, project);
+
         //tchau
 
     }

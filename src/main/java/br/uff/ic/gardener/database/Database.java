@@ -1,19 +1,25 @@
 package br.uff.ic.gardener.database;
 
+//~--- non-JDK imports --------------------------------------------------------
+
 import br.uff.ic.gardener.versioning.*;
 
 import com.mongodb.*;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
-import java.io.FileInputStream;
+//~--- JDK imports ------------------------------------------------------------
+
 import java.io.DataInputStream.*;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
+import java.nio.channels.FileChannel;
+
 import java.util.*;
 
 /**
@@ -28,173 +34,156 @@ import java.util.*;
  *
  */
 public class Database {
-
     private DB conn;
 
     /**
-     * Verifica sistema operacional para definir raiz do repeto
+     * Verifica sistema operacional para definir raiz do repositorio
      *
-     * @return      retorna a raiz do repeto, de acordo com o sistema operacional
+     * @return      retorna a raiz do repositorio, de acordo com o sistema operacional
      */
-    private String getRoot()
-    {
-           String os = System.getProperty("os.name");
-           if (os.contains("Windows")) {
-               return "c:/Gardener/";
-           } else {
-               return "/Gardener/";
-           }
+    private String getRoot() {
+        String os = System.getProperty("os.name");
+
+        if (os.contains("Windows")) {
+            return "c:/Gardener/";
+        } else {
+            return "/Gardener/";
+        }
     }
 
     /**
      * cria a conexao com o BD
      *
-     * @param serv
+     * @param rep   repositorio
      * @return      retorna a conexao com o BD
      */
-    public DB Connection(Repository rep)
-    {
-            try
-		{
+    public DB Connection(Repository rep) {
+        try {
+            ConfigurationBD serv    = new ConfigurationBD(27017, "localhost");
+            Mongo           connect = new Mongo(serv.getServer(), serv.getPort());
 
-                    ConfigurationBD serv = new ConfigurationBD(27017, "localhost");
+            conn = connect.getDB(rep.getRepository());
 
-                    Mongo connect = new Mongo(serv.getServer(), serv.getPort());
-                    conn = connect.getDB(rep.getRepository());
-                    return conn;
+            return conn;
+        } catch (Exception err) {
+            err.getMessage();
 
-		}
-		catch(Exception err)
-        	{
-                    err.getMessage();
-                    return null;
-                }
+            return null;
+        }
     }
 
     /**
-     * Cria o diretorio do Repositorio
+     * Cria o Repositorio
      *
-     * @param serv
+     * @param rep   repositorio
      */
-    public void createRepository(Repository rep)
-    {
-       File root =  new File(getRoot());
-       if (!root.exists()) root.mkdir();
+    public void createRepository(Repository rep) {
+        File root = new File(getRoot());
 
-       File dir = new File(getRoot() + rep.getRepository());
-       File dirOutStanding = new File(getRoot() + rep.getRepository() + "/fileOutStanding");
+        if (!root.exists()) {
+            root.mkdir();
+        }
 
-       dir.mkdir();
-       dirOutStanding.mkdir();
+        File dir            = new File(getRoot() + rep.getRepository());
+        File dirOutStanding = new File(getRoot() + rep.getRepository() + "/fileOutStanding");
 
+        dir.mkdir();
+        dirOutStanding.mkdir();
     }
 
     /**
-     * Cria o diretorio da revisao e armazena os metadados no Diretorio do Repositorio de uma determinada versao
+     * armazena no repositorio os itens de uma versao
      *
-     * @param serv
-     * @param vers
+     * @param vers       versao
      */
-    public void save(Version vers)
-    {
-
-        FileInputStream source;
+    public void save(Version vers) {
+        FileInputStream  source;
         FileOutputStream target;
+        FileChannel      fcSource;
+        FileChannel      fcTarget;
 
-        FileChannel fcSource;
-        FileChannel fcTarget;
+        try {
+            Repository rep = new Repository(vers.getItemVersion().getProjectItem().getNameProject());
+            boolean    dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber()).mkdir();
 
-        try
-        {
-                Repository rep = new Repository(vers.getItemVersion().getProjectItem().getNameProject());
+            this.conn = Connection(rep);
 
-                boolean dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber()).mkdir();                
+            DBCollection  collection = this.conn.getCollection(rep.getRepository());
+            BasicDBObject revision   = new BasicDBObject();
 
-                this.conn =  Connection(rep);
-                DBCollection collection = this.conn.getCollection(rep.getRepository());
-
-                BasicDBObject revision = new BasicDBObject();
-
-                revision.put("version", vers.getVersionNumber());
-                revision.put("date", vers.getTransactionVersion().getDate());
-                revision.put("messagelog", vers.getTransactionVersion().getMessage());
-                revision.put("user", vers.getTransactionVersion().getUserTransaction().getUserName());
-                revision.put("path", getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
-
-                source = (FileInputStream)vers.getItemVersion().getItemAsInputStream();
-                target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/" + vers.getItemVersion().getNameItem());
-
-                fcSource  = source.getChannel();
-                fcTarget = target.getChannel();
-
-                fcSource.transferTo(0, fcSource.size(), fcTarget);
-
-                collection.insert(revision);
-
-                fcSource.close();
-                fcTarget.close();
-
-
-        }catch(Exception err)
-         {
-             System.out.println("Erro: " + err.getMessage());
-         }
-
-    }    
+            revision.put("version", vers.getVersionNumber());
+            revision.put("date", vers.getTransactionVersion().getDate());
+            revision.put("messagelog", vers.getTransactionVersion().getMessage());
+            revision.put("user", vers.getTransactionVersion().getUserTransaction().getUserName());
+            revision.put("path", getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
+            source = (FileInputStream) vers.getItemVersion().getItemAsInputStream();
+            target = new FileOutputStream(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber() + "/"
+                                          + vers.getItemVersion().getNameItem());
+            fcSource = source.getChannel();
+            fcTarget = target.getChannel();
+            fcSource.transferTo(0, fcSource.size(), fcTarget);
+            collection.insert(revision);
+            fcSource.close();
+            fcTarget.close();
+        } catch (Exception err) {
+            System.out.println("Erro: " + err.getMessage());
+        }
+    }
 
     /**
      * Consulta o metadado
      *
-     * @param serv
-     * @param vers
-     * @return  retorna o metadado do repeto
+     * @param rep       repositorio
+     * @param vers      versao
+     * @return  retorna o metadado do repositorio
      */
-    public ArrayList queryMetadata(Repository rep, Version vers)
-    {
+    public ArrayList queryMetadata(Repository rep, Version vers) {
+        this.conn = Connection(rep);
 
-        this.conn =  Connection(rep);
-        DBCollection collection = this.conn.getCollection(rep.getRepository());
+        DBCollection  collection = this.conn.getCollection(rep.getRepository());
+        BasicDBObject revision   = new BasicDBObject();
 
-        BasicDBObject revision = new BasicDBObject();
         revision.put("revision", vers.getVersionNumber());
 
         DBCursor resultCollection = collection.find();
+
         resultCollection = collection.find(revision);
 
         ArrayList resultQuery = new ArrayList();
 
-        while(resultCollection.hasNext()) {
-
+        while (resultCollection.hasNext()) {
             DBObject resultCollectionAux;
+
             resultCollectionAux = resultCollection.next();
 
-            String user = resultCollectionAux.get("user").toString();
-            String dt = resultCollectionAux.get("date").toString();
+            String user    = resultCollectionAux.get("user").toString();
+            String dt      = resultCollectionAux.get("date").toString();
             String mensage = resultCollectionAux.get("messagelog").toString();
-            String path = resultCollectionAux.get("path").toString();
+            String path    = resultCollectionAux.get("path").toString();
 
             resultQuery.add(user);
             resultQuery.add(dt);
             resultQuery.add(mensage);
             resultQuery.add(path);
-
         }
 
         return resultQuery;
-
     }
+
     /**
-     * Lista arquivos de uma revisao de um repeto
+     * Lista arquivos de uma revisao de um repositorio
      *
-     * @param pServ
-     * @param pVers
-     * @return              lista de arquivos
+     * @param rep       repositorio
+     * @param vers      versao
+     * @return          lista de arquivos
      */
-    public File[] listFiles(Repository rep, Version vers)
-    {
-            File dir = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
-            File[] listFile = dir.listFiles();
+    public File[] listFiles(Repository rep, Version vers) {
+        File   dir      = new File(getRoot() + rep.getRepository() + "/" + vers.getVersionNumber());
+        File[] listFile = dir.listFiles();
 
-            return listFile;
+        return listFile;
     }
- }
+}
+
+
+//~ Formatted by Jindent --- http://www.jindent.com

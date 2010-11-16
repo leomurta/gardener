@@ -7,11 +7,13 @@ package br.uff.ic.gardener.comm;
 import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
+import br.uff.ic.gardener.util.FileHelper;
+import br.uff.ic.gardener.util.UtilStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URI;
@@ -28,8 +30,6 @@ import java.util.logging.Logger;
 public class ClientCommunication extends Communication {
 
     Socket mySocket;
-    //InputStream in;
-    //  OutputStream out;
 
     public ClientCommunication(String serverURL) throws IOException {
 
@@ -79,7 +79,6 @@ public class ClientCommunication extends Communication {
      */
     public RevisionID doCheckin(String strProject, String strMessage, Collection<ConfigurationItem> items) throws MalformedURLException, IOException {
 
-        //String project = "default";
         // 1 - enviar a solicitação de checkin e aguardar
         sendMessage("CI");
         String ack = receiveMessage();
@@ -98,7 +97,7 @@ public class ClientCommunication extends Communication {
         //5 - por fim, receber o número da revisão
         String revN = receiveMessage();
 
-        System.out.println("new Revision " + revN);
+     //   System.out.println("new Revision " + revN);
 
         return new RevisionID(Long.parseLong(revN));
     }
@@ -134,16 +133,21 @@ public class ClientCommunication extends Communication {
 
         ClientCommunication comm = new ClientCommunication("localhost");
 
+        File file = null;
         try {
 
             ArrayList<ConfigurationItem> itemsz = new ArrayList<ConfigurationItem>();
 
-            File file = new File("C:\\Users\\Cleyton\\Desktop\\Non ti  Scordar mai Di me.mp3");
-            FileInputStream finp = new FileInputStream(file);
+            file = FileHelper.createTemporaryRandomFile();
+            FileOutputStream finp = new FileOutputStream(file);
+
+            UtilStream.fillRandomData(finp, 34);
+            finp.close();
 
             ConfigurationItem item;
+            InputStream in = new FileInputStream(file);
 
-            item = new ConfigurationItem(new URI("/foo/bar"), finp, CIType.file, new RevisionID(0), "cleyton");
+            item = new ConfigurationItem(new URI("/foo/bar"), in, CIType.file, new RevisionID(0), "cleyton");
 
             itemsz.add(item);
             itemsz.add(item);
@@ -151,7 +155,6 @@ public class ClientCommunication extends Communication {
             itemsz.add(item);
             itemsz.add(item);
             itemsz.add(item);
-
 
             RevisionID revID = comm.doCheckin("myProject", "myMessage", itemsz);
 
@@ -160,8 +163,12 @@ public class ClientCommunication extends Communication {
 
         } catch (URISyntaxException ex) {
             Logger.getLogger(ClientCommunication.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            FileHelper.deleteDirTree(file);
         }
 
+
+        comm.doInit("myProject", "user");
 
 
     }
