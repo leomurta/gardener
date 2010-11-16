@@ -9,10 +9,9 @@ import br.uff.ic.gardener.patch.delta.FileInfo;
 import br.uff.ic.gardener.patch.deltaitem.ContextDeltaItem;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItemInfo;
 import br.uff.ic.gardener.util.TextHelper;
-
 import java.io.InputStream;
-
 import java.util.LinkedList;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -22,22 +21,16 @@ public class ContextParser extends BasicParser implements Parser {
 
     /** Field description */
     private static final String DELTAITEM_HEADER = "***************";
-
     /** Field description */
     public static final String NEW_IDENT = "---";
-
     /** Field description */
     private static final int NEW_INDEX = 2;
-
     /** Field description */
     public static final String NEW_SYMBOL = "-";
-
     /** Field description */
     public static final String ORIGINAL_IDENT = "***";
-
     /** Field description */
     private static final int ORIGINAL_INDEX = 1;
-
     /** Field description */
     public static final String ORIGINAL_SYMBOL = "*";
 
@@ -48,11 +41,11 @@ public class ContextParser extends BasicParser implements Parser {
     @Override
     protected void setupSymbols() {
         super.setupSymbols();
-        addSymbol( "+", Action.ADDED );
-        addSymbol( "-", Action.DELETED );
-        addSymbol( "!", Action.MODIFIED );
-        addSymbol( " ", Action.CONTEXT );
-        addSymbol( "m", Action.MOVED );    // not used
+        addSymbol("+", Action.ADDED);
+        addSymbol("-", Action.DELETED);
+        addSymbol("!", Action.MODIFIED);
+        addSymbol(" ", Action.CONTEXT);
+        addSymbol("m", Action.MOVED);    // not used
     }
 
     /**
@@ -67,8 +60,8 @@ public class ContextParser extends BasicParser implements Parser {
      * @throws ParserException
      */
     @Override
-    public LinkedList<Result> parseDeltas( InputStream delta ) throws ParserException {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public LinkedList<Result> parseDeltas(InputStream delta) throws ParserException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
@@ -83,56 +76,56 @@ public class ContextParser extends BasicParser implements Parser {
      * @throws ParserException
      */
     @Override
-    public Delta parseDelta( InputStream delta ) throws ParserException {
-        String[] lines = getLines( delta );
+    public Delta parseDelta(InputStream delta) throws ParserException {
+        String[] lines = getLines(delta);
 
         if (lines.length < 2) {
-            throw new ParserException( ParserException.MSG_INVALIDPATCHHEADER );
+            throw new ParserException(ParserException.MSG_INVALIDPATCHHEADER);
         }
 
         int currentLine = 0;    // current line
 
         // jump first lines, headers
-        while (!isInfoLine( lines, currentLine )) {
+        while (!isInfoLine(lines, currentLine)) {
             currentLine++;
         }
 
         // Infos
         ContextDelta newDelta = new ContextDelta();
 
-        currentLine = setInfo( lines, currentLine, newDelta, ORIGINAL_INDEX );
-        currentLine = setInfo( lines, currentLine, newDelta, NEW_INDEX );
+        currentLine = setInfo(lines, currentLine, newDelta, ORIGINAL_INDEX);
+        currentLine = setInfo(lines, currentLine, newDelta, NEW_INDEX);
 
-        ContextDeltaItem item          = null;
-        boolean          originalChunk = true;
+        ContextDeltaItem item = null;
+        boolean originalChunk = true;
 
         for (int i = currentLine; i < lines.length; i++) {
-            String line = clearBreakLines( lines[i] );
+            String line = clearBreakLines(lines[i]);
 
             if (line.isEmpty()) {
                 continue;
-            } else if (isDeltaItemLine( line )) {
+            } else if (isDeltaItemLine(line)) {
 
                 // store previous
                 if (item != null) {
-                    newDelta.addDeltaItens( item );
+                    newDelta.addDeltaItens(item);
                 }
 
                 // create new
-                item = new ContextDeltaItem( null, null, null );
-            } else if (isDeltaItemInfoLine( line )) {
-                originalChunk = isOriginalDeltaItemLine( line );
-                setupDeltaItemInfo( item, line, originalChunk );
-            } else if (isChunkLine( line )) {
-                addChunk( item, line, originalChunk );
-            } else if (!isMissingNewLine( line )) {
-                throw new ParserException( ParserException.MSG_INVALIDLINE );
+                item = new ContextDeltaItem(null, null, null);
+            } else if (isDeltaItemInfoLine(line)) {
+                originalChunk = isOriginalDeltaItemLine(line);
+                setupDeltaItemInfo(item, line, originalChunk);
+            } else if (isChunkLine(line)) {
+                addChunk(item, line, originalChunk);
+            } else if (!isMissingNewLine(line)) {
+                throw new ParserException(ParserException.MSG_INVALIDLINE);
             }
         }
 
         // store last one
         if (item != null) {
-            newDelta.addDeltaItens( item );
+            newDelta.addDeltaItens(item);
         }
 
         return newDelta;
@@ -146,12 +139,12 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      */
-    private boolean isDeltaItemInfoLine( String line ) {
+    private boolean isDeltaItemInfoLine(String line) {
         if (line.isEmpty()) {
             return false;
         }
 
-        return line.startsWith( NEW_IDENT ) || isOriginalDeltaItemLine( line );
+        return line.startsWith(NEW_IDENT) || isOriginalDeltaItemLine(line);
     }
 
     /**
@@ -162,12 +155,12 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      */
-    private boolean isOriginalDeltaItemLine( String line ) {
+    private boolean isOriginalDeltaItemLine(String line) {
         if (line.isEmpty()) {
             return false;
         }
 
-        return line.startsWith( ORIGINAL_IDENT );
+        return line.startsWith(ORIGINAL_IDENT);
     }
 
     /**
@@ -182,10 +175,10 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private boolean isInfoLine( String[] lines, int currentLine ) throws ParserException {
-        validateLine( lines, currentLine );
+    private boolean isInfoLine(String[] lines, int currentLine) throws ParserException {
+        validateLine(lines, currentLine);
 
-        return isDeltaItemInfoLine( lines[currentLine] );
+        return isDeltaItemInfoLine(lines[currentLine]);
     }
 
     /**
@@ -198,9 +191,9 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private void validateLine( String[] lines, int currentLine ) throws ParserException {
+    private void validateLine(String[] lines, int currentLine) throws ParserException {
         if (currentLine >= lines.length) {
-            throw new ParserException( ParserException.MSG_INVALIDLINE );
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
     }
 
@@ -214,16 +207,16 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private int setInfo( String[] lines, int curLine, Delta delta, int infoIndex ) throws ParserException {
+    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
         String buffer;
 
         // verifies line
-        validateLine( lines, curLine );
+        validateLine(lines, curLine);
 
-        String tokens[] = lines[curLine].split( "\t" );
+        String tokens[] = lines[curLine].split("\t");
 
         if (tokens.length != 2) {
-            throw new ParserException( ParserException.MSG_INVALIDLINE );
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
         }
 
         FileInfo info = new FileInfo();
@@ -231,23 +224,23 @@ public class ContextParser extends BasicParser implements Parser {
         // Path
         // remove ident from line begining
         if (infoIndex == ORIGINAL_INDEX) {
-            buffer = tokens[0].replace( ORIGINAL_IDENT, "" );
+            buffer = tokens[0].replace(ORIGINAL_IDENT, "");
         } else {
-            buffer = tokens[0].replace( NEW_IDENT, "" );
+            buffer = tokens[0].replace(NEW_IDENT, "");
         }
 
         // Remove blanks
         buffer = buffer.trim();
-        info.setPath( buffer );
+        info.setPath(buffer);
 
         // Date
         buffer = tokens[1].trim();
-        info.setDate( buffer );
+        info.setDate(buffer);
 
         if (infoIndex == ORIGINAL_INDEX) {
-            delta.setOriginalFileInfo( info );
+            delta.setOriginalFileInfo(info);
         } else {
-            delta.setNewFileInfo( info );
+            delta.setNewFileInfo(info);
         }
 
         return curLine + 1;
@@ -264,15 +257,15 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private void addChunk( ContextDeltaItem item, String line, boolean original ) throws ParserException {
-        Chunk.Action action = getAction( line.substring( 0, 1 ) );
-        String       sText  = "";
+    private void addChunk(ContextDeltaItem item, String line, boolean original) throws ParserException {
+        Chunk.Action action = getAction(line.substring(0, 1));
+        String sText = "";
 
         if (line.length() > 1) {
-            sText = line.substring( 2 );
+            sText = line.substring(2);
         }
 
-        item.addChunk( new ContextChunk( action, sText, original ) );
+        item.addChunk(new ContextChunk(action, sText, original));
     }
 
     /**
@@ -286,32 +279,32 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @throws ParserException
      */
-    private void setupDeltaItemInfo( ContextDeltaItem item, String line, boolean originalChunk )
+    private void setupDeltaItemInfo(ContextDeltaItem item, String line, boolean originalChunk)
             throws ParserException {
         String replace = (originalChunk)
-                         ? ORIGINAL_SYMBOL
-                         : NEW_SYMBOL;
+                ? ORIGINAL_SYMBOL
+                : NEW_SYMBOL;
 
         // Remove markers and blanks
-        line = line.replace( replace, "" ).trim();
+        line = line.replace(replace, "").trim();
 
-        String infos[] = TextHelper.toArray( line, "," );
-        int    start   = 0;
-        int    lenght  = 0;
+        String infos[] = TextHelper.toArray(line, ",");
+        int start = 0;
+        int lenght = 0;
 
         if (infos.length == 2) {
-            start  = Integer.parseInt( infos[0] );
-            lenght = Integer.parseInt( infos[1] );
+            start = Integer.parseInt(infos[0]);
+            lenght = Integer.parseInt(infos[1]);
         } else if (infos.length == 1) {
-            start = Integer.parseInt( infos[0] );
+            start = Integer.parseInt(infos[0]);
         } else {
             throw new ParserException();
         }
 
         if (originalChunk) {
-            item.setOriginalFileInfo( new DeltaItemInfo( start, lenght ) );
+            item.setOriginalFileInfo(new DeltaItemInfo(start, lenght));
         } else {
-            item.setNewFileInfo( new DeltaItemInfo( start, lenght ) );
+            item.setNewFileInfo(new DeltaItemInfo(start, lenght));
         }
     }
 
@@ -323,10 +316,7 @@ public class ContextParser extends BasicParser implements Parser {
      *
      * @return
      */
-    private boolean isDeltaItemLine( String line ) {
-        return line.trim().contains( DELTAITEM_HEADER );
+    private boolean isDeltaItemLine(String line) {
+        return line.trim().contains(DELTAITEM_HEADER);
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com

@@ -5,11 +5,8 @@ import br.uff.ic.gardener.patch.chunk.Chunk;
 import br.uff.ic.gardener.patch.chunk.ContextChunk;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItem;
-import br.uff.ic.gardener.patch.parser.Result;
-
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,21 +16,6 @@ import java.util.List;
  * @author Daniel
  */
 public class ContextPatcher extends BasicPatcher implements Patcher {
-
-    /**
-     *
-     *
-     * @param input
-     * @param results
-     * @return
-     *
-     *
-     * @throws PatcherException
-     */
-    @Override
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
     /**
      * Method description
@@ -68,11 +50,7 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
      */
     @Override
     public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException {
-        setup(input, delta, match);
-
-        if (isNoMatch()) {
-            throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
-        }
+        setup(input, match);
 
         // Convert input to text
         LinkedList<String> text = getLines(input);
@@ -107,6 +85,21 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
     }
 
     /**
+     * 
+     * @param input
+     * @param match
+     * @throws PatcherException
+     */
+    @Override
+    protected void setup(InputStream input, Match match) throws PatcherException {
+        super.setup(input, match);
+
+        if (isNoMatch()) {
+            throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
+        }
+    }
+
+    /**
      * Method description
      *
      *
@@ -127,9 +120,9 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
         }
 
         // context of alterations
-        LinkedList<String> context            = new LinkedList<String>();
-        boolean            readContext        = false;
-        boolean            foundFirstNewChunk = false;
+        LinkedList<String> context = new LinkedList<String>();
+        boolean readContext = false;
+        boolean foundFirstNewChunk = false;
 
         // Applying chunks
         for (Chunk bChunk : item.getChunks()) {
@@ -142,7 +135,7 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
             ContextChunk chunk = (ContextChunk) bChunk;
 
             // clean context before next blocks
-            if (!chunk.isOriginal() &&!foundFirstNewChunk) {
+            if (!chunk.isOriginal() && !foundFirstNewChunk) {
                 foundFirstNewChunk = true;
                 context.clear();
             }
@@ -221,6 +214,3 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
         return index;
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com

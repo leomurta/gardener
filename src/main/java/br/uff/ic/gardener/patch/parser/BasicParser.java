@@ -177,11 +177,8 @@ public abstract class BasicParser {
      * @throws ParserException
      */
     protected String[] getLines(InputStream delta) throws ParserException {
-        String sDelta;
-
         try {
-            sDelta = UtilStream.toString(delta);
-
+            String sDelta = UtilStream.toString(delta);
             return TextHelper.toArray(sDelta, CR);
         } catch (Exception ex) {
             throw new ParserException(ex);

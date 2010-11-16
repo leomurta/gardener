@@ -21,18 +21,7 @@ import java.util.LinkedList;
 public interface Patcher {
 
     /**
-     * OO version
-     * @param input
-     * @param results
-     * @return
-     *
-     *
-     * @throws PatcherException
-     */
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException;
-
-    /**
-     *
+     * OO version of patching
      * @param input
      * @param delta
      * @param match
@@ -44,7 +33,7 @@ public interface Patcher {
     public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException;
 
     /**
-     * SAX version
+     * SAX version of patching
      * @param input
      * @param patch
      * @param match

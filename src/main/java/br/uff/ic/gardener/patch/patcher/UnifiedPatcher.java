@@ -5,13 +5,8 @@ import br.uff.ic.gardener.patch.chunk.Chunk;
 import br.uff.ic.gardener.patch.chunk.UnifiedChunk;
 import br.uff.ic.gardener.patch.delta.Delta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItem;
-import br.uff.ic.gardener.patch.parser.Result;
-import br.uff.ic.gardener.util.TextHelper;
-import br.uff.ic.gardener.util.UtilStream;
-
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,21 +21,6 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      * OO patch
      *
      * @param input
-     * @param results
-     * @return
-     *
-     *
-     * @throws PatcherException
-     */
-    @Override
-    public OutputStream patch(InputStream input, LinkedList<Result> results) throws PatcherException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * OO patch
-     *
-     * @param input
      * @param delta
      * @param match
      * @return
@@ -50,7 +30,7 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
      */
     @Override
     public OutputStream patch(InputStream input, Delta delta, Match match) throws PatcherException {
-        setup(input, delta, match);
+        setup(input, match);
 
         // Convert input to text
         LinkedList<String> text = getLines(input);
@@ -271,6 +251,3 @@ public class UnifiedPatcher extends BasicPatcher implements Patcher {
         return Matcher.match(startLine, context, text);
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com

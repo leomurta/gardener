@@ -23,17 +23,14 @@ public class Patch {
          *
          */
         Unified,
-
         /**
          *
          */
         Context,
-
         /**
          *
          */
         Normal,
-
         /**
          *
          */
@@ -49,7 +46,6 @@ public class Patch {
          *
          */
         None,
-
         /**
          *
          */
@@ -65,7 +61,6 @@ public class Patch {
          *
          */
         ObjectOriented,
-
         /**
          *
          */
@@ -142,11 +137,10 @@ public class Patch {
         Patcher patcher = PatcherFactory.get(format);
 
         // Apply patch to new stream
-        OutputStream outStream = patcher.patch(file, patch, match);
-
-        return outStream;
+        return patcher.patch(file, patch, match);
     }
 }
 
 
 //~ Formatted by Jindent --- http://www.jindent.com
+

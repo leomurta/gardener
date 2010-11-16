@@ -1,7 +1,7 @@
 
 /*
-* To change this template, choose Tools | Templates
-* and open the template in the editor.
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
  */
 package br.uff.ic.gardener.patch.patcher;
 
@@ -24,14 +24,9 @@ import java.util.List;
 public class BasicPatcher {
 
     /** Field description */
-    private Delta delta;
-
-    /** Field description */
     private InputStream input;
-
     /** Field description */
     private List<ApplyDeltaItemResult> lastApplyResults;
-
     /** Field description */
     private Match match;
 
@@ -43,9 +38,8 @@ public class BasicPatcher {
      * @param delta
      * @param match
      */
-    protected void setup(InputStream input, Delta delta, Match match) {
+    protected void setup(InputStream input, Match match) throws PatcherException {
         setInput(input);
-        setDelta(delta);
         setMatch(match);
     }
 
@@ -81,20 +75,6 @@ public class BasicPatcher {
      */
     protected boolean isNoMatch() {
         return getMatch().equals(Match.None);
-    }
-
-    /**
-     * @return the delta
-     */
-    protected Delta getDelta() {
-        return delta;
-    }
-
-    /**
-     * @param delta the delta to set
-     */
-    protected void setDelta(Delta delta) {
-        this.delta = delta;
     }
 
     /**
@@ -178,6 +158,3 @@ public class BasicPatcher {
         }
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com
