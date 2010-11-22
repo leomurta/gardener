@@ -9,11 +9,32 @@ import java.util.logging.Logger;
 
 public class WriterFactory {
 
-    static String fileOutputName = "diff-" + FormatFactory.getDateHour(new java.util.Date()) + ".txt";
+    private static PrintWriter stWriter = null;
+    private static File stFile = null;
 
-    public static PrintWriter getWriter() throws IOException {
+    public synchronized static void setWriter(String fileOutputName){
+        stWriter = createWriter(fileOutputName);
+    }
+
+    public synchronized static PrintWriter getWriter() throws IOException {
+        if(stWriter != null){
+            return stWriter;
+        }
+
+        String fileOutputName = "diff-"+ FormatFactory.getDateHour(new java.util.Date()) + ".txt";
+        stWriter = createWriter(fileOutputName);
+
+        return stWriter;
+    }
+
+    public static File getFile(){
+        return stFile;
+    }
+    
+    private static PrintWriter createWriter(String fileOutputName){
         try {
-            FileWriter writer = new FileWriter(new File(fileOutputName), true);
+            stFile = new File(fileOutputName);
+            FileWriter writer = new FileWriter(stFile, true);
             return new PrintWriter(writer, true);
         } catch (IOException ex) {
             Logger.getLogger(NormalFormat.class.getName()).log(Level.SEVERE, null, ex);
