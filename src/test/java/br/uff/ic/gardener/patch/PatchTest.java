@@ -5,9 +5,13 @@
  */
 package br.uff.ic.gardener.patch;
 
+import br.uff.ic.gardener.diff.Diff;
+import br.uff.ic.gardener.diff.IResultDiff;
+import br.uff.ic.gardener.diff.WriterFactory;
 import br.uff.ic.gardener.patch.Patch.Format;
 import br.uff.ic.gardener.patch.Patch.Match;
 import br.uff.ic.gardener.patch.Patch.Type;
+import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
@@ -16,9 +20,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import org.junit.Before;
 
@@ -196,6 +203,57 @@ public class PatchTest {
 
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewNormal, format, match, type);
         assertResult(inputNew, result);
+    }
+
+    @Test
+    public void testDiffPatch() throws Exception {
+        String root = "D:/Repositorios/Git/gardener/target/test-classes/patch/";
+        String file1 = "lao.txt";
+        String file2 = "tzu.txt";
+        char format;
+
+        //Normal
+        format = 'n';
+        testDiffPatch(root, file1, file2, format, Match.None);
+
+        //Context
+        format = 'c';
+        testDiffPatch(root, file1, file2, format, Match.Complete);
+
+        //Unified
+        format = 'u';
+        testDiffPatch(root, file1, file2, format, Match.None);
+        testDiffPatch(root, file1, file2, format, Match.Complete);
+    }
+
+    public void testDiffPatch(String root, String f1, String f2, char format, Match match) throws Exception {
+        File file1 = new File(root + f1);
+        File file2 = new File(root + f2);
+
+        Format fmt = null;
+        if (format == 'c') {
+            fmt = Format.Context;
+        } else if (format == 'u') {
+            fmt = Format.Unified;
+        } else if (format == 'n') {
+            fmt = Format.Normal;
+        }
+
+        String fileOutName = root + "diff_" + format +"_" + match + ".txt";
+
+        //delete previous test
+        File testFile = new File(fileOutName);
+        testFile.delete();
+
+        WriterFactory.setWriter(fileOutName);
+        Diff diffC = new Diff(file1, file2, format);
+        diffC.setOutputFormat();
+
+        FileInputStream fi1 = new FileInputStream(file1);
+        FileInputStream fi2 = new FileInputStream(file2);
+        FileInputStream fiOut = new FileInputStream(fileOutName);
+        OutputStream result = Patch.applyPatchToFile(fi1, fiOut, fmt, match, Type.ObjectOriented);
+        assertResult(fi2, result);
     }
 
     /**

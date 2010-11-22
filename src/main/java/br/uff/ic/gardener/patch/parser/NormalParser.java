@@ -4,12 +4,14 @@ import br.uff.ic.gardener.patch.chunk.Chunk;
 import br.uff.ic.gardener.patch.chunk.Chunk.Action;
 import br.uff.ic.gardener.patch.chunk.NormalChunk;
 import br.uff.ic.gardener.patch.delta.Delta;
+import br.uff.ic.gardener.patch.delta.FileInfo;
 import br.uff.ic.gardener.patch.delta.NormalDelta;
 import br.uff.ic.gardener.patch.deltaitem.DeltaItemInfo;
 import br.uff.ic.gardener.patch.deltaitem.NormalDeltaItem;
 import br.uff.ic.gardener.util.TextHelper;
 import java.io.InputStream;
 import java.util.LinkedList;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -17,6 +19,18 @@ import java.util.LinkedList;
  */
 public class NormalParser extends BasicParser implements Parser {
 
+    /** Field description */
+    private static final String NEW_IDENT = "---";
+    /** Field description */
+    private static final int NEW_INDEX = 2;
+    /** Field description */
+    private static final String NEW_SYMBOL = "-";
+    /** Field description */
+    private static final String ORIGINAL_IDENT = "***";
+    /** Field description */
+    private static final int ORIGINAL_INDEX = 1;
+    /** Field description */
+    private static final String ORIGINAL_SYMBOL = "*";
     /** Field description */
     protected static String OP_ADD = "a";
     /** Field description */
@@ -59,6 +73,14 @@ public class NormalParser extends BasicParser implements Parser {
 
         // Infos
         NormalDelta newDelta = new NormalDelta();
+
+        //Has header
+        if (isInfoLine(lines, currentLine)) {
+            currentLine = setInfo(lines, currentLine, newDelta, ORIGINAL_INDEX);
+            currentLine = setInfo(lines, currentLine, newDelta, NEW_INDEX);
+        }     
+
+
         NormalDeltaItem item = null;
 
         for (int i = currentLine; i < lines.length; i++) {
@@ -90,6 +112,113 @@ public class NormalParser extends BasicParser implements Parser {
         }
 
         return newDelta;
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param line
+     *
+     * @return
+     */
+    private boolean isDeltaItemInfoLine(String line) {
+        if (line.isEmpty()) {
+            return false;
+        }
+
+        return line.startsWith(NEW_IDENT) || isOriginalDeltaItemLine(line);
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param line
+     *
+     * @return
+     */
+    private boolean isOriginalDeltaItemLine(String line) {
+        if (line.isEmpty()) {
+            return false;
+        }
+
+        return line.startsWith(ORIGINAL_IDENT);
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @param lines
+     * @param currentLine
+     *
+     * @return
+     *
+     *
+     * @throws ParserException
+     */
+    private boolean isInfoLine(String[] lines, int currentLine) throws ParserException {
+        validateLine(lines, currentLine);
+
+        return isDeltaItemInfoLine(lines[currentLine]);
+    }
+
+    /**
+     *
+     * @param lines
+     * @param curLine
+     * @param delta
+     * @param infoIndex
+     * @return
+     *
+     * @throws ParserException
+     */
+    private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
+
+        // verifies line
+        validateLine(lines, curLine);
+
+        StringTokenizer tokenizer = new StringTokenizer(lines[curLine], " \t");
+        if( tokenizer.countTokens() < 3){
+            throw new ParserException( ParserException.MSG_INVALIDLINE );
+        }
+
+        int nCount = 1;
+        FileInfo info = new FileInfo();
+        for (StringTokenizer stringTokenizer = tokenizer; stringTokenizer.hasMoreTokens();) {
+            String token = stringTokenizer.nextToken();
+            if(nCount ==2){ //file name
+                info.setPath(token.trim());
+            } else if(nCount >2){ //concat date
+                info.setDate(info.getDate()+token);
+            }
+            nCount++;
+        }
+
+        if (infoIndex == ORIGINAL_INDEX) {
+            delta.setOriginalFileInfo(info);
+        } else {
+            delta.setNewFileInfo(info);
+        }
+
+        return curLine + 1;
+    }
+    
+    /**
+     * Method description
+     *
+     *
+     * @param lines
+     * @param currentLine
+     *
+     *
+     * @throws ParserException
+     */
+    private void validateLine(String[] lines, int currentLine) throws ParserException {
+        if (currentLine >= lines.length) {
+            throw new ParserException(ParserException.MSG_INVALIDLINE);
+        }
     }
 
     /**

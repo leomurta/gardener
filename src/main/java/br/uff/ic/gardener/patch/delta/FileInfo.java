@@ -6,7 +6,7 @@ package br.uff.ic.gardener.patch.delta;
  */
 public class FileInfo {
     private String path = "";
-    private String date;
+    private String date = "";
 
     /**
      * @return the path

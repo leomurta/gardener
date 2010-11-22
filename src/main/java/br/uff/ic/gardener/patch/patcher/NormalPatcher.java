@@ -98,13 +98,8 @@ public class NormalPatcher extends BasicPatcher implements Patcher {
         int index = displacement - 1;
 
         // Corrects index of add operation
-        if (item.isAddOperation()) {
-            index += item.getNewFileInfo().getStart();
-
-            // new line
-            if (item.getNewFileInfo().getStart() == item.getOriginalFileInfo().getStart()) {
-                index++;
-            }
+        if (item.isAddOperation()) {            
+            index = item.getNewFileInfo().getStart() - 1;
         } else {
             index += item.getOriginalFileInfo().getStart();
         }

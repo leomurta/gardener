@@ -22,17 +22,17 @@ public class ContextParser extends BasicParser implements Parser {
     /** Field description */
     private static final String DELTAITEM_HEADER = "***************";
     /** Field description */
-    public static final String NEW_IDENT = "---";
+    private static final String NEW_IDENT = "---";
     /** Field description */
     private static final int NEW_INDEX = 2;
     /** Field description */
-    public static final String NEW_SYMBOL = "-";
+    private static final String NEW_SYMBOL = "-";
     /** Field description */
-    public static final String ORIGINAL_IDENT = "***";
+    private static final String ORIGINAL_IDENT = "***";
     /** Field description */
     private static final int ORIGINAL_INDEX = 1;
     /** Field description */
-    public static final String ORIGINAL_SYMBOL = "*";
+    private static final String ORIGINAL_SYMBOL = "*";
 
     /**
      * Method description
@@ -208,34 +208,26 @@ public class ContextParser extends BasicParser implements Parser {
      * @throws ParserException
      */
     private int setInfo(String[] lines, int curLine, Delta delta, int infoIndex) throws ParserException {
-        String buffer;
-
+        
         // verifies line
         validateLine(lines, curLine);
 
-        String tokens[] = lines[curLine].split("\t");
-
-        if (tokens.length != 2) {
-            throw new ParserException(ParserException.MSG_INVALIDLINE);
+        StringTokenizer tokenizer = new StringTokenizer(lines[curLine], " \t");
+        if( tokenizer.countTokens() < 3){
+            throw new ParserException( ParserException.MSG_INVALIDLINE );
         }
 
+        int nCount = 1;
         FileInfo info = new FileInfo();
-
-        // Path
-        // remove ident from line begining
-        if (infoIndex == ORIGINAL_INDEX) {
-            buffer = tokens[0].replace(ORIGINAL_IDENT, "");
-        } else {
-            buffer = tokens[0].replace(NEW_IDENT, "");
+        for (StringTokenizer stringTokenizer = tokenizer; stringTokenizer.hasMoreTokens();) {
+            String token = stringTokenizer.nextToken();
+            if(nCount ==2){ //file name
+                info.setPath(token.trim());
+            } else if(nCount >2){ //concat date
+                info.setDate(info.getDate()+token);
+            }
+            nCount++;
         }
-
-        // Remove blanks
-        buffer = buffer.trim();
-        info.setPath(buffer);
-
-        // Date
-        buffer = tokens[1].trim();
-        info.setDate(buffer);
 
         if (infoIndex == ORIGINAL_INDEX) {
             delta.setOriginalFileInfo(info);

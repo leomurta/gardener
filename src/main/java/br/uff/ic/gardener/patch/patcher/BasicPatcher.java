@@ -153,6 +153,10 @@ public class BasicPatcher {
      * @throws PatcherException
      */
     protected void verifyLineMatch(LinkedList<String> text, int index, String line) throws PatcherException {
+        if(index >= text.size()){
+            throw new PatcherException(PatcherException.MSG_PATCHER_DEFAULT);
+        }
+
         if (!Matcher.isMatchingLine(text.get(index), line)) {
             throw new PatcherException(PatcherException.MSG_MATCHERROR);
         }
