@@ -3,6 +3,9 @@
  */
 package br.uff.ic.gardener.workspace;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,9 +15,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
-import org.junit.AfterClass;
+
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -22,7 +25,6 @@ import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 /**
  * @author Marcos Côrtes
@@ -31,34 +33,25 @@ import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 public class WorkspaceTest{
 
 
-	static File pathWS = null;
+	File pathWS = null;
 
-	static Workspace workspace = null;
+	Workspace workspace = null; 
 
-	@BeforeClass
-	public static void setUpClass() throws WorkspaceException, IOException
+	@Before
+	public void setUp() throws WorkspaceException, IOException
 	{
 		pathWS = FileHelper.createTemporaryRandomPath();
 		workspace = new Workspace(pathWS);
 		createWorkspaceStruct(pathWS, true);
 	}
 	
-	@AfterClass
-	public static void tearDownClass()
+	@After
+	public void tearDown() throws WorkspaceException
 	{
 		workspace.close();
 		FileHelper.deleteDirTree(pathWS);
 	}
 	
-	/**
-	 * @throws IOException 
-	 * @throws WorkspaceException 
-	 * @throws java.lang.Exception
-	 */
-
-	@Before
-	public void setUp() throws IOException, WorkspaceException  {
-	}
 	
 	static Random random = new Random();
 	static char INIT_CHAR = 'a';
@@ -131,7 +124,7 @@ public class WorkspaceTest{
 	private static void createWorkspaceStruct(File filePath, boolean fillProfile) throws IOException
 	{
 		
-		createWorkspaceStructDirAndFiles(filePath, 3, 5, 5, false);
+		createWorkspaceStructDirAndFiles(filePath, 2, 2, 2, false);
 		File fileProfile 	= new File(filePath, WorkspaceConfigParser.STR_FILE_PROFILE);
 		File fileOperation 	= new File(filePath, WorkspaceConfigParser.STR_FILE_OPERATION);
 		
@@ -156,15 +149,19 @@ public class WorkspaceTest{
 	/*
 	 * Cria a estrutura do workspace de arquivos e diretórios
 	 */
-	public static void createWorkspaceStructDirAndFiles(File filePath, int treeDepth, int fileCount, int dirCount, boolean randomizeFileDirCount)
+	public static void createWorkspaceStructDirAndFiles(File filePath, int treeDepth, int _fileCount, int _dirCount, boolean randomizeFileDirCount)
 	throws IOException
 	{
 		if(!filePath.isDirectory())
 			throw new IOException("Arquivo especificado não é uma pasta");
+		
+		int fileCount = _fileCount;
+		int dirCount  = _dirCount;
+		
 		if(randomizeFileDirCount)
 		{
-			fileCount 	= 1+random.nextInt(fileCount-1);
-			dirCount 	= 1+random.nextInt(dirCount-1);
+			fileCount 	= 1+random.nextInt(_fileCount-1);
+			dirCount 	= 1+random.nextInt(_dirCount-1);
 		}
 		
 		String nameFile = nextString(null);
@@ -174,8 +171,9 @@ public class WorkspaceTest{
 			File newFile = new File(filePath, nameFile);
 			if(newFile.createNewFile())
 			{
-				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
-				UtilStream.fillLineNumber(new FileOutputStream(newFile), 10);
+				OutputStream out = new FileOutputStream(newFile);
+				UtilStream.fillLineNumber(out, 10);
+				out.close();
 			}
 			nameFile = nextString(nameFile);
 		}
@@ -189,7 +187,7 @@ public class WorkspaceTest{
 			if(newDir.mkdir())
 			{
 				if(treeDepth > 0)
-					createWorkspaceStructDirAndFiles(newDir, treeDepth-1, fileCount, dirCount, randomizeFileDirCount);
+					createWorkspaceStructDirAndFiles(newDir, treeDepth-1, _fileCount, _dirCount, randomizeFileDirCount);
 			}
 		}
 		
@@ -206,7 +204,7 @@ public class WorkspaceTest{
 	 */
 	@Test
 	public final void testCommit() throws WorkspaceException {
-		workspace.commit();
+		//workspace.commit();
 		//workspace.close();
 	}
 
@@ -231,9 +229,9 @@ public class WorkspaceTest{
 		File f3 = new File(pathWS, "abobora3");
 		@SuppressWarnings("unused")
 		File f4 = new File(pathWS, "abobora4");
-		UtilStream.fillFile(f1, "1", "1", "1", "1", "1", "1", "1");
-		UtilStream.fillFile(f2, "2", "2", "2", "2", "2", "2", "2");
-		UtilStream.fillFile(f3, "3", "3", "3", "3", "3", "3", "3");
+		FileHelper.fillFile(f1, "1", "1", "1", "1", "1", "1", "1");
+		FileHelper.fillFile(f2, "2", "2", "2", "2", "2", "2", "2");
+		FileHelper.fillFile(f3, "3", "3", "3", "3", "3", "3", "3");
 		
 		LinkedList<File> listFiles = new LinkedList<File>();
 		
@@ -243,9 +241,9 @@ public class WorkspaceTest{
 		workspace.addFiles(listFiles);
 		
 		//só deveria adicionar os que não existem na lista
-		for(WorkspaceOperation op: workspace.getNewOperationList())
+		for(CIWorkspaceStatus op: workspace.getNewOperations())
 		{
-			File file = new File(workspace.getPath(), op.getParamAt(0));
+			File file = new File(pathWS, op.getStringID());
 			org.junit.Assert.assertTrue(file.exists());				
 		}
 	}
@@ -260,13 +258,167 @@ public class WorkspaceTest{
 		
 		workspace.removeFiles(listFiles);
 		
-		for(WorkspaceOperation op: workspace.getNewOperationList())
+		for(CIWorkspaceStatus op: workspace.getNewOperations())
 		{
-			if(op.getOperation() == Operation.REMOVE_FILE)
+			if(op.getStatus() == Status.REM)
 			{
-				File file = new File(workspace.getPath(), op.getParamAt(0));
+				File file = new File(pathWS, op.getStringID());
 				org.junit.Assert.assertTrue(!file.exists());
 			}
 		}
 	}
+	
+	@Test
+	public void testStatus()
+	{
+		
+		Collection<CIWorkspaceStatus> coll = new LinkedList<CIWorkspaceStatus>();
+		workspace.clearOperations();
+		//primeiro vê se exibe como status todos os arquivos unversioned
+		try {
+			workspace.getStatus(coll);
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
+			fail("Cannot getStatus in workspace");
+		}
+		
+		for(CIWorkspaceStatus ciw: coll)
+		{
+			assertTrue(ciw.getStatus()==Status.UNVER);
+			assertTrue((new File(pathWS, ciw.getStringID()).exists()));
+		}
+		
+		//======================================================
+		//adiciona todos os caras com nome "a"		
+		//======================================================
+		Collection<File> list = new LinkedList<File>();
+		list = FileHelper.findFiles(pathWS, list, "a", true);
+		try {
+			workspace.addFiles(list);
+			workspace.saveConfig();
+		} catch (WorkspaceException e) {
+			fail("Erro no add");
+		}
+		
+		try
+		{
+			coll.clear();
+			workspace.getStatus(coll);
+			
+			//verfica
+			for(CIWorkspaceStatus ciw: coll)
+			{
+				if(ciw.getStatus()==Status.ADD)
+				{
+					final String name = ciw.getStringID();
+					assertTrue(name.charAt(name.length()-1) == 'a');
+					File f = new File(pathWS, name);
+					assertTrue(f.exists() && f.isFile());
+				}
+			}
+			
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
+			fail("Cannot getStatus in workspace pós add");
+		}
+		
+		//======================================================
+		//faz remove "b"
+		//======================================================
+		list.clear();
+		list = new LinkedList<File>();
+		list = FileHelper.findFiles(pathWS, list, "b", true);
+		try {
+			workspace.removeFiles(list);
+			workspace.saveConfig();
+		} catch (WorkspaceException e) {
+			fail("Erro no remove");
+		}
+		
+		try
+		{
+			coll.clear();
+			workspace.getStatus(coll);
+			
+			//verfica
+			for(CIWorkspaceStatus ciw: coll)
+			{
+				final String name = ciw.getStringID();
+				if(ciw.getStatus()==Status.ADD)
+				{
+					assertTrue(name.charAt(name.length()-1) == 'a');
+					File f = new File(pathWS, name);
+					assertTrue(f.exists() && f.isFile());
+				}else if(ciw.getStatus()==Status.REM)
+				{
+					assertTrue(name.charAt(name.length()-1) == 'b');
+					File f = new File(pathWS, name);
+					assertTrue(!f.exists());
+				}else
+				{
+					assertTrue(ciw.getStatus()==Status.UNVER);
+					char lastChar = name.charAt(name.length()-1);
+					assertTrue(lastChar != 'b' && lastChar != 'a');
+					File f = new File(pathWS, name);
+					assertTrue(f.exists());
+				}
+			}
+			
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
+			fail("Cannot getStatus in workspace pós add");
+		}
+		
+		//======================================================
+		//faz add do resto
+		//======================================================
+		list.clear();
+		list = new LinkedList<File>();
+		list = FileHelper.findFiles(pathWS, list, "**", true);
+		try {
+			workspace.addFiles(list, true);
+			workspace.saveConfig();
+		} catch (WorkspaceException e) {
+			fail("Erro no add resto");
+		}
+		
+		try
+		{
+			coll.clear();
+			workspace.getStatus(coll);
+			//verfica
+			for(CIWorkspaceStatus ciw: coll)
+			{
+				assertTrue(ciw.getStatus()!=Status.UNVER);//< não existem itens não versionados
+				final String name = ciw.getStringID();
+				if(ciw.getStatus()==Status.ADD)
+				{
+					assertTrue(name.charAt(name.length()-1) != 'b');
+					File f = new File(pathWS, name);
+					assertTrue(f.exists() && f.isFile());
+				}else if(ciw.getStatus()==Status.REM)
+				{
+					assertTrue(name.charAt(name.length()-1) == 'b');
+					File f = new File(pathWS, name);
+					assertTrue(!f.exists());
+				}else
+				{
+					fail("Unexpected option");
+				}
+			}
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
+			fail("Cannot getStatus in workspace pós add all");
+		}
+	}
+	
+	/**
+	 * Testa operações que exigem commit
+	 */
+	@Test
+	public void TestStatus2()
+	{
+		fail("Not implemented");
+	}
+	
 }

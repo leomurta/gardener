@@ -12,6 +12,7 @@ import java.io.FileFilter;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
+import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 import br.uff.ic.gardener.ConfigurationItem;
@@ -76,8 +77,6 @@ public class APIClient {
 		{
 			throw new APIClientException("Can not create Workspace", e);
 		}
-		
-	//	uriServ = workspace.getServSource();
 	}
 	/**Constructor that Sets Workspace URI and initialize the workspace attribute
 	 * @param uriWorkspace
@@ -115,24 +114,20 @@ public class APIClient {
 	 * @throw TransationException it throws when the system cannot checkout
 	 *        data. It will have a message of the exception
 	 */
-	public void checkout(RevisionID revision, String msg)throws TransationException{
+	public void checkout(RevisionID revision)throws TransationException{
 		
 		//get checkout from Communication
 		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout("", revision, list);//Obtém os itens da conexão 
+			revision = getComClient().checkout("", revision, list);//Obtém os itens da conexão 
 			getWorkspace().checkout(revision, list);//Popula os itens no Workspace
-			getWorkspace().saveConfig();
 		} catch (WorkspaceException ew){
 			throw new TransationException("Workspace filling error", ew);
 		} catch (ComClientException e) {
 			throw new TransationException("Error retrieving files from server", e);
 		} catch (APIClientException e) {
 			throw new TransationException("Error in APIClient ", e);
-		}
-		
-		//set checkout to Workspace
-		
+		}		
 	}
 
 	/**
@@ -145,11 +140,19 @@ public class APIClient {
 	 */
 	public RevisionID commit(String msg) throws TransationException
 	{
-		//List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
-		//getWorkspace().generateCheckin(list);
-	//	getComClient().commit("", msg, list);
-		//getWorkspace().processOperations();
-		return RevisionID.ZERO_REVISION;
+		List<ConfigurationItem> listCI = new LinkedList<ConfigurationItem>();
+		try {
+			this.getWorkspace().getCIsToCommit(listCI);
+			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, listCI);
+			this.getWorkspace().setCommited(id);
+			return id;
+		} catch (WorkspaceException e) {
+			throw new TransationException("Cannot commit", e);
+		} catch (APIClientException e) {
+			throw new TransationException("Cannot commit: ", e);
+		} catch (ComClientException e) {
+			throw new TransationException("Cannot commit", e);
+		}
 	}
 
 	public void addFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
@@ -157,10 +160,9 @@ public class APIClient {
 		try
 		{
 			getWorkspace().addFiles(listFiles);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
-			throw e;//new APIClientException("Do not add files in the workspace", e);
+			throw e;
 		}
 	}
 
@@ -169,7 +171,6 @@ public class APIClient {
 		try
 		{
 			getWorkspace().removeFiles(listFiles);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
 			throw e;
@@ -181,7 +182,6 @@ public class APIClient {
 		try
 		{
 			getWorkspace().renameFile(fileSource, strNewName);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
 			throw e;
@@ -197,13 +197,10 @@ public class APIClient {
 	public void init(String strProject) throws APIClientException , WorkspaceException 
 	{
 		getComClient().init(strProject);
-		getWorkspace().setCurrentRevision(RevisionID.ZERO_REVISION);
-		try {
-			getWorkspace().saveConfig();
-		} catch (WorkspaceException e) {
-			throw e;
-		}
-		
+		URI uri = getWorkspace().getServSource();
+		getWorkspace().reset();
+		getWorkspace().setServSource(uri);
+
 	}
 
 	/**
@@ -214,13 +211,22 @@ public class APIClient {
 		try {
 			getComClient().checkout("", getComClient().getLastRevision(""), list);
 		} catch (ComClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new TransationException("Cannot realize update transation", e);
 		} catch (APIClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new TransationException("Cannot realize update transation", e);
 		}
 		
+	}
+
+	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {
+		getWorkspace().getStatus(coll);
+		
+	}
+
+	public void forceClose() throws WorkspaceException, APIClientException 
+	{
+		if(workspace != null)workspace.close();
+		if(comClient != null)comClient.close();
 	}
 
 }

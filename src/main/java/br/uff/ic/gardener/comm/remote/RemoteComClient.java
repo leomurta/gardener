@@ -52,9 +52,10 @@ public class RemoteComClient implements ComClient {
 
 
 	@Override
-	public void checkout(String strProject, RevisionID revision,
+	public RevisionID checkout(String strProject, RevisionID revision,
 			Collection<ConfigurationItem> items) throws ComClientException {
-		// TODO Auto-generated method stub
+		
+		return RevisionID.ZERO_REVISION;
 		
 	}
 

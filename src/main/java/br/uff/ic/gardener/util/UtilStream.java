@@ -1,14 +1,11 @@
 package br.uff.ic.gardener.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
 import java.util.Random;
@@ -29,6 +26,34 @@ public class UtilStream {
 
     /** Field description */
     private static char[] CHARBUFFER = new char[DEFAULT_BUFFER_SIZE];
+	
+	public static void fillStream(OutputStream os, String... strVec)throws IOException
+	{
+		//PrintWriter pw = new PrintWriter(os, false);
+		PrintStream ps = new PrintStream (os);
+		for (String str : strVec) 
+		{
+			ps.format("%s%s", str, getLineSeperator());
+		}
+		ps.flush();
+	}
+	
+	public static void fillPrintStream(PrintStream ps, String... strVec)throws IOException
+	{
+		for (String str : strVec) 
+		{
+			ps.format("%s%s", str, getLineSeperator());
+		}
+	}
+	
+	
+	
+	
+	public static String getLineSeperator()
+	{
+		return System.getProperty("line.separator");
+	}
+
 
     /**
      * Method description
@@ -141,18 +166,6 @@ public class UtilStream {
         }
     }
 
-    /**
-     * Method description
-     *
-     *
-     * @param strFile
-     * @param strVec
-     *
-     * @throws IOException
-     */
-    public static void fillFile( String strFile, String... strVec ) throws IOException {
-        fillFile( new File( strFile ), strVec );
-    }
 
     /**
      * Convert InputStream to String (only support UTF-8).

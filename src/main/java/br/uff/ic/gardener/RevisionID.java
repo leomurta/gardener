@@ -17,6 +17,8 @@ public class RevisionID implements Comparable<RevisionID> {
 	public final static RevisionID ZERO_REVISION = new RevisionID(0);
 
 	public static final RevisionID LAST_REVISION = new RevisionID(-1);
+	
+	public static final RevisionID NEW_REVISION = new RevisionID(-2);
 
 	public RevisionID(long rev) {
 		revision = rev;
