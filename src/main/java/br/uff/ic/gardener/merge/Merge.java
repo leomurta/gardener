@@ -16,7 +16,7 @@ import java.io.OutputStreamWriter;
 
 public class Merge implements IMerge{
 	
-	public File merge(File base, File file1, File file2) {
+	public File merge(File base, File file1, File file2, File file3) {
 		File fileMerge = new File("..\\fileMerge.txt");
 		try {
 			OutputStream outputStream = merge(new FileInputStream(base), new FileInputStream(file1), new FileInputStream(file2));

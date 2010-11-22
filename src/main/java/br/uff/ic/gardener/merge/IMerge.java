@@ -6,6 +6,6 @@ import java.io.OutputStream;
 
 
 public interface IMerge {
-	public File merge(File base, File file1, File file2);
+	public File merge(File base, File file1, File file2, File destiny);
 	public OutputStream merge(InputStream base, InputStream file1, InputStream file2);
 }
