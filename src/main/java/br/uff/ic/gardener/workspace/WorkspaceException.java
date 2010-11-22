@@ -1,7 +1,5 @@
 package br.uff.ic.gardener.workspace;
 
-import java.io.File;
-
 /**
  * Uma exce��o do workspace
  * 

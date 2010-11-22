@@ -204,7 +204,7 @@ public class WorkspaceTest{
 	 */
 	@Test
 	public final void testCommit() throws WorkspaceException {
-		workspace.commit();
+		//workspace.commit();
 		//workspace.close();
 	}
 
@@ -241,7 +241,7 @@ public class WorkspaceTest{
 		workspace.addFiles(listFiles);
 		
 		//só deveria adicionar os que não existem na lista
-		for(CIWorkspaceStatus op: workspace.getNewOperationList())
+		for(CIWorkspaceStatus op: workspace.getNewOperations())
 		{
 			File file = new File(pathWS, op.getStringID());
 			org.junit.Assert.assertTrue(file.exists());				
@@ -258,7 +258,7 @@ public class WorkspaceTest{
 		
 		workspace.removeFiles(listFiles);
 		
-		for(CIWorkspaceStatus op: workspace.getNewOperationList())
+		for(CIWorkspaceStatus op: workspace.getNewOperations())
 		{
 			if(op.getStatus() == Status.REM)
 			{

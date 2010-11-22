@@ -383,7 +383,7 @@ public class CLI {
 			
 			break;
 			case CHECKOUT:
-					onCheckout(strMessage);
+					onCheckout();
 			break;
 			case COMMIT:
 					onCommit(strMessage);
@@ -480,8 +480,8 @@ public class CLI {
 	 *
 	 * @throws TransationException 
 	 */
-	private void onCheckout(String message) throws TransationException {
-		getClient().checkout(revision, message);
+	private void onCheckout() throws TransationException {
+		getClient().checkout(revision);
 	}
 	
 	

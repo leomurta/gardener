@@ -114,14 +114,13 @@ public class APIClient {
 	 * @throw TransationException it throws when the system cannot checkout
 	 *        data. It will have a message of the exception
 	 */
-	public void checkout(RevisionID revision, String msg)throws TransationException{
+	public void checkout(RevisionID revision)throws TransationException{
 		
 		//get checkout from Communication
 		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
 		try {
 			revision = getComClient().checkout("", revision, list);//Obtém os itens da conexão 
 			getWorkspace().checkout(revision, list);//Popula os itens no Workspace
-			getWorkspace().saveConfig();
 		} catch (WorkspaceException ew){
 			throw new TransationException("Workspace filling error", ew);
 		} catch (ComClientException e) {
@@ -145,7 +144,6 @@ public class APIClient {
 		try {
 			this.getWorkspace().getCIsToCommit(listCI);
 			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, listCI);
-			
 			this.getWorkspace().setCommited(id);
 			return id;
 		} catch (WorkspaceException e) {
@@ -162,7 +160,6 @@ public class APIClient {
 		try
 		{
 			getWorkspace().addFiles(listFiles);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
 			throw e;
@@ -174,7 +171,6 @@ public class APIClient {
 		try
 		{
 			getWorkspace().removeFiles(listFiles);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
 			throw e;
@@ -186,7 +182,6 @@ public class APIClient {
 		try
 		{
 			getWorkspace().renameFile(fileSource, strNewName);
-			getWorkspace().saveConfig();
 		}catch(WorkspaceException e)
 		{
 			throw e;
@@ -202,13 +197,10 @@ public class APIClient {
 	public void init(String strProject) throws APIClientException , WorkspaceException 
 	{
 		getComClient().init(strProject);
-		getWorkspace().setCurrentRevision(RevisionID.ZERO_REVISION);
-		try {
-			getWorkspace().saveConfig();
-		} catch (WorkspaceException e) {
-			throw e;
-		}
-		
+		URI uri = getWorkspace().getServSource();
+		getWorkspace().reset();
+		getWorkspace().setServSource(uri);
+
 	}
 
 	/**
@@ -233,8 +225,8 @@ public class APIClient {
 
 	public void forceClose() throws WorkspaceException, APIClientException 
 	{
-		getWorkspace().close();
-		getComClient().close();
+		if(workspace != null)workspace.close();
+		if(comClient != null)comClient.close();
 	}
 
 }
