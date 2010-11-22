@@ -41,7 +41,8 @@ public class WorkspaceConfigParserTest extends TestWithTemporaryPath{
 	@Test
 	public void testSave() throws WorkspaceConfigParserException
 	{
-		wParser.saveProfile();
+		List<CIWorkspace> list = new LinkedList<CIWorkspace>();
+		wParser.saveProfile(list);
 	
 	}
 	@Test

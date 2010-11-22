@@ -119,7 +119,7 @@ public class APIClient {
 		//get checkout from Communication
 		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout("", revision, list);//Obtém os itens da conexão 
+			revision = getComClient().checkout("", revision, list);//Obtém os itens da conexão 
 			getWorkspace().checkout(revision, list);//Popula os itens no Workspace
 			getWorkspace().saveConfig();
 		} catch (WorkspaceException ew){
@@ -141,7 +141,20 @@ public class APIClient {
 	 */
 	public RevisionID commit(String msg) throws TransationException
 	{
-		return RevisionID.ZERO_REVISION;
+		List<ConfigurationItem> listCI = new LinkedList<ConfigurationItem>();
+		try {
+			this.getWorkspace().getCIsToCommit(listCI);
+			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, listCI);
+			
+			this.getWorkspace().setCommited(id);
+			return id;
+		} catch (WorkspaceException e) {
+			throw new TransationException("Cannot commit", e);
+		} catch (APIClientException e) {
+			throw new TransationException("Cannot commit: ", e);
+		} catch (ComClientException e) {
+			throw new TransationException("Cannot commit", e);
+		}
 	}
 
 	public void addFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
@@ -216,6 +229,12 @@ public class APIClient {
 	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {
 		getWorkspace().getStatus(coll);
 		
+	}
+
+	public void forceClose() throws WorkspaceException, APIClientException 
+	{
+		getWorkspace().close();
+		getComClient().close();
 	}
 
 }

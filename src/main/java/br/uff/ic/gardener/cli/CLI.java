@@ -427,6 +427,7 @@ public class CLI {
 	 */
 	private static void resetCLI() 
 	{
+		cliSingletons.forceCloseSystem();
 		cliSingletons = null;
 		CLI.me();
 	}
@@ -625,5 +626,18 @@ public class CLI {
 		}
 		else
 			return 'n';
+	}
+
+	private void forceCloseSystem() {
+		try {
+			this.getClient().forceClose();
+		} catch (WorkspaceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

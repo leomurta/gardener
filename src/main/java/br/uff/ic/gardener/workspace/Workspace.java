@@ -19,6 +19,7 @@ import java.util.PriorityQueue;
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
+import br.uff.ic.gardener.util.NotFileFilter;
 import br.uff.ic.gardener.util.UtilStream;
 
 public class Workspace {
@@ -57,7 +58,7 @@ public class Workspace {
 	/**
 	 * Lista com os itens contidos no workspace. (carregados do arquivo de configuração)
 	 */
-	private ArrayList<CIWorkspace> listICContent = new ArrayList<CIWorkspace>();
+	private List<CIWorkspace> listICContent = new ArrayList<CIWorkspace>();
 	
 	/**
 	 * The current revisionID of workspace
@@ -227,51 +228,33 @@ public class Workspace {
 	 */
 	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
 	
-
-		// erase content
-		for (File f : path.listFiles(new NotInitDotFileFilter())) {
-			f.delete();
+		listICContent.clear();
+		listNewOperations.clear();
+		listOperations.clear();
+		try {
+			this.currentRevision = revision;
+			parser.checkout(revision, list, listICContent);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException("Cannot checkou", e);
 		}
-
-		for (ConfigurationItem e : list) {
-			//File f = new File(path, e.getStringID());
-			File f = null;
-			try {
-				f = FileHelper.createFile(path, e.getStringID());
-			} catch (IllegalArgumentException ee) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", ee);
-			} catch (IOException eee) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", eee);
-			}
-			try {
-				f.createNewFile();
-			} catch (IOException e1) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", e1);
-			}
-
-			try {
-
-				OutputStream out = new FileOutputStream(f);
-				UtilStream.copy(e.getItemAsInputStream(), out);
-
-			} catch (IOException e1) {
-				throw new WorkspaceException(f,
-						"Do not copy data from repository", e1);
-			}
-
-		}
-
 	}
 
 	/**
 	 * Close the things
 	 * @throws WorkspaceException 
 	 */
-	public void close() throws WorkspaceException {
+	public void close() throws WorkspaceException
+	{
 		this.saveConfig();
+		//fecha todos os outputstreams
+		for(CIWorkspace ci: listICContent)
+		{
+			if(ci.getInputStream() != null)
+				try {
+					ci.getInputStream().close();
+				} catch (IOException e) {
+				}
+		}
 	}
 
 	public void setServSource(URI servSource) {
@@ -305,7 +288,7 @@ public class Workspace {
 							listNewOperations.removeLast();
 							qtdRemove--;
 						}
-						throw new WorkspaceException(f, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
+						throw new WorkspaceException(null, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
 					}
 				}
 			}
@@ -359,7 +342,7 @@ public class Workspace {
 								listNewOperations.removeLast();
 								qtdAdd--;
 							}
-							throw new WorkspaceException(f, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
+							throw new WorkspaceException(null, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
 						}
 					}
 				} catch (URISyntaxException e) {
@@ -379,10 +362,10 @@ public class Workspace {
 	public void renameFile(File fileSource, String strNewName) throws WorkspaceException
 	{
 		if(!fileSource.exists())
-			throw new WorkspaceException(fileSource, "Arquivo não existe", null);
+			throw new WorkspaceException(null, "Arquivo não existe", null);
 		
 		if(!fileSource.isFile())
-			throw new WorkspaceException(fileSource, "Não foi especificado um arquivo válido", null);
+			throw new WorkspaceException(null, "Não foi especificado um arquivo válido", null);
 		
 		try
 		{
@@ -390,7 +373,7 @@ public class Workspace {
 			fileSource.renameTo(fileNew);
 		}catch(Exception e)
 		{
-			throw new WorkspaceException(fileSource, "Não foi possível renomear para " + strNewName, e);
+			throw new WorkspaceException(null, "Não foi possível renomear para " + strNewName, e);
 		}
 	}
 	
@@ -425,12 +408,29 @@ public class Workspace {
 	{
 		try
 		{
-			parser.save(getNewOperationList());
+			parser.save(this.getOriginalCIContent(), getNewOperationList());
 			listOperations.addAll(listNewOperations);
 			listNewOperations.clear();
 		}catch(WorkspaceConfigParserException e)
 		{
 			throw new WorkspaceException(null, "Error in the save workspace", e);
+		}
+	}
+	
+	/**
+	 * Salva apagando arquivo de operation
+	 * @throws WorkspaceException
+	 */
+	public void saveConfigRefresh() throws WorkspaceException
+	{
+		try
+		{
+			parser.saveWithOutOperation(this.getOriginalCIContent());
+			listNewOperations.clear();
+			listOperations.clear();
+		}catch(WorkspaceConfigParserException e)
+		{
+			throw new WorkspaceException(null, "Error in the saveConfigRefresh workspace", e);
 		}
 	}
 
@@ -617,6 +617,95 @@ public class Workspace {
 	{
 		listOperations.clear();
 		listNewOperations.clear();		
+	}
+
+	public void getCIsToCommit(List<ConfigurationItem> listCI) throws WorkspaceException 
+	{
+		try {
+			this.parser.loadICToCommit(listCI);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Cannot load CI to commit", e);
+		}
+		
+	}
+
+	/**
+	 * After commited in comm, the workspace can be update by this method
+	 * @param the new revision
+	 * @throws WorkspaceException 
+	 */
+	public void setCommited(RevisionID id) throws WorkspaceException {
+		List<CIWorkspaceStatus> listOp = new LinkedList<CIWorkspaceStatus>();
+		listOp.addAll(this.getOperationList());
+		listOp.addAll(this.getNewOperationList());
+		getNewOperationList().clear();
+		
+		//fazbackup da lista
+		List<CIWorkspace> backup = new LinkedList<CIWorkspace>();
+		backup.addAll(listICContent);
+		
+		for(CIWorkspaceStatus op: listOp)
+		{
+			switch (op.getStatus()) 
+			{
+			case ADD:
+				listICContent.add(op);
+				break;
+			case REM:
+				listICContent.remove(op);
+				break;
+			case RENAME:
+				CIWorkspace ciRenamed = renameCIInCommit(op);
+				//
+				if(ciRenamed == null)
+				{
+					//rollback
+					listICContent = backup;
+					throw new WorkspaceException(op, "Cannot rename item", null);
+				}
+				break;
+			default:
+				listICContent = backup;
+				throw new WorkspaceException(op, "Status invalid to setCommited operation", null);
+			}
+		}
+		
+		this.listNewOperations.clear();
+		listOperations.clear();
+		
+		this.currentRevision = id;
+		this.checkoutTime = new Date();//NOW
+		try
+		{
+			this.saveConfigRefresh();
+		}catch(WorkspaceException e)
+		{
+			loadConfig();//force rollback by read config files
+		}
+	}
+
+	private CIWorkspace renameCIInCommit(CIWorkspaceStatus op)
+	{
+		Iterator<CIWorkspace> i = listICContent.iterator();
+		CIWorkspace current = null;
+		boolean achou = false;
+		for(current = i.next(); i.hasNext(); current = i.next() )
+		{
+			if(current.getURI().equals(op.getURI()))
+			{
+				achou = true;
+				break;
+			}
+		}
+		
+		if(achou)
+		{
+			i.remove();
+			current = new CIWorkspace(current, op.getOldURI());
+			listICContent.add(current);
+			return current;
+		}
+		return null;		
 	}
 }
 

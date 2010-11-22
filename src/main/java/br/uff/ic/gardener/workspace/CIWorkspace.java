@@ -12,7 +12,7 @@ import java.util.Date;
 public class CIWorkspace implements Comparable<CIWorkspace>
 {
 	
-	public static CIWorkspace NEVER_EQUAL = new CIWorkspace(null, null);
+//	public static CIWorkspace NEVER_EQUAL = new CIWorkspace(null, null);
 	
 	/**
 	 * uri of CI
@@ -55,6 +55,12 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 		dateModified = date;
 	}
 	
+	public CIWorkspace(CIWorkspace current, URI newURI) {
+		this(current);
+		uri = newURI;
+		
+	}
+
 	/**
 	 * URI of CI
 	 * @return

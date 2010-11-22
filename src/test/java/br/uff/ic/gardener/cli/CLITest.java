@@ -73,19 +73,17 @@ public class CLITest {
 			pathServ = FileHelper.createTemporaryRandomPath();
 			File pathWS   = FileHelper.createTemporaryRandomPath();
 			
-			
-			//CLI.doMain(String.format("init -w\"%s\" -s\"%s\" aboboras", pathWS.toString(), strServ));
 			CLI.doMain(new String[]{"init", "-w", pathWS.toString(), "-s", getStrServ(pathServ), "abobora"});
 			
 			WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
 			
 			CLI.doMain("add -w\"%s\" **", pathWS.toString());
 			CLI.doMain("add -ci -w\"%s\" -s\"%s\"", pathWS.toString(), getStrServ(pathServ));
+
 			FileHelper.deleteDirTree(pathWS);
 		}catch(Exception e)
 		{
 			pathServ = null;
-			//pathWS = null;
 			assertTrue(false);
 		}
 	}

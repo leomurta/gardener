@@ -32,10 +32,9 @@ public class LocalComClient implements ComClient {
 	}
 	
 	@Override
-	public void checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
+	public RevisionID checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
 			throws ComClientException {
 		throw new ComClientException("Not implemented","checkout", null, null );
-		
 	}
 
 	@Override

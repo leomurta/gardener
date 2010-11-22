@@ -11,16 +11,19 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.util.NotFilenameFilter;
+import br.uff.ic.gardener.util.UtilStream;
 
 
 /**
@@ -257,7 +260,7 @@ public class WorkspaceConfigParser
 	 * This is do to save workspace configuration
 	 * @throws WorkspaceConfigParserException
 	 */
-	public void saveProfile() throws WorkspaceConfigParserException
+	void saveProfile(Collection<CIWorkspace> listCI)throws WorkspaceConfigParserException
 	{
 		/**
 		 * Guarda o profile do workspace
@@ -266,9 +269,14 @@ public class WorkspaceConfigParser
 			OutputStream outputStream = new FileOutputStream(new File(directory, STR_FILE_PROFILE));
 			PrintStream ps = new PrintStream(outputStream, true);
 			
-			ps.printf("%s %s\n", STR_SERV_ORIGIN, workspace.getServSource()!=null?workspace.getServSource().toString():"null");
-			ps.printf("%s %s\n", STR_REVISION, workspace.getCurrentRevision().toString());
-			ps.printf("%s %d\n", STR_LAST_TIMESTAMP_CHECKOUT, workspace.getCheckoutTime().getTime());
+			ps.printf("%s %s%s", STR_SERV_ORIGIN, workspace.getServSource()!=null?workspace.getServSource().toString():"null", UtilStream.getLineSeperator());
+			ps.printf("%s %s%s", STR_REVISION, workspace.getCurrentRevision().toString(), UtilStream.getLineSeperator());
+			ps.printf("%s %d%s", STR_LAST_TIMESTAMP_CHECKOUT, workspace.getCheckoutTime().getTime(), UtilStream.getLineSeperator());
+			
+			for(CIWorkspace ci: listCI)
+			{
+				ps.printf("%s \"%s\"%s", STR_HAS_IC, ci.getURI(), UtilStream.getLineSeperator());
+			}
 			
 			ps.close();
 		}catch(IOException e)
@@ -282,11 +290,30 @@ public class WorkspaceConfigParser
 	/**
 	 * Save content of father workspace in the directory 
 	 */
-	public void save(List<CIWorkspaceStatus> list) throws WorkspaceConfigParserException
+	public void save(Collection<CIWorkspace> listCI, List<CIWorkspaceStatus> listOp) throws WorkspaceConfigParserException
 	{
-		saveProfile();
-		appendOperations(list);
+		saveProfile(listCI);
+		appendOperations(listOp);
 	}
+
+	public void saveWithOutOperation(Collection<CIWorkspace> originalCIContent) throws WorkspaceConfigParserException {
+		saveProfile(originalCIContent);
+
+		OutputStream outputStream;
+		//String token = "";
+		try {
+			outputStream = new FileOutputStream(new File(directory, STR_FILE_OPERATION));
+			outputStream.close();//faz arquivo vazio
+		
+		} catch (FileNotFoundException e) {
+			throw new WorkspaceConfigParserException("Não foi possível salvar operações vazio", null, e);
+		} catch (IOException e) {
+			throw new WorkspaceConfigParserException("Não foi possível salvar operações vazio", null, e);
+		}
+		
+	}
+	
+
 
 	/**
 	 * Return if the path is a configuration file (profile or operation)
@@ -347,4 +374,85 @@ public class WorkspaceConfigParser
 			}
 		}
 	}
+	
+	public void loadICToCommit(Collection<ConfigurationItem> collDest) throws WorkspaceConfigParserException
+	{
+		Queue<File> list = new LinkedList<File>();
+		list.add(this.directory);
+		while(list.size() > 0)
+		{
+			File current = list.remove();
+			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
+			for(File f: files)
+			{
+				if(f.isDirectory())
+					list.add(f);
+				else if(f.isFile())
+				{
+					try {
+						collDest.add(
+								new ConfigurationItem( 
+										FileHelper.getRelative(directory, f),
+										new FileInputStream(f),
+										RevisionID.NEW_REVISION
+									)
+								);
+					} catch (FileNotFoundException e) {
+						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
+					}
+				}
+			}
+		}
+	}
+
+	public void checkout(RevisionID revision, Collection<ConfigurationItem> list, Collection<CIWorkspace> listCIContent) throws WorkspaceConfigParserException 
+	{
+		// erase content
+		File[] listContent = this.directory.listFiles();
+		for(File f: listContent)
+		{
+			FileHelper.deleteDirTree(f);
+		}
+
+		//save content
+		for (ConfigurationItem e : list) {
+			File f = null;
+			try {
+				f = FileHelper.createFile(this.directory, e.getStringID());
+			} catch (IllegalArgumentException ee) {
+				throw new WorkspaceConfigParserException("Do not create file in repository",f.toString(), ee);
+			} catch (IOException eee) {
+				throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), eee);
+			}
+			try {
+				f.createNewFile();
+			} catch (IOException e1) {
+				throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), e1);
+			}
+
+			try {
+
+				OutputStream out = new FileOutputStream(f);
+				UtilStream.copy(e.getItemAsInputStream(), out);
+				out.close();
+
+			} catch (IOException e1) {
+				throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
+			}
+			
+			try {
+				CIWorkspace ci = new CIWorkspace(e.getUri(), new FileInputStream(f), new Date());
+				listCIContent.add(ci);
+			} catch (FileNotFoundException e1) {
+				throw new WorkspaceConfigParserException("Cannot open file", f.toString(), e1);
+			}
+		}
+		
+		//setRevision
+	
+		this.save(listCIContent, new ArrayList<CIWorkspaceStatus>());		
+				
+	}
+
+
 }
