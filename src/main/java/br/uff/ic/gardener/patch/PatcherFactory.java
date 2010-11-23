@@ -1,7 +1,5 @@
 package br.uff.ic.gardener.patch;
 
-import br.uff.ic.gardener.patch.Patch;
-import br.uff.ic.gardener.patch.PatchException;
 import br.uff.ic.gardener.patch.patcher.BinaryPatcher;
 import br.uff.ic.gardener.patch.patcher.ContextPatcher;
 import br.uff.ic.gardener.patch.patcher.NormalPatcher;
@@ -25,6 +23,8 @@ public class PatcherFactory {
         if (format == Patch.Format.Binary) {
             return new BinaryPatcher();
         } else if (format == Patch.Format.Context) {
+            return new ContextPatcher();
+        } else if (format == Patch.Format.LessContext) {
             return new ContextPatcher();
         } else if (format == Patch.Format.Normal) {
             return new NormalPatcher();

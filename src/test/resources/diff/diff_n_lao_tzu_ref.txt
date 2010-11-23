@@ -1,0 +1,15 @@
+*** lao 2010-11-22 06:23:48.2348 -0800
+--- tzu 2010-11-22 06:23:48.2348 -0800
+
+1,2d0
+< The Way that can be told of is not the eternal Way;
+< The name that can be named is not the eternal name.
+4d1
+< The Named is the mother of all things.
+4a2,3
+> The named is the mother of all things.
+> 
+11a11,13
+> They both may be called deep and profound.
+> Deeper and more profound,
+> The door of all subtleties!

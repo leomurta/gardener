@@ -1,12 +1,10 @@
 package br.uff.ic.gardener.patch;
 
-import br.uff.ic.gardener.patch.Patch;
-import br.uff.ic.gardener.patch.PatchException;
+
 import br.uff.ic.gardener.patch.parser.BinaryParser;
 import br.uff.ic.gardener.patch.parser.ContextParser;
 import br.uff.ic.gardener.patch.parser.NormalParser;
 import br.uff.ic.gardener.patch.parser.Parser;
-import br.uff.ic.gardener.patch.parser.ParserException;
 import br.uff.ic.gardener.patch.parser.UnifiedParser;
 
 /**
@@ -27,6 +25,8 @@ public class ParserFactory {
             return new BinaryParser();
         } else if (format == Patch.Format.Context) {
             return new ContextParser();
+        } else if (format == Patch.Format.LessContext) {
+            return new ContextParser();
         } else if (format == Patch.Format.Normal) {
             return new NormalParser();
         } else if (format == Patch.Format.Unified) {
@@ -36,6 +36,3 @@ public class ParserFactory {
         }
     }
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com

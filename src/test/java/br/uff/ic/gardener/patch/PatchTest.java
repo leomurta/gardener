@@ -6,28 +6,17 @@
 package br.uff.ic.gardener.patch;
 
 import br.uff.ic.gardener.diff.Diff;
-import br.uff.ic.gardener.diff.IResultDiff;
 import br.uff.ic.gardener.diff.WriterFactory;
 import br.uff.ic.gardener.patch.Patch.Format;
 import br.uff.ic.gardener.patch.Patch.Match;
 import br.uff.ic.gardener.patch.Patch.Type;
-import br.uff.ic.gardener.util.FileHelper;
-import br.uff.ic.gardener.util.TextHelper;
-import br.uff.ic.gardener.util.UtilStream;
-
 import org.junit.Test;
-
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import org.junit.Before;
+import br.uff.ic.gardener.util.TestHelper;
 
 /**
  *
@@ -56,18 +45,23 @@ public class PatchTest {
     /** Field description */
     private InputStream inputNew;
 
+    /**
+     *
+     * @throws Exception
+     */
     @Before
     public void setUp() throws Exception {
-        inputLao = getResourceFile("lao.txt");
-        inputTzu = getResourceFile("tzu.txt");
-        patchUnified = getResourceFile("unifiedFormat.txt");
-        patchOrigNewUnified = getResourceFile("ori-new UnifiedFormat.txt");
-        patchOrigNewNormal = getResourceFile("ori-new NormalFormat.txt");
-        patchOrigNewContext = getResourceFile("ori-new ContextFormat.txt");
-        patchNormal = getResourceFile("normalFormat.txt");
-        patchContext = getResourceFile("contextFormat.txt");
-        inputOriginal = getResourceFile("original.txt");
-        inputNew = getResourceFile("new.txt");
+        String subdir = "/patch/";
+        inputLao = TestHelper.getResourceFile("lao.txt", subdir);
+        inputTzu = TestHelper.getResourceFile("tzu.txt", subdir);
+        patchUnified = TestHelper.getResourceFile("unifiedFormat.txt", subdir);
+        patchOrigNewUnified = TestHelper.getResourceFile("ori-new UnifiedFormat.txt", subdir);
+        patchOrigNewNormal = TestHelper.getResourceFile("ori-new NormalFormat.txt", subdir);
+        patchOrigNewContext = TestHelper.getResourceFile("ori-new ContextFormat.txt", subdir);
+        patchNormal = TestHelper.getResourceFile("normalFormat.txt", subdir);
+        patchContext = TestHelper.getResourceFile("contextFormat.txt", subdir);
+        inputOriginal = TestHelper.getResourceFile("original.txt", subdir);
+        inputNew = TestHelper.getResourceFile("new.txt", subdir);
     }
 
     /**
@@ -83,9 +77,9 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
-        assertResult(inputTzu, result);
+        TestHelper.assertResult(inputTzu, result);
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        assertResult(inputNew, result);
+        TestHelper.assertResult(inputNew, result);
     }
 
     /**
@@ -102,7 +96,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        assertResult(inputNew, result);
+        TestHelper.assertResult(inputNew, result);
     }
 
     /**
@@ -118,7 +112,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
-        assertResult(inputTzu, result);
+        TestHelper.assertResult(inputTzu, result);
     }
 
     /**
@@ -135,7 +129,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        assertResult(inputNew, result);
+        TestHelper.assertResult(inputNew, result);
     }
 
     /**
@@ -151,7 +145,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputLao, patchContext, format, match, type);
-        assertResult(inputTzu, result);
+        TestHelper.assertResult(inputTzu, result);
     }
 
     /**
@@ -168,7 +162,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewContext, format, match, type);
-        assertResult(inputNew, result);
+        TestHelper.assertResult(inputNew, result);
     }
 
     /**
@@ -185,7 +179,7 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputLao, patchNormal, format, match, type);
-        assertResult(inputTzu, result);
+        TestHelper.assertResult(inputTzu, result);
     }
 
     /**
@@ -202,48 +196,82 @@ public class PatchTest {
         OutputStream result = null;
 
         result = Patch.applyPatchToFile(inputOriginal, patchOrigNewNormal, format, match, type);
-        assertResult(inputNew, result);
+        TestHelper.assertResult(inputNew, result);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @Test
-    public void testDiffPatch() throws Exception {
-        String root = "D:/Repositorios/Git/gardener/target/test-classes/patch/";
-        String file1 = "lao.txt";
-        String file2 = "tzu.txt";
-        char format;
-
-        //Normal
-        format = 'n';
-        testDiffPatch(root, file1, file2, format, Match.None);
-
-        //Context
-        format = 'c';
-        testDiffPatch(root, file1, file2, format, Match.Complete);
-
-        //Unified
-        format = 'u';
-        testDiffPatch(root, file1, file2, format, Match.None);
-        testDiffPatch(root, file1, file2, format, Match.Complete);
+    public void testDiffPatchLaoTzuNormal() throws Exception {
+        testDiffPatch("lao", "tzu", 'n', Match.None);
     }
 
-    public void testDiffPatch(String root, String f1, String f2, char format, Match match) throws Exception {
-        File file1 = new File(root + f1);
-        File file2 = new File(root + f2);
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffPatchLaoTzuContext() throws Exception {
+        testDiffPatch("lao", "tzu", 'n', Match.Complete);
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffPatchLaoTzuUnifiedNone() throws Exception {
+        testDiffPatch("lao", "tzu", 'u', Match.None);
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffPatchLaoTzuUnifiedComplete() throws Exception {
+        testDiffPatch("lao", "tzu", 'u', Match.Complete);
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffPatchLaoTzuLessContextComplete() throws Exception {
+        testDiffPatch("lao", "tzu", 'l', Match.Complete);
+    }
+
+    /**
+     *
+     * @param f1
+     * @param f2
+     * @param format
+     * @param match
+     * @throws Exception
+     */
+    public void testDiffPatch(String f1, String f2, char format, Match match) throws Exception {
+        String root = TestHelper.getCurrentPath() + "/patch/";
+        File file1 = new File(root + f1 + ".txt");
+        File file2 = new File(root + f2 + ".txt");
 
         Format fmt = null;
         if (format == 'c') {
             fmt = Format.Context;
+        } else if (format == 'l') {
+            fmt = Format.LessContext;
         } else if (format == 'u') {
             fmt = Format.Unified;
         } else if (format == 'n') {
             fmt = Format.Normal;
         }
 
-        String fileOutName = root + "diff_" + format +"_" + match + ".txt";
+        String fileOutName = root + "diff_" + format + "_" + match + ".txt";
 
         //delete previous test
-        File testFile = new File(fileOutName);
-        testFile.delete();
+        new File(fileOutName).delete();
 
         WriterFactory.setWriter(fileOutName);
         Diff diffC = new Diff(file1, file2, format);
@@ -253,65 +281,6 @@ public class PatchTest {
         FileInputStream fi2 = new FileInputStream(file2);
         FileInputStream fiOut = new FileInputStream(fileOutName);
         OutputStream result = Patch.applyPatchToFile(fi1, fiOut, fmt, match, Type.ObjectOriented);
-        assertResult(fi2, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @param file
-     *
-     * @return
-     */
-    protected InputStream getResourceFile(String file) {
-        String root = "/patch/";
-        String path = root + file;
-        InputStream in = this.getClass().getResourceAsStream(path);
-        assertTrue(in != null);
-        return in;
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @param file
-     *
-     * @return
-     *
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws UnsupportedEncodingException
-     */
-    protected OutputStream getFileOutputStream(String file)
-            throws IOException, UnsupportedEncodingException, InterruptedException {
-        InputStream in = getResourceFile(file);
-
-        assertTrue(in != null);
-
-        return UtilStream.toOutputStream(UtilStream.toString(in));
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @param input
-     * @param result
-     *
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws UnsupportedEncodingException
-     */
-    private void assertResult(InputStream input, OutputStream result)
-            throws UnsupportedEncodingException, IOException, InterruptedException {
-        String sText = UtilStream.toString(input);
-        String sResult = UtilStream.toString((ByteArrayOutputStream) result);
-
-        // normalize breaks
-        sText = TextHelper.normalizeBreakLine(sText);
-        sResult = TextHelper.normalizeBreakLine(sResult);
-        assertTrue(sText.compareTo(sResult) == 0);
+        TestHelper.assertResult(fi2, result);
     }
 }

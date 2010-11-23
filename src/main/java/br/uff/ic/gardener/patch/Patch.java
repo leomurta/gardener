@@ -30,6 +30,10 @@ public class Patch {
         /**
          *
          */
+        LessContext,
+        /**
+         *
+         */
         Normal,
         /**
          *
