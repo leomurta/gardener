@@ -59,7 +59,9 @@ public class MergeWithRegEx implements IMerge {
 
 			String diffFileSinal = null;
 			while (diffLine != null) { //start reading the DiffFile
-				diffFileSinal = diffLine.substring(0, 1);
+				if (diffLine.length() > 0) {
+					diffFileSinal = diffLine.substring(0, 1);
+				}
 
 				//there are differences between files
 				if ("-".equals(diffFileSinal) || "+".equals(diffFileSinal)) {

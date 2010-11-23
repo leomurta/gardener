@@ -15,6 +15,12 @@ import org.junit.Test;
 
 public class MergeTest {
 
+    private File test4Left;
+    private File test4Right;
+    private File test4Base;
+    private File test4Result;
+    private File test4ExpectedResult;
+    
     private File test1Left;
     private File test1Right;
     private File test1Base;
@@ -35,7 +41,13 @@ public class MergeTest {
 
     @Before
     public void setUp() throws Exception {
-        this.test1Left = getResourceFile("test1Left.txt");
+        this.test4Left = getResourceFile("test4Left.txt");
+        this.test4Right = getResourceFile("test4Right.txt");
+        this.test4Base = getResourceFile("test4Base.txt");
+        this.test4Result = getResourceFile("test4Result.txt");
+        this.test4ExpectedResult = getResourceFile("test4ExpectedResult.txt");
+    	
+    	this.test1Left = getResourceFile("test1Left.txt");
         this.test1Right = getResourceFile("test1Right.txt");
         this.test1Base = getResourceFile("test1Base.txt");
         this.test1Result = getResourceFile("test1Result.txt");
@@ -52,6 +64,15 @@ public class MergeTest {
         this.test3Base = getResourceFile("test3Base.txt");
         this.test3Result = getResourceFile("test3Result.txt");
         this.test3ExpectedResult = getResourceFile("test3ExpectedResult.txt");
+    }
+
+    @Test
+    public void testMerge4() {
+    	IMerge merge = new MergeWithRegEx();
+    	File mergeResult = merge.merge(this.test4Base, this.test4Left, this.test4Right, this.test4Result);
+    	String mergeResultAsString = this.convertFileToString(mergeResult);
+    	String expectedResultAsString = this.convertFileToString(this.test4ExpectedResult);
+    	assertTrue(expectedResultAsString.equals(mergeResultAsString));
     }
 
     @Test
