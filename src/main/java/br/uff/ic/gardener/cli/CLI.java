@@ -28,6 +28,7 @@ import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.GlobFilenameFilter;
 import br.uff.ic.gardener.util.NotDirectoryFileFilter;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
+import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 
 
@@ -60,6 +61,9 @@ public class CLI {
 	
 	@Option(name = "-rename", aliases = "--rename", metaVar = "RENAME", usage = "Rename a file in the workspace")
 	private boolean bRename = false;
+	
+	@Option(name = "-status", aliases = "--status", metaVar = "STATUS", usage = "Show status of workspace")
+	private boolean bStatus = false;
 	
 	@Option(name = "-m", aliases = "--message", metaVar = "MESSAGE", usage="Message to transations (Checkout, Checkin)")
 	private String strMessage = "";
@@ -119,7 +123,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		INIT, CHECKOUT, COMMIT, UPDATE, DIFF, ADD, REMOVE, RENAME, NULL
+		INIT, CHECKOUT, COMMIT, UPDATE, DIFF, ADD, REMOVE, RENAME, STATUS, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -147,6 +151,8 @@ public class CLI {
 			return OPERATION.REMOVE;
 		}else if(bRename){
 			return OPERATION.RENAME;
+		}else if(bStatus){
+			return OPERATION.STATUS;
 		}
 		else
 			return OPERATION.NULL;
@@ -377,10 +383,14 @@ public class CLI {
 			
 			break;
 			case CHECKOUT:
-					onCheckout(strMessage);
+					onCheckout();
 			break;
 			case COMMIT:
 					onCommit(strMessage);
+			break;
+			
+			case STATUS:
+				onStatus();
 			break;
 			default:
 				// this will redirect the output to the specified output
@@ -402,11 +412,22 @@ public class CLI {
 		}
 	}
 	
+	private void onStatus() throws WorkspaceException, APIClientException {
+		Collection<CIWorkspaceStatus> coll = new LinkedList<CIWorkspaceStatus>();
+		getClient().status(coll);
+		
+		for(CIWorkspaceStatus ci: coll)
+		{
+			System.out.println(ci.toString());
+		}		
+	}
+
 	/**
 	 * Reset CLI Commands
 	 */
 	private static void resetCLI() 
 	{
+		cliSingletons.forceCloseSystem();
 		cliSingletons = null;
 		CLI.me();
 	}
@@ -459,8 +480,8 @@ public class CLI {
 	 *
 	 * @throws TransationException 
 	 */
-	private void onCheckout(String message) throws TransationException {
-		getClient().checkout(revision, message);
+	private void onCheckout() throws TransationException {
+		getClient().checkout(revision);
 	}
 	
 	
@@ -563,19 +584,6 @@ public class CLI {
 			
 			throw new TransationException(str.toString());
 		}
-			
-		/*
-		 *   case 'c': //CONTEXT-FORMAT
-                return getContextFormatter();
-            case 'l': // LESS-CONTEXT-FORMAT
-                return getLessContextFormatter();
-            case 'f': //FULL-CONTEXT-FORMAT
-                return getFullContextFormatter();
-            case 'n':  //NORMAL-FORMAT
-                return getNormalFormatter();
-            case 'u':  //UNIFIED-FORMAT
-                return getUnifiedFormatter();
-		 */
 		Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
         diff.setOutputFormat();
         
@@ -591,6 +599,19 @@ public class CLI {
 		bDiffUnifiedFormat = false;
 	}
 
+	
+	/**Return the format for diff
+	 *   case 'c': //CONTEXT-FORMAT
+            return getContextFormatter();
+        case 'l': // LESS-CONTEXT-FORMAT
+            return getLessContextFormatter();
+        case 'f': //FULL-CONTEXT-FORMAT
+            return getFullContextFormatter();
+        case 'n':  //NORMAL-FORMAT
+            return getNormalFormatter();
+        case 'u':  //UNIFIED-FORMAT
+            return getUnifiedFormatter();
+	 */
 	private char getContextFormat() {
 		if(bDiffUnifiedFormat)
 			return 'u';
@@ -605,5 +626,18 @@ public class CLI {
 		}
 		else
 			return 'n';
+	}
+
+	private void forceCloseSystem() {
+		try {
+			this.getClient().forceClose();
+		} catch (WorkspaceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

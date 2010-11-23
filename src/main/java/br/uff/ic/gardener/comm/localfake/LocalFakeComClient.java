@@ -99,7 +99,7 @@ public class LocalFakeComClient implements ComClient {
 	
 	/**TODO: Corrigir o Checkout*/
 	@Override
-	public void checkout(String strProject, RevisionID revision,  Collection<ConfigurationItem> items) throws ComClientException{
+	public RevisionID checkout(String strProject, RevisionID revision,  Collection<ConfigurationItem> items) throws ComClientException{
 		FileInputStream input;
 		if(revision.equals(RevisionID.LAST_REVISION))
 		{
@@ -108,7 +108,7 @@ public class LocalFakeComClient implements ComClient {
 		
 		if(revision.getNumber() == 0 ) //< a última revisão não tem nada.
 		{
-			return;
+			return revision;
 		}
 		
 		try {
@@ -149,6 +149,8 @@ public class LocalFakeComClient implements ComClient {
 			throw new ComClientException("Error at decompact revision.", "Checkout", getURIServ(), e);
 		}
 		
+		return revision;
+		
 	}
 	
 	public String getPathOfRevision(RevisionID r) {
@@ -178,6 +180,10 @@ public class LocalFakeComClient implements ComClient {
 			}
 
 			properties.setProperty("LastRevision", RevisionID.generateNewRevision(getLastRevision().getNumber()).toString());
+			
+			File config = new File(String.format("%s%s%s", pathConfig.getPath(), File.separatorChar, CONFIG_PROPERTIES));
+			
+			properties.store(new FileOutputStream(config), "");
 			// close the stream
 			zos.close();
 

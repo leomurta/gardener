@@ -6,13 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
@@ -36,10 +32,9 @@ public class LocalComClient implements ComClient {
 	}
 	
 	@Override
-	public void checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
+	public RevisionID checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
 			throws ComClientException {
 		throw new ComClientException("Not implemented","checkout", null, null );
-		
 	}
 
 	@Override

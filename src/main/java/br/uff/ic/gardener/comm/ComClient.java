@@ -29,10 +29,10 @@ public interface ComClient extends Closeable {
 	 * @param strProject The name of project in the serv
 	 * @param strMessage The message usage in the revision commited
 	 * @param items the collection of ConfigurationItems that receive data
-	 * @return the new revision generate
+	 * @return the real revision checkouted
 	 * @throws ComClientException
 	 */
-	void checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
+	RevisionID checkout(String strProject, RevisionID revision, Collection<ConfigurationItem> items)
 			throws ComClientException;
 
 	/**

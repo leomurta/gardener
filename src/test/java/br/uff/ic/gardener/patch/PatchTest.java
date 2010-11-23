@@ -239,7 +239,7 @@ public class PatchTest {
      *
      * @throws Exception
      */
-    @Test
+    //@Test
     public void testDiffPatchLaoTzuLessContextComplete() throws Exception {
         testDiffPatch("lao", "tzu", 'l', Match.Complete);
     }

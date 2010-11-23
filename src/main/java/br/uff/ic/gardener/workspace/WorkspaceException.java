@@ -1,7 +1,5 @@
 package br.uff.ic.gardener.workspace;
 
-import java.io.File;
-
 /**
  * Uma excecao do workspace
  *
@@ -10,30 +8,41 @@ import java.io.File;
  */
 public class WorkspaceException extends Exception {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 2251516287838447597L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2251516287838447597L;
+	
+	/**
+	 * the CI envolved in the exception
+	 */
+	CIWorkspaceStatus ciCurrent = null;
 
-    /**
-     * File especificado como fonte do workspace
-     */
-    File sourceFile = null;
-
-    /**
-     * COnstrutor
-     *
-     * @param file
-     *            Determined file for workspace
-     * @param msg
-     *            The message error
-     * @param parent
-     *            the throwable partent
-     */
-    public WorkspaceException(File file, String msg, Throwable parent) {
-        super(msg, parent);
-        sourceFile = file;
-    }
+	/**
+	 * COnstrutor
+	 * 
+	 * @param file
+	 *            Determined file for workspace
+	 * @param msg
+	 *            The message error
+	 * @param parent
+	 *            the throwable partent
+	 */
+	public WorkspaceException(CIWorkspaceStatus ci, String msg, Throwable parent) {
+		this(msg, parent);
+		ciCurrent = ci;
+	}
+	
+	public WorkspaceException(String msg, Throwable parent)
+	{
+		super(msg, parent);
+		ciCurrent = null;
+	}
+	
+	public String toString()
+	{
+		return String.format("%s: CI=>%s; parent=>%s", ciCurrent, this.getCause()!=null?getCause():"null");
+	}
 }
 
 

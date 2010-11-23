@@ -1,7 +1,9 @@
 package br.uff.ic.gardener.util;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -266,4 +268,37 @@ public class FileHelper {
 		
 		return true;
 	}
+	
+	/**
+	 * Preenche um arquivo com várias linhas de String
+	 * @param file o arquivo a ser preenchido
+	 * @param strVec as linhas que o preencherão
+	 */
+	public static void fillFile(File file, String... strVec)throws IOException
+	{
+		FileWriter fw;
+		fw = new FileWriter(file);
+		PrintWriter pw = new PrintWriter(fw);
+
+		for (String str : strVec) {
+			pw.append(str + UtilStream.getLineSeperator());
+		}
+		pw.close();
+	
+	}
+	
+	 /**
+     * Method description
+     *
+     *
+     * @param strFile
+     * @param strVec
+     *
+     * @throws IOException
+     * @deprecated não usar pq ela será removida daqui, não deve haver file aqui nesta classe
+     */
+    public static void fillFile( String strFile, String... strVec ) throws IOException {
+        fillFile( new File( strFile ), strVec );
+    }
+
 }

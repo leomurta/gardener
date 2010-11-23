@@ -20,13 +20,10 @@ public class UtilStream {
 
     /** Field description */
     public static final int DEFAULT_BUFFER_SIZE = 2156;
-
     /** Field description */
     private static byte[] BUFFER = new byte[DEFAULT_BUFFER_SIZE];
-
     /** Field description */
     private static String ENCONDING = "UTF-8";
-
     /** Field description */
     private static char[] CHARBUFFER = new char[DEFAULT_BUFFER_SIZE];
 
@@ -39,13 +36,13 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static void fillStream( OutputStream os, String... strVec ) throws IOException {
+    public static void fillStream(OutputStream os, String... strVec) throws IOException {
 
         // PrintWriter pw = new PrintWriter(os, false);
-        PrintStream ps = new PrintStream( os );
+        PrintStream ps = new PrintStream(os);
 
         for (String str : strVec) {
-            ps.format( "%s%s", str, getLineSeperator() );
+            ps.format("%s%s", str, getLineSeperator());
         }
 
         ps.flush();
@@ -60,9 +57,9 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static void fillPrintStream( PrintStream ps, String... strVec ) throws IOException {
+    public static void fillPrintStream(PrintStream ps, String... strVec) throws IOException {
         for (String str : strVec) {
-            ps.format( "%s%s", str, getLineSeperator() );
+            ps.format("%s%s", str, getLineSeperator());
         }
     }
 
@@ -73,15 +70,15 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static void fillFile( File file, String... strVec ) throws IOException {
+    public static void fillFile(File file, String... strVec) throws IOException {
         FileWriter fw;
 
-        fw = new FileWriter( file );
+        fw = new FileWriter(file);
 
-        PrintWriter pw = new PrintWriter( fw );
+        PrintWriter pw = new PrintWriter(fw);
 
         for (String str : strVec) {
-            pw.append( str + getLineSeperator() );
+            pw.append(str + getLineSeperator());
         }
 
         pw.close();
@@ -94,7 +91,7 @@ public class UtilStream {
      * @return
      */
     public static String getLineSeperator() {
-        return System.getProperty( "line.separator" );
+        return System.getProperty("line.separator");
     }
 
     /**
@@ -103,8 +100,8 @@ public class UtilStream {
      * @param output
      * @throws IOException
      */
-    public static void copy( InputStream input, OutputStream output ) throws IOException {
-        copy( input, output, BUFFER );
+    public static void copy(InputStream input, OutputStream output) throws IOException {
+        copy(input, output, BUFFER);
     }
 
     /**
@@ -114,7 +111,7 @@ public class UtilStream {
      * @param sizeBuffer
      * @throws IOException
      */
-    public static void copy( InputStream input, OutputStream output, int sizeBuffer ) throws IOException {
+    public static void copy(InputStream input, OutputStream output, int sizeBuffer) throws IOException {
         byte[] buffer = null;
 
         if (sizeBuffer != DEFAULT_BUFFER_SIZE) {
@@ -123,7 +120,7 @@ public class UtilStream {
             buffer = BUFFER;
         }
 
-        copy( input, output, buffer );
+        copy(input, output, buffer);
     }
 
     /**
@@ -133,25 +130,12 @@ public class UtilStream {
      * @param buffer
      * @throws IOException
      */
-    public static void copy( InputStream input, OutputStream output, byte[] buffer ) throws IOException {
+    public static void copy(InputStream input, OutputStream output, byte[] buffer) throws IOException {
         int byteRead = 0;
 
-        while ((byteRead = input.read( buffer )) > 0) {
-            output.write( buffer, 0, byteRead );
+        while ((byteRead = input.read(buffer)) > 0) {
+            output.write(buffer, 0, byteRead);
         }
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @param strFile
-     * @param strVec
-     *
-     * @throws IOException
-     */
-    public static void fillFile( String strFile, String... strVec ) throws IOException {
-        fillFile( new File( strFile ), strVec );
     }
 
     /**
@@ -162,22 +146,22 @@ public class UtilStream {
      * @throws IOException
      * @throws InterruptedException
      */
-    public static String toString( InputStream input )
+    public static String toString(InputStream input)
             throws UnsupportedEncodingException, IOException, InterruptedException {
-        StringBuilder     text   = new StringBuilder();
-        InputStreamReader reader = new InputStreamReader( input, ENCONDING );
-        int               read   = 0;
+        StringBuilder text = new StringBuilder();
+        InputStreamReader reader = new InputStreamReader(input, ENCONDING);
+        int read = 0;
 
-        read = reader.read( CHARBUFFER );
+        read = reader.read(CHARBUFFER);
 
         while (read > -1) {
             if (read > 0) {
-                text.append( CHARBUFFER, 0, read );
+                text.append(CHARBUFFER, 0, read);
             } else {
-                Thread.sleep( 50 );
+                Thread.sleep(50);
             }
 
-            read = reader.read( CHARBUFFER );
+            read = reader.read(CHARBUFFER);
         }
 
         reader.close();
@@ -195,8 +179,8 @@ public class UtilStream {
      *
      * @throws UnsupportedEncodingException
      */
-    public static String toString( ByteArrayOutputStream output ) throws UnsupportedEncodingException {
-        return output.toString( ENCONDING );
+    public static String toString(ByteArrayOutputStream output) throws UnsupportedEncodingException {
+        return output.toString(ENCONDING);
     }
 
     /**
@@ -209,11 +193,11 @@ public class UtilStream {
      *
      * @throws IOException
      */
-    public static OutputStream toOutputStream( String text ) throws IOException {
-        byte[]                stringByteArray = text.getBytes();
-        ByteArrayOutputStream out             = new ByteArrayOutputStream( stringByteArray.length );
+    public static OutputStream toOutputStream(String text) throws IOException {
+        byte[] stringByteArray = text.getBytes();
+        ByteArrayOutputStream out = new ByteArrayOutputStream(stringByteArray.length);
 
-        out.write( stringByteArray );
+        out.write(stringByteArray);
         out.close();
 
         return out;
@@ -226,11 +210,11 @@ public class UtilStream {
      * @param size
      * @throws IOException
      */
-    public static void fillRandomData( OutputStream out, int size ) throws IOException {
+    public static void fillRandomData(OutputStream out, int size) throws IOException {
         Random r = new Random();
 
         while (size > 0) {
-            out.write( r.nextInt() );
+            out.write(r.nextInt());
             size--;
         }
     }
@@ -241,14 +225,15 @@ public class UtilStream {
      * @param out
      * @param lineCount
      */
-    public static void fillLineNumber( OutputStream out, int lineCount ) {
-        PrintStream p = new PrintStream( out );
+    public static void fillLineNumber(OutputStream out, int lineCount) {
+        PrintStream p = new PrintStream(out);
 
         for (int i = 0; i < lineCount; i++) {
-            p.printf( "%d%s", i, UtilStream.getLineSeperator() );
+            p.printf("%d%s", i, UtilStream.getLineSeperator());
         }
     }
 }
 
 
 //~ Formatted by Jindent --- http://www.jindent.com
+

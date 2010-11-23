@@ -2,82 +2,118 @@ package br.uff.ic.gardener.workspace;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
-import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.WorkspaceOperation;
 
 public class Workspace {
 
 	/**
-	 * Path of the workspace
+	 * Project name of workspace
 	 */
-	private File path = null;
-	
 	private String strProjectName = null;
-	
+
 	/**
-	 * reference to the client aplication
+	 * Lista que irá conter as transações especificadas no workspace. Ela não deveria alterar de tamanho frequentemente 
 	 */
-	private APIClient client = null;
-	
-	/**
-	 * Lista que irá conter as transações especificadas no workspace. Ela nunca altera de tamanho 
-	 */
-	private ArrayList<WorkspaceOperation> listOperations = new ArrayList<WorkspaceOperation>();
+	private ArrayList<CIWorkspaceStatus> listOperations = new ArrayList<CIWorkspaceStatus>();
 	
 	/**
 	 * Lista que receberá as novas operações do workspace para serem gravadas em um commit
 	 */
-	private LinkedList<WorkspaceOperation> listNewOperations = new LinkedList<WorkspaceOperation>();
+	private LinkedList<CIWorkspaceStatus> listNewOperations = new LinkedList<CIWorkspaceStatus>();
 	
+
+	/**
+	 * Instance of parser
+	 */
 	private WorkspaceConfigParser parser = null;
 	
 	/**
 	 * Lista com os itens contidos no workspace. (carregados do arquivo de configuração)
 	 */
-	private ArrayList<URI> listICContent = new ArrayList<URI>();
+	private List<CIWorkspace> listICContent = new ArrayList<CIWorkspace>();
 	
 	/**
 	 * The current revisionID of workspace
 	 */
 	private RevisionID currentRevision = RevisionID.ZERO_REVISION;
-	
-	
+		
+	/**
+	 * Date of checkout currentVersion
+	 */
 	private Date checkoutTime = new Date();
 	
+	/**
+	 * Serv source of this workspace
+	 */
 	private URI servSource = null;
 
-	public File getPath() {
-		return path;
+	private WorkspaceConfigParser getParser()
+	{
+		return parser;
 	}
-
-	public void setPath(File path) {
-		this.path = path;
+	
+	public final Collection<CIWorkspaceStatus> getOperations()
+	{
+		return listOperations;
 	}
+	
+	public void addContent(Collection<? extends CIWorkspace> content) {
+		listICContent.addAll(content);
+		Collections.sort(listICContent);
+	}
+	
 
+	public void addOldOperation(LinkedList<CIWorkspaceStatus> list) {
+		listOperations.addAll(list);
+	}
+	
+	public void addNewOperation(CIWorkspaceStatus ci)
+	{
+		listNewOperations.add(ci);
+	}
+	
+	public final Collection<CIWorkspaceStatus> getNewOperations()
+	{
+		return listNewOperations;
+	}
+	
 	/**
-	 * get APIClient of application
-	 * 
+	 * return the ci versioneds
+	 * @return
 	 */
-	private APIClient getClient() {
-		return client;
+	public final Collection<CIWorkspace> getWorkspaceVersionedContent()
+	{
+		return listICContent;
 	}
-
-
+	
+	/**
+	 * @return
+	 */
+	private File getPath() {
+		return getParser().getPath();
+	}
+	
 	public Date getCheckoutTime() {
 		return checkoutTime;
 	}
@@ -94,19 +130,6 @@ public class Workspace {
 		currentRevision = revision;
 	}
 	
-	public final List<WorkspaceOperation> getOperationList()
-	{
-		return listOperations;
-	}
-	
-	/**
-	 * Retorna lista de novas operações a serem manipuladas
-	 * @return
-	 */
-	public final List<WorkspaceOperation> getNewOperationList()
-	{
-		return this.listNewOperations;
-	}
 	
 	public String getProjectName()
 	{
@@ -118,6 +141,15 @@ public class Workspace {
 		strProjectName = _str;
 	}
 
+	public void setServSource(URI servSource) {
+		this.servSource = servSource;
+	}
+
+	public URI getServSource() {
+		return servSource;
+	}
+
+	
 	/**
 	 * Constructor. it needs a path to look up for the configuration files
 	 * 
@@ -128,32 +160,25 @@ public class Workspace {
 	 */
 	public Workspace(File pathOfWorkspace) throws IllegalArgumentException, WorkspaceException
 	{
-		path = pathOfWorkspace;
+	//	path = pathOfWorkspace;
 		
-		if (path == null)
+		if (pathOfWorkspace == null)
 			throw new IllegalArgumentException("path cannot be null");
 		
-		if(!path.isDirectory())
+		if(!pathOfWorkspace.isDirectory())
 				throw new IllegalArgumentException("path should be a directory");
-	
-		parser = new WorkspaceConfigParser(this, path);
+	try {
+		parser = new WorkspaceConfigParser(this, pathOfWorkspace);
 		
-		if(parser.isWorkspaceDir(path))
-		{
-			try {
-				parser.loadProfile(listICContent);
-			} catch (WorkspaceConfigParserException e) {
-				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
-			}
-			
-			try {
-				parser.loadOperations(this.listOperations);
-			} catch (WorkspaceConfigParserException e) {
-				throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
-			}
+		} catch (WorkspaceConfigParserException e) {
+			parser = null;
+			this.reset();
+			throw new WorkspaceException("Cannot load config in parser", e);
 		}
+		
 	}
 
+	/*@SuppressWarnings("unused")
 	private class NotInitDotFileFilter implements FileFilter {
 
 		@Override
@@ -162,212 +187,33 @@ public class Workspace {
 			return temp.length() == 0 || temp.charAt(0) != '.';
 		}
 
-	}
-
-	/**
-	 * Commita as alterações Para isto ele pega os arquivos e diretórios do
-	 * diretório corrente, ignorando os .diretórios
-	 * 
-	 * @throws WorkspaceException
-	 */
-	public Collection<ConfigurationItem> commit() throws WorkspaceException 
-	{
-		getClient();
-		//File files[] = path.listFiles(new NotInitDotFileFilter());
-
-		return new LinkedList<ConfigurationItem>();
-//		Map<String, InputStream> map = new TreeMap<String, InputStream>();
-//
-//		try {
-//			for (File f : files) {
-//				InputStream is;
-//
-//				is = new FileInputStream(f);
-//
-//				java.io.ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-//
-//				try {
-//					UtilStream.copy(is, outBuffer);
-//
-//				} catch (IOException e) {
-//					throw new WorkspaceException(f,
-//							"Erro ao gravar arquivo no buffer em memória", e);
-//				}
-//
-//				InputStream inputStream = new ByteArrayInputStream(
-//						outBuffer.toByteArray());
-//				map.put(f.getName(), inputStream);
-//			}
-//		} catch (FileNotFoundException e) {
-//			throw new WorkspaceException(path, "Arquivo não encontrado", e);
-//		}
-	}
-
-	/**
-	 * Implements the completely checkout, generate the workspace It will get
-	 * the flow data of serv and will build the Workspace.
-	 * 
-	 * @throws WorkspaceException
-	 */
-	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
+	}*/
 	
-
-		// erase content
-		for (File f : path.listFiles(new NotInitDotFileFilter())) {
-			f.delete();
-		}
-
-		for (ConfigurationItem e : list) {
-			//File f = new File(path, e.getStringID());
-			File f = null;
-			try {
-				f = FileHelper.createFile(path, e.getStringID());
-			} catch (IllegalArgumentException ee) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", ee);
-			} catch (IOException eee) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", eee);
-			}
-			try {
-				f.createNewFile();
-			} catch (IOException e1) {
-				throw new WorkspaceException(f,
-						"Do not create file in repository", e1);
-			}
-
-			try {
-
-				OutputStream out = new FileOutputStream(f);
-				UtilStream.copy(e.getItemAsInputStream(), out);
-
-			} catch (IOException e1) {
-				throw new WorkspaceException(f,
-						"Do not copy data from repository", e1);
-			}
-
-		}
-
-	}
-
-	/**
-	 * Close the things
-	 */
-	public void close() {
-		// fecha o que venha a ser necess�rio fechar
-	}
-
-	public void setServSource(URI servSource) {
-		this.servSource = servSource;
-	}
-
-	public URI getServSource() {
-		return servSource;
-	}
-
-	public void removeFiles(Collection<File> listFiles) throws WorkspaceException {
-	
-		URI basePath = getPath().toURI();
-		//número de itens adicionados na lista
-		int qtdRemove = 0;
-		
-		try {
-			for(File f: listFiles)
-			{
-				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
-				{				
-					URI uri = containItem(f);
-					if(uri != null)
-					{
-						uri = f.toURI();
-						uri = basePath.relativize(uri);
-						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.REMOVE_FILE, uri.toString() ));
-						f.delete();
-						qtdRemove ++;
-					}else
-					{
-						while(qtdRemove > 0)
-						{
-							listNewOperations.removeLast();
-							qtdRemove--;
-						}
-						throw new WorkspaceException(f, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
-					}
-				}
-			}
-		} catch (URISyntaxException e) {
-			while(qtdRemove > 0)
-			{
-				listNewOperations.removeLast();
-				qtdRemove--;
-			}
-			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
-		}
-	}
-	
-	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
-	{
-		URI basePath = getPath().toURI();
-		//número de itens adicionados na lista nesta operação de add
-		int qtdAdd = 0;
-		
-		try
-		{
-			for(File f: listFiles)
-			{
-				if(!WorkspaceConfigParser.isConfigFile(getPath(), f))
-				{
-					URI uri = containItem(f);
-					if(uri == null)
-					{
-						uri = f.toURI();
-						uri = basePath.relativize(uri);
-						listNewOperations.add(new WorkspaceOperation(WorkspaceOperation.Operation.ADD_FILE, uri.toString() ));
-						qtdAdd ++;
-					}else
-					{
-						while(qtdAdd > 0)
-						{
-							listNewOperations.removeLast();
-							qtdAdd--;
-						}
-						throw new WorkspaceException(f, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
-					}
-				}
-			}
-		} catch (URISyntaxException e) {
-			while(qtdAdd > 0)
-			{
-				listNewOperations.removeLast();
-				qtdAdd--;
-			}
-			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
-		}
-	}
 	
 	/**
 	 * Verifica se um arquivo já sofreu operação neste workspace
 	 * @param f O arquivo que está sendo procurado
 	 * @return uma URI para o arquivo que está sendo modificado
 	 * @throws URISyntaxException
+	 * @Deprecated
 	 */
-	private URI containItem(File f) throws URISyntaxException 
+	private CIWorkspace containItem(File f) throws URISyntaxException 
 	{
 		
 		URI uri = f.toURI();
-		uri = path.toURI().relativize(uri);
-		URI wo = containItem(this.listOperations, uri);
-		if(wo != null)
-			return wo;
+		uri = getPath().toURI().relativize(uri);
+		CIWorkspace ci = containItem(this.listOperations, uri);
+		if(ci != null)
+			return ci;
 		
-		wo = containItem(this.listNewOperations, uri);
-		if(wo != null)
-			return wo;
+		ci = containItem(this.listNewOperations, uri);
+		if(ci != null)
+			return ci;
 		
-		for(URI uriIC: this.listICContent)
+		for(CIWorkspace ciFor: this.listICContent)
 		{
-			if(uriIC.equals(uri))
-				return uriIC;
+			if(ciFor.getURI().equals(uri))
+				return ciFor;
 		}
 		return null;
 		
@@ -380,80 +226,629 @@ public class Workspace {
 	 * @param uri Relative URI
 	 * @return the operation that references the URI.
 	 * @throws URISyntaxException 
+	 * @Deprecated
 	 */
-	private static URI containItem(Collection<WorkspaceOperation> coll, URI uri) throws URISyntaxException
+	private static CIWorkspace containItem(Collection<CIWorkspaceStatus> coll, URI uri) throws URISyntaxException
 	{
 		
-		for(WorkspaceOperation op: coll)
+		for(CIWorkspace op: coll)
 		{
-			if((op.getParamQtd() > 0))
-			{				
-				String str = op.getParamAt(0);
-				
-				URI uriColl = new URI(str);
-				if(uriColl.equals(uri))
-					return uriColl;
-			}
+			URI uriColl = op.getURI();
+			if(uriColl.equals(uri))
+				return op;
 		}
 		
 		return null;
 	}
 
-	public void renameFile(File fileSource, String strNewName) throws WorkspaceException
+	/**
+	 * Close the things
+	 * @throws WorkspaceException 
+	 */
+	public void close() throws WorkspaceException
 	{
-		if(!fileSource.exists())
-			throw new WorkspaceException(fileSource, "Arquivo não existe", null);
+		//this.saveConfig();
+		reset();
+	}
+
+	
+
+	/**
+	 * Implements the completely checkout, generate the workspace It will get
+	 * the flow data of serv and will build the Workspace.
+	 * 
+	 * @throws WorkspaceException
+	 */
+	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
+	
+		reset();
+		try {
+			setCurrentRevision(revision);
+			// erase content
+			File[] listContent = getPath().listFiles();
+			for(File f: listContent)
+			{
+				FileHelper.deleteDirTree(f);
+			}
+
+			//save content
+			for (ConfigurationItem e : list) {
+				File f = null;
+				try {
+					f = FileHelper.createFile(this.getPath(), e.getStringID());
+				} catch (IllegalArgumentException ee) {
+					throw new WorkspaceConfigParserException("Do not create file in repository",f.toString(), ee);
+				} catch (IOException eee) {
+					throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), eee);
+				}
+				try {
+					f.createNewFile();
+				} catch (IOException e1) {
+					throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), e1);
+				}
+
+				try {
+
+					OutputStream out = new FileOutputStream(f);
+					UtilStream.copy(e.getItemAsInputStream(), out);
+					out.close();
+
+				} catch (IOException e1) {
+					throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
+				}
+				
+				try {
+					CIWorkspace ci = new CIWorkspace(e.getUri(), new FileInputStream(f), new Date());
+					this.listICContent.add(ci);
+				} catch (FileNotFoundException e1) {
+					throw new WorkspaceException("Cannot open file", e1);
+				}
+			}
+
+			this.saveConfig();
+		} catch (WorkspaceConfigParserException e) {
+			reset();
+			throw new WorkspaceException("Cannot checkout", e);
+		}
+	}
+
+	
+	public void removeFiles(Collection<File> listFiles) throws WorkspaceException 
+	{
+		//número de itens adicionados na lista
+		int qtdRemove = 0;
 		
-		if(!fileSource.isFile())
-			throw new WorkspaceException(fileSource, "Não foi especificado um arquivo válido", null);
-		
-		try
-		{
-			File fileNew = new File(getPath(), strNewName);
-			fileSource.renameTo(fileNew);
-		}catch(Exception e)
-		{
-			throw new WorkspaceException(fileSource, "Não foi possível renomear para " + strNewName, e);
+		try {
+			for(File f: listFiles)
+			{
+				if(!getParser().isConfigFile(f))
+				{				
+					CIWorkspace ci = containItem(f);
+					if(ci != null)
+					{
+						listNewOperations.add(new CIWorkspaceStatus(ci.getURI(), null, Status.REM));
+						f.delete();
+						qtdRemove ++;
+					}else
+					{
+						while(qtdRemove > 0)
+						{
+							listNewOperations.removeLast();
+							qtdRemove--;
+						}
+						throw new WorkspaceException(null, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
+					}
+				}
+			}
+			saveConfig();
+		} catch (URISyntaxException e) {
+			while(qtdRemove > 0)
+			{
+				listNewOperations.removeLast();
+				qtdRemove--;
+			}
+			throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
 		}
 	}
 	
+	/**
+	 * Do addiction of files
+	 * @param listFiles
+	 * @throws WorkspaceException
+	 */
+	public void addFiles(Collection<File> listFiles) throws WorkspaceException 
+	{
+		addFiles(listFiles, false);
+	}
+	/**
+	 * Do addiction of files
+	 * @param listFiles File to add
+	 * @param ignoreConflict ignore conflict with others operations
+	 */
+	public void addFiles(Collection<File> listFiles, boolean ignoreConflict) throws WorkspaceException {
+		//número de itens adicionados na lista nesta operação de add
+		int qtdAdd = 0;
+		for(File f: listFiles)
+		{
+			if(!getParser().isConfigFile(f))
+			{
+				try
+				{
+					CIWorkspace ci = containItem(f);
+					if(ci == null)
+					{
+						
+						URI uri = FileHelper.getRelative(getPath(), f);
+						
+						listNewOperations.add(new CIWorkspaceStatus(uri, null, Status.ADD));
+						qtdAdd ++;
+					}else
+					{
+						if(!ignoreConflict)
+						{
+							while(qtdAdd > 0)
+							{
+								listNewOperations.removeLast();
+								qtdAdd--;
+							}
+							throw new WorkspaceException(null, String.format("O arquivo %s já está contido no workspace", f.toString()), null);
+						}
+					}
+				} catch (URISyntaxException e) {
+					while(qtdAdd > 0)
+					{
+						listNewOperations.removeLast();
+						qtdAdd--;
+					}
+					throw new WorkspaceException(null, "Não foi possível interpretar o path do arquivo", e);
+				}
+			}
+		}
+		
+		saveConfig();
+		
+	}
+
+
+	public void renameFile(File fileSource, String strNewName) throws WorkspaceException
+	{		
+		try
+		{
+			CIWorkspace ci = containItem(fileSource);
+			if(ci != null)
+			{
+				throw new WorkspaceError(fileSource, "renamed file has have a operation: " + ci.toString(), null);
+			}
+			
+			 if(!fileSource.exists())
+				throw new WorkspaceConfigParserException("Arquivo não existe", "", null);
+			
+			if(!fileSource.isFile())
+				throw new WorkspaceConfigParserException("Não foi especificado um arquivo válido", "", null);
+			
+			File fileNew = new File(getPath(), strNewName);
+			fileSource.renameTo(fileNew);		
+			
+			listNewOperations.add(new CIWorkspaceStatus(getParser().getRelativeURI(fileSource.toURI()), null, Status.RENAME));
+			saveConfig();
+		}catch(WorkspaceConfigParserException e)
+		{
+			throw new WorkspaceException(null, "Não foi possível renomear para " + strNewName, e);
+		} catch (URISyntaxException e) {
+			throw new WorkspaceException(null, "Cannot get URI of a file " + strNewName, e);
+		}
+	}
+	
+	/**
+	 * Load data of workspace
+	 * @deprecated
+	 * @throws WorkspaceException
+	 */
+	/*private void loadConfig() throws WorkspaceException
+	{
+		listICContent.clear();
+		listOperations.clear();
+		listNewOperations.clear();
+		try {
+			getParser().loadProfile(listICContent);
+			Collections.sort(listICContent);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e); 
+		}
+		
+		try {
+			parser.loadOperations(this.listOperations);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível carregar as configurações do workspace", e);
+		}
+	}*/
 	
 	/**
 	 * Save workspace content in the config files in the directory
 	 * @throws WorkspaceException 
+	 * @Deprecated
 	 */
 	public void saveConfig() throws WorkspaceException
 	{
 		try
 		{
 			parser.save();
+			listOperations.addAll(listNewOperations);
+			listNewOperations.clear();
 		}catch(WorkspaceConfigParserException e)
 		{
 			throw new WorkspaceException(null, "Error in the save workspace", e);
 		}
+	}
+	
+
+	public void getStatus(Collection<CIWorkspaceStatus> coll ) throws WorkspaceException
+	{
+		processStatus(this.getPath(), coll);
+	}
+
+	
+	/**
+	 * Pop item from a iterator. If do not have item in the iterator, return null;
+	 * @param <T>
+	 * @param it
+	 * @return
+	 */
+	private static <T> T pop(Iterator<T> it)
+	{
+		if(it.hasNext())
+			return it.next();
+		else
+			return null;
+	}
+	
+	/**
+	 * Return the min value of two itens
+	 * null is greater than anything	
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private static <T extends Comparable<T>> boolean minus(T a, T b)
+	{
+		if(a== null)
+		{
+				return false;
+		}else
+		{
+			if(b==null)
+				return true;
+			else {
+				return a.compareTo(b) < 0;
+			}
+				
+		}
+	}
+	private void loadRealICContent(Collection<CIWorkspaceStatus> collReal) throws WorkspaceConfigParserException {
+		Queue<File> list = new LinkedList<File>();
+		list.add(getPath());
+		while(list.size() > 0)
+		{
+			File current = list.remove();
+			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
+			for(File f: files)
+			{
+				if(f.isDirectory())
+					list.add(f);
+				else if(f.isFile())
+				{
+					try {
+						collReal.add(
+								new CIWorkspaceStatus(
+										FileHelper.getRelative(getPath(), f),
+										new FileInputStream(f),
+										Status.UNVER,
+										new Date(f.lastModified()),
+										null
+									)
+								);
+					} catch (FileNotFoundException e) {
+						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
+					}
+				}
+			}
+		}
+	}
+	
+	
+	/**
+	 * Internal generate status operation
+	 * 	
+	 * It need list of Original itens, modified items and real itens (non-versioned)
+	 * Begin with a iterator for init of tree lists and does a "merge" of them.
+	 * for each situation in the merge, the algorith should add a operation in the return list
+	 * Algorithm table: (O = original, M = Modified, R = Real)
+	 * equal value 	| Operation
+	 * OMR 			| pop(O,M,R), add(M), status(M)
+	 * OM			| pop(O,M)	, add(M), status(missed(M))
+	 * MR			| pop(M,R)	, add(M), status(M)
+	 * OR			| pop(O,R)	, add(R), status(Versioned or Modified)
+	 * O			| pop(O)	, add(O), status(missed(O))
+	 * M			| pop(M)	, add(M), status(missed(M))
+	 * R			| pop(R)	, add(R), status(unversioned)
+	 * 
+	 * @param currentPath the path inpected now
+	 * @param coll the collection witch receives the CIStatus
+	 * @throws WorkspaceException 
+	 */
+	private Collection<CIWorkspaceStatus> processStatus(File currentPath, Collection<CIWorkspaceStatus> coll) throws WorkspaceException {
+	
+	
+		Collection<CIWorkspace> collOriginal = this.getOriginalCIContent();//já ordenado
+		
+		PriorityQueue<CIWorkspaceStatus> queueNew = new PriorityQueue<CIWorkspaceStatus>();
+		
+		for(CIWorkspaceStatus ciw: this.getOperations())
+		{
+			queueNew.add(ciw);
+		}
+		
+		for(CIWorkspaceStatus ciw: this.getNewOperations())
+		{
+			queueNew.add(ciw);
+		}
+		
+		PriorityQueue<CIWorkspaceStatus> queueReal = new PriorityQueue<CIWorkspaceStatus>();
+		
+		try {
+			loadRealICContent(queueReal);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Não foi possível verificar o conteúdo atual do workspace", e);
+		}
+		
+		Iterator<CIWorkspace> itOr = collOriginal.iterator();
+		Iterator<CIWorkspaceStatus> itMod = queueNew.iterator();
+		Iterator<CIWorkspaceStatus> itReal = queueReal.iterator();
+		
+		CIWorkspace or = itOr.hasNext()?itOr.next():null;
+		CIWorkspaceStatus mod = itMod.hasNext()?itMod.next():null;
+		CIWorkspaceStatus real = itReal.hasNext()?itReal.next():null;
+		
+		while(or != null || mod != null || real != null)
+		{
+			if(minus(or, mod) && minus(or, real))
+			{
+				//5 caso, só 1
+				coll.add(new CIWorkspaceStatus(or, Status.VER_MISSED));
+				or 	= pop(itOr);
+			}else if(minus(mod, or) && minus((CIWorkspace)mod, real))
+			{
+				//6 caso só 1
+				coll.add(new CIWorkspaceStatus(mod, Status.VER_MISSED));
+				mod	= pop(itMod);
+			}else if(minus(real, or) && minus((CIWorkspace)real,mod))
+			{
+				//7 caso só 1
+				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
+				real= pop(itReal);
+			}
+			else if(equals(or, mod) && equals(mod, real))
+			{
+				//1 caso
+				
+				coll.add(new CIWorkspaceStatus(mod));
+				or 	= pop(itOr);
+				mod	= pop(itMod);
+				real= pop(itReal);
+			}else if(equals(or, mod))
+			{
+				//2 caso
+				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+				or 	= pop(itOr);
+				mod	= pop(itMod);
+			}else if(equals(mod, real))
+			{
+				//3 caso
+				coll.add(new CIWorkspaceStatus(mod));
+				mod	= pop(itMod);
+				real= pop(itReal);
+			}
+			else if(equals(or, real))
+			{
+				//4 caso
+				if(real.getDateModified().compareTo(this.getCheckoutTime()) > 0)
+					coll.add(new CIWorkspaceStatus(real, Status.MOD));
+				else
+					coll.add(new CIWorkspaceStatus(real, Status.VER));
+				or	= pop(itOr);
+				real= pop(itReal);
+			}
+		}
+		
+		
+		
+		return coll;
+	}
+	
+
+	
+	private static boolean equals(CIWorkspace a, CIWorkspace b) {
+		if(a == null)
+		{
+			if(b == null)
+				return true;
+			else
+				return false;
+		}else
+		{
+			if(b != null)
+				return a.equals(b);
+			else
+				return false;
+		}
+	}
+
+	private Collection<CIWorkspace> getOriginalCIContent()
+	{
+		return this.listICContent;
 	}
 
 	static public FileFilter getNotFileConfigFilter() {
 		return WorkspaceConfigParser.getNotFileConfigFilter();
 	}
 
-	/**
-	 * Generate ConfigurationItens representing the new revision configured in the workspace 
-	 * @param list
-	 */
-	public void generateCheckin(List<ConfigurationItem> list) {
-		// TODO Auto-generated method stub
+	void clearOperations() 
+	{
+		listOperations.clear();
+		listNewOperations.clear();		
+	}
+
+	public void loadICToCommit(Collection<ConfigurationItem> collDest) throws WorkspaceConfigParserException
+	{
+		Queue<File> list = new LinkedList<File>();
+		list.add(getPath());
+		while(list.size() > 0)
+		{
+			File current = list.remove();
+			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
+			for(File f: files)
+			{
+				if(f.isDirectory())
+					list.add(f);
+				else if(f.isFile())
+				{
+					try {
+						collDest.add(
+								new ConfigurationItem( 
+										FileHelper.getRelative(getPath(), f),
+										new FileInputStream(f),
+										RevisionID.NEW_REVISION
+									)
+								);
+					} catch (FileNotFoundException e) {
+						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
+					}
+				}
+			}
+		}
+	}
+		
+	public void getCIsToCommit(List<ConfigurationItem> listCI) throws WorkspaceException 
+	{
+		try {
+			loadICToCommit(listCI);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException(null, "Cannot load CI to commit", e);
+		}
 		
 	}
 
 	/**
-	 * process operations with reflect a new version
+	 * After commited in comm, the workspace can be update by this method
+	 * @param the new revision
+	 * @throws WorkspaceException 
 	 */
-	public void processOperations() {
-		// TODO Auto-generated method stub
+	public void setCommited(RevisionID id) throws WorkspaceException {
+		List<CIWorkspaceStatus> listOp = new LinkedList<CIWorkspaceStatus>();
+		listOp.addAll(this.getOperations());
+		listOp.addAll(this.getNewOperations());
+		listNewOperations.clear();
 		
+		//fazbackup da lista
+		List<CIWorkspace> backup = new LinkedList<CIWorkspace>();
+		backup.addAll(listICContent);
+		
+		for(CIWorkspaceStatus op: listOp)
+		{
+			switch (op.getStatus()) 
+			{
+			case ADD:
+				listICContent.add(op);
+				break;
+			case REM:
+				listICContent.remove(op);
+				break;
+			case RENAME:
+				CIWorkspace ciRenamed = renameCIInCommit(op);
+				//
+				if(ciRenamed == null)
+				{
+					//rollback
+					listICContent = backup;
+					throw new WorkspaceException(op, "Cannot rename item", null);
+				}
+				break;
+			default:
+				listICContent = backup;
+				throw new WorkspaceException(op, "Status invalid to setCommited operation", null);
+			}
+		}
+		
+		this.listNewOperations.clear();
+		listOperations.clear();
+		
+		this.currentRevision = id;
+		this.checkoutTime = new Date();//NOW
+		try
+		{
+			getParser().save();
+			getParser().clearOperationData();
+		}catch(WorkspaceConfigParserException e)
+		{
+			throw new WorkspaceException("Não foi possível salvar configurações do workspace durante o commit", e);
+		}
+	}
+
+	private CIWorkspace renameCIInCommit(CIWorkspaceStatus op)
+	{
+		Iterator<CIWorkspace> i = listICContent.iterator();
+		CIWorkspace current = null;
+		boolean achou = false;
+		for(current = i.next(); i.hasNext(); current = i.next() )
+		{
+			if(current.getURI().equals(op.getURI()))
+			{
+				achou = true;
+				break;
+			}
+		}
+		
+		if(achou)
+		{
+			i.remove();
+			current = new CIWorkspace(current, op.getOldURI());
+			listICContent.add(current);
+			return current;
+		}
+		return null;		
 	}
 	
+	public void reset()
+	{
+		checkoutTime = new Date();
+		currentRevision = RevisionID.NEW_REVISION;
+		closeAll(listICContent);
+		listICContent.clear();
+		
+		closeAll(listNewOperations);
+		listNewOperations.clear();
+		
+		closeAll(listOperations);
+		listOperations.clear();
+		
+		servSource = null;
+		strProjectName = "";
+	}
 
+	private static void closeAll(Iterable<? extends CIWorkspace> list) {
+		for(CIWorkspace ci : list)
+		{
+			InputStream is = ci.getInputStream();
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e) {
+					//faz nada, é apenas por segurança este método, não conseguiu fechar quer dizer que há problema em outro lugar mas não aqui.
+				}
+			}
+		}
+		
+	}
 }
 
