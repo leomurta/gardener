@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 
 public class PreMerge {
 	
-	private ArrayList<HashMap<String, StringBuilder>> structuredDiff; 
+	private ArrayList<HashMap<String, StringBuilder>> structuredDiff;
 	
 	public PreMerge() {
 		super();
@@ -25,21 +25,28 @@ public class PreMerge {
 
 	public void addBothSides(String diffLine, int position) {
 		HashMap<String, StringBuilder> structuredDiffElement = null;
+		boolean newPosition = false;
 		
-		boolean newElement = false;
-		try {
+		if (position < this.structuredDiff.size()) {
 			structuredDiffElement = structuredDiff.get(position);
-		} catch (IndexOutOfBoundsException e) {
+		} else { //create a new position
+			if ((position == 2) && (this.structuredDiff.size() == 1)) {
+				structuredDiffElement = new HashMap<String, StringBuilder>();
+				structuredDiffElement.put("leftFileContent", null);
+				structuredDiffElement.put("rightFileContent", null);
+				structuredDiffElement.put("bothFilesContent", null);
+				this.structuredDiff.add(structuredDiffElement); //position 1 didn't exist yet. skipping position 1
+			}
 			structuredDiffElement = new HashMap<String, StringBuilder>();
 			structuredDiffElement.put("leftFileContent", null);
 			structuredDiffElement.put("rightFileContent", null);
 			structuredDiffElement.put("bothFilesContent", new StringBuilder());
-			newElement = true;
+			newPosition = true;
 		}
 
 		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(diffLine + "\n"));
 		
-		if (newElement) {
+		if (newPosition) {
 			structuredDiff.add(structuredDiffElement);
 		} else {
 			structuredDiff.set(position, structuredDiffElement);
@@ -48,11 +55,19 @@ public class PreMerge {
 	
 	public void addDifferences(String diffLine, int position) {
 		HashMap<String, StringBuilder> structuredDiffElement = null;
-		
 		boolean newPosition = false;
-		try {
+		
+		if (position < this.structuredDiff.size()) {
 			structuredDiffElement = structuredDiff.get(position);
-		} catch (IndexOutOfBoundsException e) {
+		} else { //create a new position
+			if (diffLine == null) { //flag indicating this is the last element
+				structuredDiffElement = new HashMap<String, StringBuilder>();
+				structuredDiffElement.put("leftFileContent", null);
+				structuredDiffElement.put("rightFileContent", null);
+				structuredDiffElement.put("bothFilesContent", null);
+				this.structuredDiff.add(structuredDiffElement); //forcing always terminate with differences. It will be easier processing later
+				return;
+			}
 			structuredDiffElement = new HashMap<String, StringBuilder>();
 			structuredDiffElement.put("leftFileContent", new StringBuilder());
 			structuredDiffElement.put("rightFileContent", new StringBuilder());
@@ -67,9 +82,7 @@ public class PreMerge {
 			structuredDiffElement.put("leftFileContent", structuredDiffElement.get("leftFileContent").append(trueLine));
 		} else if ("+".equals(diffFileSinal)) {
 			structuredDiffElement.put("rightFileContent", structuredDiffElement.get("rightFileContent").append(trueLine));
-		}
-		//this next line probably could be removed
-		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(trueLine));	
+		}	
 	
 		if (newPosition) {
 			structuredDiff.add(structuredDiffElement);
@@ -77,96 +90,66 @@ public class PreMerge {
 			structuredDiff.set(position, structuredDiffElement);
 		}
 	}
-	
-	private FirstAndSecondGroupsFounded findFirstTwoGroupsMatched(Matcher matcher, int firstGroupPosition) {
-		//possible "feature": transform in recursive algorithm
-		//or just transform to looking for just one group. It will be necessary call 2 times.
-		
-		int secondGroupPosition = firstGroupPosition + 2;
-		
-		if (firstGroupPosition < 0 || firstGroupPosition > matcher.groupCount()) {
-			return new FirstAndSecondGroupsFounded(-1, -1); //start not found
-		}
-
-		//looking for the first
-		while (matcher.group(firstGroupPosition) == null && firstGroupPosition + 2 <= matcher.groupCount()) {
-			firstGroupPosition += 2;
-		}
-
-		if (matcher.group(firstGroupPosition) == null) {
-			return new FirstAndSecondGroupsFounded(-1, -1); //start not found
-		}
-
-		secondGroupPosition = firstGroupPosition + 2;
-		
-		if (secondGroupPosition > matcher.groupCount()) {
-			return new FirstAndSecondGroupsFounded(firstGroupPosition, -1); //end not found
-		}
-		
-		//looking for the second
-		while (matcher.group(secondGroupPosition) == null && secondGroupPosition + 2 <= matcher.groupCount()) {
-			secondGroupPosition += 2;
-		}
-		
-		if (matcher.group(secondGroupPosition) == null) {
-			return new FirstAndSecondGroupsFounded(firstGroupPosition, -1); //end not found
-		}
-
-		return new FirstAndSecondGroupsFounded(firstGroupPosition, secondGroupPosition);
-	}
 
 	public File merge(Matcher matcher, File destiny) {
+		/* 
+		 * our regular expression always return equalities at even positions and differences at odd positions
+		 */
+		
 		BufferedWriter bufferedWriterMerge = null;
 
 		try {			
 			bufferedWriterMerge = new BufferedWriter(new FileWriter(destiny));
-
-			int firstGroupPointer = 0;
-			boolean allMatcherProcessed = false;
-			FirstAndSecondGroupsFounded firstAndSecondGroupsFounded = null;
 			
-			while (!allMatcherProcessed) {
-				firstAndSecondGroupsFounded = this.findFirstTwoGroupsMatched(matcher, firstGroupPointer);
-				
-				if (firstAndSecondGroupsFounded.isConsecutive()) {
-					int indexMiddleDifferences = firstAndSecondGroupsFounded.getFirstGroup() + 1;
-					String middleDifferences = matcher.group(indexMiddleDifferences);
-
-					if (middleDifferences.equals(this.getLeftFileContent(indexMiddleDifferences))) {
-						bufferedWriterMerge.write(this.getRightFileContent(indexMiddleDifferences));
-						System.out.print(this.getRightFileContent(indexMiddleDifferences));
-					} else if (middleDifferences.equals(this.getRightFileContent(indexMiddleDifferences))) {
-						bufferedWriterMerge.write(this.getLeftFileContent(indexMiddleDifferences));
-						System.out.print(this.getLeftFileContent(indexMiddleDifferences));
-					} else {
-						//conflict
-						this.printConflict(bufferedWriterMerge, indexMiddleDifferences);
-					}
-					bufferedWriterMerge.write(this.getBothFilesContent(firstAndSecondGroupsFounded.getSecondGroup()));
-					System.out.print(this.getBothFilesContent(firstAndSecondGroupsFounded.getSecondGroup()));
-				} else { //base file coudn't help, so print the result of diff
-					if (firstAndSecondGroupsFounded.getFirstGroup() == -1) { //there aren't more groups, so all groups were processed
-						allMatcherProcessed = true;
-					} else { //there are one or more groups to process yet
-						int endOfFor = firstAndSecondGroupsFounded.getSecondGroup(); //print until the next group
-						if (firstAndSecondGroupsFounded.getSecondGroup() == -1) { //if there isn't another group
-							endOfFor = matcher.groupCount() - 1; //I will just print until the end of matcher and finish the process
-							allMatcherProcessed = true; 
-						}
-
-						for (int arrayPosition = firstAndSecondGroupsFounded.getFirstGroup() + 1; arrayPosition <= endOfFor; arrayPosition++) {
-							if (arrayPosition % 2 != 0) { //even positions contains content present in both files and odd positions the differences
-								printConflict(bufferedWriterMerge, arrayPosition);
-							} else {
-								bufferedWriterMerge.write(this.getBothFilesContent(arrayPosition));
-								System.out.print(this.getBothFilesContent(arrayPosition));
-							}
-						}
-					}
-				}
-				firstGroupPointer = firstAndSecondGroupsFounded.getSecondGroup();
+			int firstArrayPosition = 1;
+			//if diff file started with differences so...
+			if (this.getLeftFileContent(firstArrayPosition) != null && this.getRightFileContent(firstArrayPosition) != null) {
+				bufferedWriterMerge.write(this.doMerge(matcher, firstArrayPosition));
+				System.out.print(this.doMerge(matcher, firstArrayPosition));
 			}
 
+			boolean allMatcherProcessed = false;
+			FirstAndSecondGroupsFounded groupsFounded = null;
+			int firstGroupPosition = 2;
+			
+			while (!allMatcherProcessed) {
+				groupsFounded = this.findFirstTwoGroupsMatched(matcher, firstGroupPosition);
+				
+				if (groupsFounded.isConsecutive()) {
+					//print the group
+					bufferedWriterMerge.write(this.getBothFilesContent(firstGroupPosition));
+					System.out.print(this.getBothFilesContent(firstGroupPosition));
+					
+					//print the result of merging the differences between this group and the second
+					bufferedWriterMerge.write(this.doMerge(matcher, firstGroupPosition + 1));
+					System.out.print(this.doMerge(matcher, firstGroupPosition + 1));
+				} else if (groupsFounded.hasBothGroups()) { //base file coudn't help
+					//print the result of diff2 until the next group
+					for (int arrayPosition = groupsFounded.getFirstGroup(); arrayPosition < groupsFounded.getSecondGroup(); arrayPosition++) {
+						bufferedWriterMerge.write(this.doSimpleMerge(matcher, arrayPosition));
+						System.out.print(this.doSimpleMerge(matcher, arrayPosition));
+					}
+				} else if (groupsFounded.hasOnlyFirstGroup()) { //base file coudn't help
+					//print the result of diff2 until the end
+					int lastGroupPosition = this.structuredDiff.size() - 1;
+					for (int arrayPosition = groupsFounded.getFirstGroup(); arrayPosition < lastGroupPosition; arrayPosition++) {
+						bufferedWriterMerge.write(this.doSimpleMerge(matcher, arrayPosition));
+						System.out.print(this.doSimpleMerge(matcher, arrayPosition));
+					}
+				} else if (groupsFounded.hasNoMoreGroups()) { //all groups and were processed
+					//pode só ter diferencas
+					allMatcherProcessed = true;
+				}
+				firstGroupPosition = groupsFounded.getSecondGroup();
+			}
+
+			int lastArrayPosition = this.structuredDiff.size() - 1;
+			//if diff file ended with differences so...
+			if (this.getLeftFileContent(lastArrayPosition) != null && this.getRightFileContent(lastArrayPosition) != null) {
+				bufferedWriterMerge.write(this.doMerge(matcher, lastArrayPosition));
+				System.out.print(this.doMerge(matcher, lastArrayPosition));				
+			}
+			
 			bufferedWriterMerge.close();
 			return destiny;
 		} catch (IOException e) {
@@ -175,33 +158,79 @@ public class PreMerge {
 		}
 	}
 
-	private void printConflict(BufferedWriter bufferedWriterMerge, int indexMiddleDifferences) throws IOException {
-		bufferedWriterMerge.write("<<<<<<<<<<<<<\n");
-		System.out.println("<<<<<<<<<<<<<");
-		
-		bufferedWriterMerge.write(this.getLeftFileContent(indexMiddleDifferences));
-		System.out.print(this.getLeftFileContent(indexMiddleDifferences));
+	private String doMerge(Matcher matcher, int arrayPosition) {
+		StringBuilder ret = new StringBuilder();
 
-		bufferedWriterMerge.write("=============\n");
-		System.out.println("=============");
+		String baseContent = matcher.group(arrayPosition);
 
-		bufferedWriterMerge.write(this.getRightFileContent(indexMiddleDifferences));
-		System.out.print(this.getRightFileContent(indexMiddleDifferences));
+		if (baseContent.equals(this.getLeftFileContent(arrayPosition))) {
+			ret.append(this.getRightFileContent(arrayPosition));
+		} else if (baseContent.equals(this.getRightFileContent(arrayPosition))) {
+			ret.append(this.getLeftFileContent(arrayPosition));
+		} else {
+			//conflict
+			ret.append(this.printConflict(matcher, arrayPosition));
+		}
+		return ret.toString();
+	}
+	
+	private String doSimpleMerge(Matcher matcher, int arrayPosition) {
+		StringBuilder ret = new StringBuilder();
+
+		if (arrayPosition % 2 == 0) { //even positions contains content present in both files 
+			ret.append(this.getBothFilesContent(arrayPosition));
+		} else { //odd positions contains the differences
+			ret.append(this.printConflict(matcher, arrayPosition));
+		}
+		return ret.toString();
+	}
+	
+	private String printConflict(Matcher matcher, int arrayPosition) {
+		StringBuilder ret = new StringBuilder();
 		
-		bufferedWriterMerge.write(">>>>>>>>>>>>>\n");
-		System.out.println(">>>>>>>>>>>>>");
+		ret.append("<<<<<<<<<<<<<\n");
+		ret.append(this.getLeftFileContent(arrayPosition));
+		ret.append("=============\n");
+		ret.append(this.getRightFileContent(arrayPosition));
+		ret.append(">>>>>>>>>>>>>\n");
+		
+		return ret.toString();
 	}
 	
 	public String getLeftFileContent(int position) {
-		return this.structuredDiff.get(position).get("leftFileContent").toString();
+		StringBuilder leftContent = this.structuredDiff.get(position).get("leftFileContent");
+		return leftContent != null ? leftContent.toString() : null;  
 	}
 	
 	public String getRightFileContent(int position) {
-		return this.structuredDiff.get(position).get("rightFileContent").toString();
+		StringBuilder rightContent = this.structuredDiff.get(position).get("rightFileContent");
+		return rightContent != null ? rightContent.toString() : null;
 	}
 	
 	public String getBothFilesContent(int position) {
-		return this.structuredDiff.get(position).get("bothFilesContent").toString();
+		StringBuilder bothContent = this.structuredDiff.get(position).get("bothFilesContent");
+		return bothContent != null ? bothContent.toString() : null;
+	}
+	
+	private FirstAndSecondGroupsFounded findFirstTwoGroupsMatched(Matcher matcher, int firstCandidate) {
+		int first = this.findFirstGroupMatched(matcher, firstCandidate);
+		int second = this.findFirstGroupMatched(matcher, first > 0 ? first + 2 : -1);
+		return new FirstAndSecondGroupsFounded(first, second);
+	}
+	
+	private int findFirstGroupMatched(Matcher matcher, int firstCandidate) {
+		if (firstCandidate < 0 || firstCandidate > matcher.groupCount()) {
+			return -1; //group doesn't exist
+		}
+		//looking for the group
+		while (matcher.group(firstCandidate) == null && firstCandidate + 2 <= matcher.groupCount()) {
+			firstCandidate += 2;
+		}
+		//groupCount has finished and I didn't find a group
+		if (matcher.group(firstCandidate) == null) {
+			return -1;
+		}
+		return firstCandidate;
 	}
 }
 
@@ -213,10 +242,23 @@ class FirstAndSecondGroupsFounded {
 		this.firstGroup = firstGroup;
 		this.secondGroup = secondGroup;
 	}
-	
+
 	public boolean isConsecutive() {
 		return secondGroup == (firstGroup + 2);
 	}
+
+	public boolean hasBothGroups() {
+		return (firstGroup > 0) && (secondGroup > 0);
+	}
+
+	public boolean hasOnlyFirstGroup() {
+		return (firstGroup > 0) && (secondGroup == -1);
+	}
+	
+	public boolean hasNoMoreGroups() {
+		return (firstGroup == -1) && (secondGroup == -1);
+	}
+
 	public int getFirstGroup() {
 		return firstGroup;
 	}

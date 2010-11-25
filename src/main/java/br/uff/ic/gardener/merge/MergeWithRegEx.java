@@ -96,6 +96,10 @@ public class MergeWithRegEx implements IMerge {
 				String bothSides = preMerge.getBothFilesContent(arrayPosition);
 				diffRegex.append("(.*(?=\\Q" + bothSides + "\\E))?(\\Q" + bothSides + "\\E)?");
 				readingEquals = false;
+
+				//forcing always terminate with differences. It will be easier processing later
+				arrayPosition++; //alloc new position to the differences
+				preMerge.addDifferences(null, arrayPosition);
 			} else if (readingDifferences) { //just for closing the differences flag
 				readingDifferences = false;
 			}
