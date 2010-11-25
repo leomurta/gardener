@@ -7,7 +7,7 @@ import br.uff.ic.gardener.RevisionID;
  * Configuration Item Class. Works like a Configuration Item data and metadata container.
  * 
  * @author Vitor Neves*/
-public class ConfigurationItem {
+public class ConfigurationItem implements Comparable<ConfigurationItem>{
 
 	/**InputStream source of CI data.
 	*/
@@ -103,5 +103,10 @@ public class ConfigurationItem {
 	public String toString()
 	{
 		return String.format("(%s, %s)", uri.getPath(), revision.toString());
+	}
+
+	@Override
+	public int compareTo(ConfigurationItem arg0) {
+		return getUri().compareTo(arg0.getUri());
 	}
 }

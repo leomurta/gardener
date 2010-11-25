@@ -3,6 +3,8 @@ package br.uff.ic.gardener.client;
 import java.io.File;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -207,13 +209,31 @@ public class APIClient {
 	 * Update the workspace to the last revision
 	 */
 	public void update() throws TransationException{
-		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
+		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
+		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout("", getComClient().getLastRevision(""), list);
+			getComClient().checkout("", RevisionID.LAST_REVISION, listServ);
+			getWorkspace().getCIsToCommit(listWork);
+			Collections.sort(listServ);
+			Collections.sort(listWork);
+			
+			Iterator<ConfigurationItem> is = listServ.iterator();
+			Iterator<ConfigurationItem> iw = listWork.iterator();
+			
+			while(is.hasNext() && iw.hasNext())
+			{
+				ConfigurationItem ciServ = is.next();
+				ConfigurationItem ciWork = iw.next();
+				//faz o merge
+			}
+			
+			
 		} catch (ComClientException e) {
 			throw new TransationException("Cannot realize update transation", e);
 		} catch (APIClientException e) {
 			throw new TransationException("Cannot realize update transation", e);
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
 		}
 		
 	}
