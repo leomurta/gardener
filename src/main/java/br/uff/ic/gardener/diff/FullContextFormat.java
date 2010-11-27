@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class FullContextFormat implements IFormat {
     /*
@@ -42,7 +42,11 @@ public class FullContextFormat implements IFormat {
                 outputWriter.println("+ " + line.getLine());
             } else {
                 outputWriter.println("  " + line.getLine());
-                line = (LinesBean) it.next();
+
+                //context lines are replicated, so jump extra one
+                //TODO see why the last has only one during tests of merge package
+                if(it.hasNext())
+                    it.next();
             }
         }
         outputWriter.close();
