@@ -71,8 +71,9 @@ public class MergeWithRegEx implements IMerge {
 		int arrayPosition = 0;
 		
 		BufferedReader diffBufferedReader = null;
+		File fileDiff = null;
 		try {
-			File fileDiff = DiffProxy.diff(file1, file2);
+			fileDiff = DiffProxy.diff(file1, file2);
 			
 			diffBufferedReader = new BufferedReader(new FileReader(fileDiff));
 
@@ -131,11 +132,20 @@ public class MergeWithRegEx implements IMerge {
 				readingDifferences = false;
 			}
 			diffRegex.append("(.*)"); //it's necessary always terminate with any characters
+
+			diffBufferedReader.close();
+			fileDiff.delete();
 		} catch (IOException e) {
 			throw new MergeException("Error accessing the file", e);
 		} finally {
 			try {
-				diffBufferedReader.close();
+				if (diffBufferedReader != null) {
+					diffBufferedReader.close();
+				}
+				
+				if (fileDiff != null) {
+					fileDiff.delete();	
+				}
 			} catch (IOException e) {
 				throw new MergeException("Error accessing the file", e);
 			}
