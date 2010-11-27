@@ -52,7 +52,7 @@ public class MergeContentStructured {
 			newPosition = true;
 		}
 
-		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(diffLine + "\n"));
+		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(diffLine.subSequence(2, diffLine.length()) + "\n"));
 		
 		if (newPosition) {
 			structuredDiff.add(structuredDiffElement);
@@ -84,7 +84,7 @@ public class MergeContentStructured {
 		}
 
 		String diffFileSinal = diffLine.substring(0, 1);
-		String trueLine = diffLine.subSequence(1, diffLine.length()) + "\n";
+		String trueLine = diffLine.subSequence(2, diffLine.length()) + "\n";
 		
 		if ("-".equals(diffFileSinal)) {
 			structuredDiffElement.put("leftFileContent", structuredDiffElement.get("leftFileContent").append(trueLine));
