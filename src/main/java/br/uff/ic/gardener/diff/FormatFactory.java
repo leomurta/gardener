@@ -4,11 +4,23 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ *
+ * @author Daniel
+ */
 public class FormatFactory {
 
+    /**
+     *
+     */
     public final String END_CONTEXT = "***************";
     private static String mainHeader = null;
 
+    /**
+     *
+     * @param formatName
+     * @return
+     */
     public static IFormat getFormatter(char formatName) {
         switch (formatName) {
             case 'c': //CONTEXT-FORMAT
@@ -25,34 +37,69 @@ public class FormatFactory {
         return getUnifiedFormatter();
     }
 
+    /**
+     *
+     * @return
+     */
     public static IFormat getNormalFormatter() {
         return new NormalFormat();
     }
 
+    /**
+     *
+     * @return
+     */
     public static IFormat getContextFormatter() {
         return new ContextFormat();
     }
 
+    /**
+     *
+     * @return
+     */
     public static IFormat getFullContextFormatter() {
         return new FullContextFormat();
     }
 
+    /**
+     *
+     * @return
+     */
     public static IFormat getLessContextFormatter() {
         return new LessContextFormat();
     }
 
+    /**
+     *
+     * @return
+     */
     public static IFormat getUnifiedFormatter() {
         return new UnifiedFormat();
     }
 
+    /**
+     *
+     * @param date
+     * @return
+     */
     public static String getFormatDateHour(Date date) {
         return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.mms").format(date);
     }
 
+    /**
+     *
+     * @param date
+     * @return
+     */
     public static String getDateHour(Date date) {
         return new SimpleDateFormat("yyMMddhhmm").format(date);
     }
 
+    /**
+     *
+     * @param file1
+     * @param file2
+     */
     public static void setMainHeader(File file1, File file2) {
         //*** from-file from-file-modification-time
         //--- to-file to-file-modification time
@@ -62,6 +109,10 @@ public class FormatFactory {
         mainHeader = headerF1 + "!!" + headerF2;
     }
 
+    /**
+     *
+     * @return
+     */
     public static String getMainHeader() {
         return mainHeader;
     }

@@ -8,8 +8,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ *
+ * @author Daniel
+ */
 public class NormalFormat implements IFormat {
 
+    /**
+     *
+     */
     public NormalFormat() {
     }
     /* -------------- DETAILS DESCRIPTION OF NORMAL FORMAT --------------
@@ -23,6 +30,10 @@ public class NormalFormat implements IFormat {
      * -------------------------------------------------------------------
      */
 
+    /**
+     *
+     * @param resultDiff
+     */
     @Override
     public void format(IResultDiff resultDiff) {
         List listLines = new ArrayList();
@@ -98,6 +109,15 @@ public class NormalFormat implements IFormat {
         outputWriter.close();
     }
 
+    /**
+     *
+     * @param format
+     * @param startLine1F
+     * @param finalLine1F
+     * @param startLine2F
+     * @param finalLine2F
+     * @return
+     */
     @Override
     public String getHeader(char format, int startLine1F, int finalLine1F, int startLine2F, int finalLine2F) {
         String addHeader = Integer.toString(startLine1F);

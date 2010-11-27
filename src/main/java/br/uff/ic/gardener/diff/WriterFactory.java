@@ -7,15 +7,28 @@ import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ *
+ * @author Daniel
+ */
 public class WriterFactory {
 
     private static PrintWriter stWriter = null;
     private static File stFile = null;
 
+    /**
+     *
+     * @param fileOutputName
+     */
     public synchronized static void setWriter(String fileOutputName){
         stWriter = createWriter(fileOutputName);
     }
 
+    /**
+     *
+     * @return
+     * @throws IOException
+     */
     public synchronized static PrintWriter getWriter() throws IOException {
         if(stWriter != null){
             return stWriter;
@@ -27,6 +40,10 @@ public class WriterFactory {
         return stWriter;
     }
 
+    /**
+     *
+     * @return
+     */
     public static File getFile(){
         return stFile;
     }
