@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class ResultLCS implements IResultDiff {
 

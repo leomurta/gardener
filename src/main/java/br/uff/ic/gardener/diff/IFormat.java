@@ -2,7 +2,7 @@ package br.uff.ic.gardener.diff;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public interface IFormat {
     /**

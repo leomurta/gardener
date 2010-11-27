@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class NormalFormat implements IFormat {
 

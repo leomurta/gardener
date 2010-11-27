@@ -4,7 +4,7 @@ import java.io.File;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class AlgorithmsFactory {
 

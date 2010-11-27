@@ -6,7 +6,7 @@ import java.util.Date;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class FormatFactory {
 

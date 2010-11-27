@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Daniel
+ * @author Fernanda
  */
 public class LCS implements IDiff {
 
