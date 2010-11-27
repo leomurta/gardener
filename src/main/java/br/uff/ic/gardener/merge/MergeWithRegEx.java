@@ -6,48 +6,75 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.naming.OperationNotSupportedException;
+
 public class MergeWithRegEx implements IMerge {
 
 	@Override
-	public File merge(File base, File file1, File file2, File destiny) {
+	public Boolean merge(File file1, File file2, File destinyFile) throws MergeException {
+		StringBuilder diffRegex = new StringBuilder("");
+		
+		MergeContentStructured mergeContentStructured = new MergeContentStructured(destinyFile);
+		
+		this.buildMergeContentStructuredAndRegEx(file1, file2, diffRegex, mergeContentStructured);
+		
+		this.printLogs(diffRegex, mergeContentStructured, null);
+		
+		return mergeContentStructured.mergeWithoutBaseContent();
+	}
+
+	@Override
+	public Boolean merge(File file1, File file2, File baseFile, File destinyFile) throws MergeException {
 
 		/* 
-		 * base file will be transformed in one line with \n separators between lines
+		 * base file will be transformed in one line with \n separators between lines 
 		 * 
 		 * diff file will be read creating groups of the same lines presents in both files
 		 * 
 		 * after that diff file will be matched across base file with a regular expression 
 		 * to discover which groups are presents in base file
 		 * 
-		 * those groups intervals can be used to discover the evolution of repository. which are newer
-		 * or older  
+		 * those groups intervals can be used to discover the evolution of repository. which are newer or older
+		 * 
+		 * Pattern p = Pattern.compile("(.*(?=BC))?(BC)?(.*(?=E))?(E)?(.*(?=FG))?(FG)?(.*(?=W))?(W)?(.*(?=X))?(X)?(.*)", Pattern.DOTALL);
+		 * (.*(?=BC))?(BC)? sequence of groups, this sequence represent BC group
+		 * (.*) end of any regular expression
+		 * base sample "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		 */
 
-		String baseFile = readBaseFile(base);
+		String baseFileContent = this.readBaseFile(baseFile);
 
 		StringBuilder diffRegex = new StringBuilder("");
+		
+		MergeContentStructured mergeContentStructured = new MergeContentStructured(destinyFile);
+		
+		this.buildMergeContentStructuredAndRegEx(file1, file2, diffRegex, mergeContentStructured);
+		
+		Pattern pattern = Pattern.compile(diffRegex.toString(), Pattern.DOTALL);
+		Matcher matcher = pattern.matcher(baseFileContent);
+		
+		this.printLogs(diffRegex, mergeContentStructured, matcher);
+		
+		return mergeContentStructured.merge(matcher);
+	}
 
-		//Pattern p = Pattern.compile("(.*(?=BC))?(BC)?(.*(?=E))?(E)?(.*(?=FG))?(FG)?(.*(?=W))?(W)?(.*(?=X))?(X)?(.*)", Pattern.DOTALL);
-		//(.*(?=BC))?(BC)?
-		//(.*)
-		//String base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private void buildMergeContentStructuredAndRegEx(File file1, File file2, StringBuilder diffRegex, MergeContentStructured mergeContentStructured) throws DiffException, MergeException {
 		
 		boolean readingDifferences = false;
 		boolean readingEquals = false;
 		
 		int arrayPosition = 0;
-		PreMerge preMerge = new PreMerge();
 		
+		BufferedReader diffBufferedReader = null;
 		try {
-			File fileDiff = diff(file1, file2);
-			BufferedReader diffBufferedReader = new BufferedReader(new FileReader(fileDiff));
+			File fileDiff = DiffProxy.diff(file1, file2);
+			
+			diffBufferedReader = new BufferedReader(new FileReader(fileDiff));
 
 			//reading the headers
 			String diffLine = null;
@@ -67,14 +94,14 @@ public class MergeWithRegEx implements IMerge {
 				if ("-".equals(diffFileSinal) || "+".equals(diffFileSinal)) {
 					if (!readingDifferences) {
 						if (readingEquals) {
-							String bothSides = preMerge.getBothFilesContent(arrayPosition);
+							String bothSides = mergeContentStructured.getBothFilesContent(arrayPosition);
 							diffRegex.append("(.*(?=\\Q" + bothSides + "\\E))?(\\Q" + bothSides + "\\E)?");
 							readingEquals = false;
 						}
 						readingDifferences = true; //start ou restart reading differences
 						arrayPosition++; //alloc new position to the differences
 					} 
-					preMerge.addDifferences(diffLine, arrayPosition);
+					mergeContentStructured.addDifferences(diffLine, arrayPosition);
 				} else { //text present in both files 
 					if (!readingEquals) {
 						if (readingDifferences) {
@@ -86,95 +113,68 @@ public class MergeWithRegEx implements IMerge {
 						}
 						arrayPosition++; //alloc new position to the equals
 					}
-					preMerge.addBothSides(diffLine, arrayPosition);
+					mergeContentStructured.addBothSides(diffLine, arrayPosition);
 				}
 				diffLine = diffBufferedReader.readLine();
 			}
 
 			if (readingEquals) {
 				//closing the last group of the regular expression
-				String bothSides = preMerge.getBothFilesContent(arrayPosition);
+				String bothSides = mergeContentStructured.getBothFilesContent(arrayPosition);
 				diffRegex.append("(.*(?=\\Q" + bothSides + "\\E))?(\\Q" + bothSides + "\\E)?");
 				readingEquals = false;
 
 				//forcing always terminate with differences. It will be easier processing later
 				arrayPosition++; //alloc new position to the differences
-				preMerge.addDifferences(null, arrayPosition);
+				mergeContentStructured.addDifferences(null, arrayPosition);
 			} else if (readingDifferences) { //just for closing the differences flag
 				readingDifferences = false;
 			}
 			diffRegex.append("(.*)"); //it's necessary always terminate with any characters
-
-			Pattern pattern = Pattern.compile(diffRegex.toString(), Pattern.DOTALL);
-			Matcher matcher = pattern.matcher(baseFile);
-			
-			this.printLogs(baseFile, diffRegex, preMerge, matcher);
-			
-			return preMerge.merge(matcher, destiny);
 		} catch (IOException e) {
-			System.out.println("Error accessing the file!!!");
-			return null;
-		}
-	}
-
-	private File diff(File file1, File file2) {
-//		Diff diff = new Diff(file1, file2, 'f');
-//		File diffResult = diff.getDiffResult();
-		// TODO usar modulo diff
-
-		//WORKAROUNDDD!!!!!!
-		
-		String diffFileName = null;
-		if (file1.getName().equals("test1Left.txt")) {
-			diffFileName = "test1Diff.txt";
-		} else if (file1.getName().equals("test2Left.txt")) {
-			diffFileName = "test2Diff.txt";
-		} else if (file1.getName().equals("test3Left.txt")) {
-			diffFileName = "test3Diff.txt";
-		} else if (file1.getName().equals("test4Left.txt")) {
-			diffFileName = "test4Diff.txt";
-		} else if (file1.getName().equals("test5Left.txt")) {
-			diffFileName = "test5Diff.txt";
-		}
-		String root = "/merge/";
-        String path = root + diffFileName;
-        URL in = this.getClass().getResource(path);
-        try {
-			return new File(in.toURI());
-		} catch (URISyntaxException e) {
-			System.out.println("Error accessing the resource!!!" + e);
-			return null;
+			throw new MergeException("Error accessing the file", e);
+		} finally {
+			try {
+				diffBufferedReader.close();
+			} catch (IOException e) {
+				throw new MergeException("Error accessing the file", e);
+			}
 		}
 	}
 
 	@Override
-	public OutputStream merge(InputStream base, InputStream file1, InputStream file2) {
-		// TODO Auto-generated method stub
-		return null;
+	public OutputStream merge(InputStream base, InputStream file1, InputStream file2) throws MergeException {
+		throw new MergeException("This operation with streams is not supported yet.", new OperationNotSupportedException());
+	}
+	
+	@Override
+	public OutputStream merge(InputStream file1, InputStream file2) throws MergeException {
+		throw new MergeException("This operation with streams is not supported yet.", new OperationNotSupportedException());
 	}
 
-	private Matcher printLogs(String baseFile, StringBuilder diffRegex, PreMerge preMerge, Matcher matcher) {
+	private void printLogs(StringBuilder diffRegex, MergeContentStructured mergeContentStructured, Matcher matcher) {
 		System.out.println("=================>>>>>>>>>>>>>>> Beginning of regular expression");
 		System.out.println(diffRegex);
 		System.out.println("<<<<<<<<<<<<<<<================= End of regular expression");
 
-		boolean result = false;
-		result = matcher.matches();
-
-		System.out.println("=================############### Beginning of groups");
-		// Get all groups for this match
-		for (int i = 0; i <= matcher.groupCount(); i++) {
-			String groupStr = matcher.group(i);
-			System.out.println(i + " - " + groupStr + " begin: " + matcher.start(i) + " end: " + (matcher.end(i) - 1));
+		if (matcher != null) {
+			boolean result = false;
+			result = matcher.matches();
+	
+			System.out.println("=================############### Beginning of groups");
+			// Get all groups for this match
+			for (int i = 0; i <= matcher.groupCount(); i++) {
+				String groupStr = matcher.group(i);
+				System.out.println(i + " - " + groupStr + " begin: " + matcher.start(i) + " end: " + (matcher.end(i) - 1));
+			}
+			System.out.println("=================############### End of groups");
+			
+			System.out.println("Match result: " + result);
+			System.out.println("Groups quantity: " + matcher.groupCount());
 		}
-		System.out.println("=================############### End of groups");
-		
-		System.out.println("Match result: " + result);
-		System.out.println("Groups quantity: " + matcher.groupCount());
-		
 		//differences
 		System.out.println("=================&&&&&&&&&&&&&&& Beginnig of structured differences");
-		for (HashMap<String, StringBuilder> element : preMerge.getDifferences()) {
+		for (HashMap<String, StringBuilder> element : mergeContentStructured.getDifferences()) {
 			
 			Iterator iterator = element.keySet().iterator();   
 			while (iterator.hasNext()) {  
@@ -186,14 +186,18 @@ public class MergeWithRegEx implements IMerge {
 			System.out.println("=================");
 		}
 		System.out.println("=================&&&&&&&&&&&&&&& End of structured differences");
-		return matcher;
 	}
 	
-	private static String readBaseFile(File base) {
+	private String readBaseFile(File base) {
+		if (base == null) {
+			return null;
+		}
+		
 		StringBuilder result = new StringBuilder();
 
+		BufferedReader baseBufferedReader = null;
 		try {
-			BufferedReader baseBufferedReader = new BufferedReader(new FileReader(base));
+			baseBufferedReader = new BufferedReader(new FileReader(base));
 			String baseLine = baseBufferedReader.readLine();
 
 			while (baseLine != null) {
@@ -203,6 +207,12 @@ public class MergeWithRegEx implements IMerge {
 			}
 		} catch (IOException e) {
 			System.out.println("Error accessing the file !!!");
+		} finally {
+			try {
+				baseBufferedReader.close();
+			} catch (IOException e) {
+				return null;
+			}
 		}
 		return result.toString();
 	}
