@@ -1,6 +1,8 @@
 package br.uff.ic.gardener.client;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,9 +13,11 @@ import java.util.List;
 
 import java.io.FileFilter;
 
+import br.uff.ic.gardener.client.ClientMerge.ClientMergeException;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
+import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -42,6 +46,8 @@ public class APIClient {
 	{
 		return workspace.getServSource();
 	}
+	
+	private ClientMerge merge = null;
 	
 	/**
 	 * get APIClient of application
@@ -90,10 +96,13 @@ public class APIClient {
 	{
 		try
 		{
-			workspace = new Workspace (_uriWorkspace);			
+			workspace = new Workspace (_uriWorkspace);	
+			merge = new ClientMerge();
 		}catch(WorkspaceException e)
 		{
 			throw new APIClientException("Can not create Workspace", e);
+		} catch (IOException e) {
+			throw new APIClientException("Cannot create ClientMerge and generate IOException", e);
 		}
 		getWorkspace();
 		workspace.setServSource(_uriServ);		
@@ -162,13 +171,8 @@ public class APIClient {
 
 	public void addFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
 	{	
-		try
-		{
-			getWorkspace().addFiles(listFiles);
-		}catch(WorkspaceException e)
-		{
-			throw e;
-		}
+		getWorkspace().addFiles(listFiles);
+		
 	}
 
 	public void removeFiles(Collection<File> listFiles) throws APIClientException, WorkspaceException 
@@ -211,7 +215,7 @@ public class APIClient {
 	/**
 	 * Update the workspace to the last revision
 	 */
-	public void update() throws TransationException{
+	public void update(Collection<Conflict> conflicts) throws TransationException{
 		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
 		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
 		try {
@@ -223,13 +227,43 @@ public class APIClient {
 			Iterator<ConfigurationItem> is = listServ.iterator();
 			Iterator<ConfigurationItem> iw = listWork.iterator();
 			
+			ConfigurationItem ciServ = null;
+			ConfigurationItem ciWork = null;
 			while(is.hasNext() && iw.hasNext())
 			{
-				ConfigurationItem ciServ = is.next();
-				ConfigurationItem ciWork = iw.next();
+				if(ciServ == null)
+					ciServ = is.next();
+				if(ciWork == null)
+					ciWork = iw.next();
+				
 				//faz o merge
+				
+				String strServ = ciServ.getUri().getPath();
+				String strWork = ciWork.getUri().getPath();
+				
+				final int diff = strServ.compareTo(strWork);
+				if(0 == diff)//mesmo item
+				{
+					boolean conflict = merge(ciServ,ciWork);
+					if(conflict)
+					{
+						conflicts.add(new Conflict(ciServ.getUri(), ciWork.getUri()));
+					}
+					ciServ =is.next();
+					ciWork = is.next();
+				}else if (0 < diff) //strServ é menor. Grava ele no disco
+				{
+					addCIWorkspace(ciServ);
+					ciServ =is.next();
+					
+				}else //strServ é maior. faz nada, mantém o do ws
+				{
+					ciWork = is.next();
+				}
 			}
 			
+			//atribui a nova revisão ao workspace
+			workspace.setCurrentRevision(getComClient().getLastRevision(""));
 			
 		} catch (ComClientException e) {
 			throw new TransationException("Cannot realize update transation", e);
@@ -239,6 +273,40 @@ public class APIClient {
 			e.printStackTrace();
 		}
 		
+	}
+
+	private void addCIWorkspace(ConfigurationItem ci) throws WorkspaceException, APIClientException
+	{
+		getWorkspace().addNewCI(ci);
+	}
+
+	/**
+	 * faz merge de dos CIs. Nunca dá exceção pq a política por enquanto é deixar o erro do merge dentro do arquivo
+	 * @param ciServ
+	 * @param ciWork
+	 * @return if it cause conflict
+	 */
+	private boolean merge(ConfigurationItem ciServ, ConfigurationItem ciWork) {
+		try {
+			InputStream in = merge.merge(ciServ, ciWork, getWorkspace());
+			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciServ.getRevision());
+			getWorkspace().replaceCI(ci);
+			
+			return merge.lastConflict();
+		} catch (WorkspaceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MergeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClientMergeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true; 
 	}
 
 	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {

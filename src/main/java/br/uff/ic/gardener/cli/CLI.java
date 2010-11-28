@@ -30,6 +30,7 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.APIClientException;
+import br.uff.ic.gardener.client.Conflict;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.diff.Diff;
 import br.uff.ic.gardener.util.ANDFileFilter;
@@ -533,7 +534,12 @@ public class CLI {
 
 	private void onUpdate() throws TransationException
 	{
-		getClient().update();
+		List<Conflict> list =  new LinkedList<Conflict>();
+		getClient().update(list);
+		for(Conflict c: list)
+		{
+			System.out.println(String.format("The workspace file: %s has have conflict", c.getPathB().getPath()));
+		}
 	}
 	
 	/**
