@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,7 +16,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Queue;
 
 import br.uff.ic.gardener.ConfigurationItem;
@@ -212,7 +210,7 @@ public class Workspace {
 		
 		for(CIWorkspace ciFor: this.listICContent)
 		{
-			if(ciFor.getURI().equals(uri))
+			if(ciFor.equals(uri))
 				return ciFor;
 		}
 		return null;
@@ -873,22 +871,70 @@ public class Workspace {
 		strProjectName = "";
 	}
 
-	
-
-	/*private static void closeAll(Iterable<? extends CIWorkspace> list) {
-		for(CIWorkspace ci : list)
+	/**
+	 * replace a ci in the workspace with a new revision. Usage in the update system
+	 * @param ci
+	 * @throws WorkspaceException 
+	 */
+	public void replaceCI(ConfigurationItem ci) throws WorkspaceException {
+		ConfigurationItem ciOld = null;
+		for(CIWorkspace ciIt: listICContent)
 		{
-			InputStream is = ci.getInputStream();
-			if(is != null)
+			if(ciIt.equals(ci))
 			{
-				try {
-					is.close();
-				} catch (IOException e) {
-					//faz nada, é apenas por segurança este método, não conseguiu fechar quer dizer que há problema em outro lugar mas não aqui.
-				}
+				ciOld = new ConfigurationItem(ciIt.getURI(), null, RevisionID.ZERO_REVISION);
+				break;
 			}
 		}
 		
-	}*/
+		if(ciOld == null)
+		{
+			throw new WorkspaceException("Cannot replace a CI item: " + ci.toString(), null);
+		}
+		
+		//faz a substituição
+		File fOld = new File(this.getPath(), ciOld.getUri().getPath().toString());
+		if(!fOld.exists())
+			throw new WorkspaceException("File replaced do not exits: " + ci.toString(), null);
+		
+		try {
+			OutputStream fOut = new FileOutputStream(fOld);
+			UtilStream.copy(ci.getItemAsInputStream(), fOut);
+			fOut.close();
+		} catch (FileNotFoundException e) {
+			throw new WorkspaceException("File replaced not found: " + fOld.toString(), null);
+		} catch (IOException e) {
+			throw new WorkspaceException("File problem at io process: " + fOld.toString(), null);
+		}
+	}
+
+	public void addNewCI(ConfigurationItem ci) throws WorkspaceException 
+	{
+		File f = new File(getPath(), ci.getUri().getPath());
+		if(f.exists())
+			throw new WorkspaceException("File exists: " + f.toString(), null);
+		
+		FileOutputStream fOut;
+		try {
+			fOut = new FileOutputStream(f);
+			UtilStream.copy(ci.getItemAsInputStream(), fOut);
+		} catch (FileNotFoundException e) {
+			throw new WorkspaceException("File not found: " + f.toString(), e);
+		} catch (IOException e) {
+			throw new WorkspaceException("IOException " + f.toString(), e);
+		}
+		
+		try {
+			if(fOut != null)
+				fOut.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Collection<File> c = new ArrayList<File>(1);
+		c.add(f);		
+		addFiles(c);		
+	}
 }
 
