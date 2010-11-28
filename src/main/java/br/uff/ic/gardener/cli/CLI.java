@@ -38,6 +38,7 @@ import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.WorkspaceException;
+import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 
 /**
@@ -231,6 +232,9 @@ public class CLI {
 	 */
 	static private String[] preParser(String[] args)
 	{
+		if(args.length == 0)
+			return args;
+		
 		if(! args[0].startsWith("-"))
 		{
 			args[0] = "-" + args[0]; 			
@@ -341,11 +345,18 @@ public class CLI {
 			}
 			
 			switch (getOperation()) {
-			
+			case NULL:
+				System.out.println("Specify a command: ");
+				for(OPERATION op: OPERATION.values())
+				{
+					System.out.println(op.toString() +  ", ");
+				}
+			break;
 			case INIT:
 				if(listArguments.size() == 0)
 				{
 					System.err.println("Specify the project name to init.");
+					break;
 				}
 				onInit(listArguments.get(0));
 				break;
@@ -473,7 +484,25 @@ public class CLI {
 
 	private static void printError(String msg, Throwable error, CmdLineParser parser)
 	{
-		System.err.println(String.format("%s: %s", msg, error.getMessage()));
+		System.err.println(String.format("%s: %s%s%s%s", msg, error.getMessage(), UtilStream.getLineSeperator()
+				,"================================================================" 
+				,UtilStream.getLineSeperator()));
+		
+		System.err.println(String.format("Exception messages:"));
+		Throwable t = error;
+		while(t != null)
+		{
+			System.err.println(String.format("\t%s", t.toString()));
+			t= t.getCause();
+		}
+		System.err.println(String.format("%s%s%s", UtilStream.getLineSeperator()
+				,UtilStream.getLineSeperator()
+				,"================================================================"
+				,UtilStream.getLineSeperator()
+				));
+		System.err.println("Possible Commands:");
+		
+		
 		parser.printUsage(System.err);
 		System.err.println(parser.printExample(ExampleMode.ALL));
 		
