@@ -78,6 +78,9 @@ public class CLI {
 	@Option(name = "-m", aliases = "--message", metaVar = "MESSAGE", usage="Message to transations (Checkout, Checkin)")
 	private String strMessage = "";
 	
+	@Option(name = "-user", aliases = "--user", metaVar= "USER", usage="The user of manager the workspace. it is usage to send the user information to the serv in a commit")
+	private String strUser = null;
+	
 	// Other arguments
 	@Argument
 	private List<String> listArguments = new ArrayList<String>();
@@ -312,6 +315,9 @@ public class CLI {
 	private void internalDoMain(String[] args) {
 		CmdLineParser parser = new CmdLineParser(this);
 
+		if(strUser != null)
+			getClient().setUser(strUser);
+		
 		// default destiny
 		pathWorkspace = CLI.getActualPath();
 				
@@ -504,7 +510,7 @@ public class CLI {
 	 * @throws WorkspaceException
 	 */
 	private void onCommit() throws TransationException {
-			getClient().commit(this.strMessage, "cli");
+			getClient().commit(this.strMessage);
 	}
 
 	/**

@@ -36,6 +36,8 @@ public class APIClient {
 
 	private Workspace workspace = null;
 	
+	private String strUser = "anonymus";
+	
 	private URI getURIServ()
 	{
 		return workspace.getServSource();
@@ -141,12 +143,12 @@ public class APIClient {
 	 * @throws APIClientException 
 	 * @throws ComClientException 
 	 */
-	public RevisionID commit(String msg, String user) throws TransationException
+	public RevisionID commit(String msg) throws TransationException
 	{
 		List<ConfigurationItem> listCI = new LinkedList<ConfigurationItem>();
 		try {
 			this.getWorkspace().getCIsToCommit(listCI);
-			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, user, listCI);
+			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, getUser(), listCI);
 			this.getWorkspace().setCommited(id);
 			return id;
 		} catch (WorkspaceException e) {
@@ -260,6 +262,15 @@ public class APIClient {
 			RevisionID firstRevision, RevisionID lastRevision) throws APIClientException, ComClientException
 	{
 			getComClient().generateLog(coll, firstRevision, lastRevision);
+	}
+
+	public void setUser(String _strUser) {
+		strUser = _strUser;
+	}
+	
+	public final String getUser()
+	{
+		return strUser;
 	}
 
 }
