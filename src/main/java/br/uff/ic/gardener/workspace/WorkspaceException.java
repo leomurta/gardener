@@ -41,7 +41,7 @@ public class WorkspaceException extends Exception {
 	
 	public String toString()
 	{
-		return String.format("%s: CI=>%s; parent=>%s", ciCurrent, this.getCause()!=null?getCause():"null");
+		return String.format("%s: CI=>%s; parent=>%s", ciCurrent.toString(), this.getCause()!=null?getCause():"null");
 	}
 }
 

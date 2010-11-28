@@ -46,13 +46,13 @@ public class CIWorkspaceStatus extends CIWorkspace
 		status = otherStatus;
 	}
 	
-	public CIWorkspaceStatus(URI _uri, InputStream _stream, Status _status) {
-		super(_uri, _stream);
+	public CIWorkspaceStatus(URI _uri, Status _status) {
+		super(_uri);
 		status = _status;
 	}
 	
-	public CIWorkspaceStatus(URI _uri, InputStream _stream, Status _status, Date date, URI _oldURI) {
-		super(_uri, _stream, date);
+	public CIWorkspaceStatus(URI _uri, Status _status, Date date, URI _oldURI) {
+		super(_uri,  date);
 		status = _status;
 		oldURI =  _oldURI;
 		
@@ -71,7 +71,7 @@ public class CIWorkspaceStatus extends CIWorkspace
 	@Override
 	public String toString()
 	{
-		if(this.getURI() == null && this.getInputStream() == null)
+		if(this.getURI() == null /*&& this.getInputStream() == null*/)
 			return "NeverEqual";
 		
 		return String.format("%s \"%s\" \"%s\"", 
