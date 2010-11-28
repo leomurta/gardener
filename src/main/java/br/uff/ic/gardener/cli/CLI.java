@@ -37,6 +37,7 @@ import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.WorkspaceException;
+import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 
 /**
@@ -230,6 +231,9 @@ public class CLI {
 	 */
 	static private String[] preParser(String[] args)
 	{
+		if(args.length == 0)
+			return args;
+		
 		if(! args[0].startsWith("-"))
 		{
 			args[0] = "-" + args[0]; 			
@@ -340,7 +344,13 @@ public class CLI {
 			}
 			
 			switch (getOperation()) {
-			
+			case NULL:
+				System.out.println("Specify a command: ");
+				for(OPERATION op: OPERATION.values())
+				{
+					System.out.println(op.toString() +  ", ");
+				}
+			break;
 			case INIT:
 				if(listArguments.size() == 0)
 				{
