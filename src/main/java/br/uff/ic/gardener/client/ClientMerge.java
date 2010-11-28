@@ -11,7 +11,6 @@ import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.merge.IMerge;
 import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.merge.MergeWithRegEx;
-import br.uff.ic.gardener.patch.delta.FileInfo;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.Workspace;
@@ -25,6 +24,11 @@ public class ClientMerge {
 
 	public class ClientMergeException extends Exception
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 920405757395138678L;
+
 		public ClientMergeException(String msg, Throwable t) {
 			super(msg, t);			
 		}
