@@ -2,6 +2,10 @@ package br.uff.ic.gardener.diff;
 
 import java.io.File;
 
+/**
+ *
+ * @author Fernanda
+ */
 public class AlgorithmsFactory {
 
     static IDiff getComparator(File fileVersionOne, File fileVersionTwo) {

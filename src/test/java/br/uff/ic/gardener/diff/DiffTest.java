@@ -24,12 +24,12 @@ public class DiffTest {
     }
 
     /**
-     * 
+     *
      * @throws Exception
      */
     @Test
-    public void testDiffLaoTzuNormal() throws Exception {
-        testDiff("lao", "tzu", 'n');
+    public void testDiffLaoTzuFullContext() throws Exception {
+        testDiff("lao", "tzu", 'f');
     }
 
     /**
@@ -41,6 +41,15 @@ public class DiffTest {
         testDiff("lao", "tzu", 'l');
     }
 
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLaoTzuNormal() throws Exception {
+        testDiff("lao", "tzu", 'n');
+    }
+    
     /**
      *
      * @throws Exception

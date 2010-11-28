@@ -8,12 +8,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 
-public class PreMerge {
+public class MergeContentStructured {
 	
 	private ArrayList<HashMap<String, StringBuilder>> structuredDiff;
+	private BufferedWriter bufferedWriterMerge;
 	
-	public PreMerge() {
+	private Boolean hasConflict;
+	
+	public MergeContentStructured(File destiny) throws MergeException {
 		super();
+		try {
+			this.bufferedWriterMerge = new BufferedWriter(new FileWriter(destiny));
+		} catch (IOException e) {
+			throw new FileNotFoundException("Destiny not found.");
+		}
 		this.structuredDiff = new ArrayList<HashMap<String, StringBuilder>>();;
 		this.structuredDiff.add(new HashMap<String, StringBuilder>()); //skipping position 0
 	}
@@ -44,7 +52,7 @@ public class PreMerge {
 			newPosition = true;
 		}
 
-		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(diffLine + "\n"));
+		structuredDiffElement.put("bothFilesContent", structuredDiffElement.get("bothFilesContent").append(diffLine.subSequence(2, diffLine.length()) + "\n"));
 		
 		if (newPosition) {
 			structuredDiff.add(structuredDiffElement);
@@ -76,7 +84,7 @@ public class PreMerge {
 		}
 
 		String diffFileSinal = diffLine.substring(0, 1);
-		String trueLine = diffLine.subSequence(1, diffLine.length()) + "\n";
+		String trueLine = diffLine.subSequence(2, diffLine.length()) + "\n";
 		
 		if ("-".equals(diffFileSinal)) {
 			structuredDiffElement.put("leftFileContent", structuredDiffElement.get("leftFileContent").append(trueLine));
@@ -91,21 +99,16 @@ public class PreMerge {
 		}
 	}
 
-	public File merge(Matcher matcher, File destiny) {
+	public Boolean merge(Matcher matcher) throws MergeException {
 		/* 
 		 * our regular expression always return equalities at even positions and differences at odd positions
 		 */
-		
-		BufferedWriter bufferedWriterMerge = null;
 
-		try {			
-			bufferedWriterMerge = new BufferedWriter(new FileWriter(destiny));
-			
+		try {
 			int firstArrayPosition = 1;
 			//if diff file started with differences so...
 			if (this.getLeftFileContent(firstArrayPosition) != null && this.getRightFileContent(firstArrayPosition) != null) {
-				bufferedWriterMerge.write(this.doMerge(matcher, firstArrayPosition));
-				System.out.print(this.doMerge(matcher, firstArrayPosition));
+				this.writeResult(this.doMerge(matcher, firstArrayPosition));
 			}
 
 			boolean allMatcherProcessed = false;
@@ -117,25 +120,20 @@ public class PreMerge {
 				
 				if (groupsFounded.isConsecutive()) {
 					//print the group
-					bufferedWriterMerge.write(this.getBothFilesContent(firstGroupPosition));
-					System.out.print(this.getBothFilesContent(firstGroupPosition));
+					this.writeResult(this.getBothFilesContent(firstGroupPosition));
 					
 					//print the result of merging the differences between this group and the second
-					bufferedWriterMerge.write(this.doMerge(matcher, firstGroupPosition + 1));
-					System.out.print(this.doMerge(matcher, firstGroupPosition + 1));
+					this.writeResult(this.doMerge(matcher, firstGroupPosition + 1));
 				} else if (groupsFounded.hasBothGroups()) { //base file coudn't help
 					//print the result of diff2 until the next group
 					for (int arrayPosition = groupsFounded.getFirstGroup(); arrayPosition < groupsFounded.getSecondGroup(); arrayPosition++) {
-						bufferedWriterMerge.write(this.doSimpleMerge(matcher, arrayPosition));
-						System.out.print(this.doSimpleMerge(matcher, arrayPosition));
+						this.writeResult(this.doSimpleMerge(arrayPosition));
 					}
 				} else if (groupsFounded.hasOnlyFirstGroup()) { //base file coudn't help
 					//print the result of diff2 until the end
-					int lastGroupPosition = this.structuredDiff.size() - 1;
-					for (int arrayPosition = groupsFounded.getFirstGroup(); arrayPosition < lastGroupPosition; arrayPosition++) {
-						bufferedWriterMerge.write(this.doSimpleMerge(matcher, arrayPosition));
-						System.out.print(this.doSimpleMerge(matcher, arrayPosition));
-					}
+					int firstPosition = groupsFounded.getFirstGroup();
+					int lastPosition = this.structuredDiff.size() - 1;
+					this.doSimpleMergeWithDiff2Result(firstPosition, lastPosition);
 				} else if (groupsFounded.hasNoMoreGroups()) { //all groups and were processed
 					//pode só ter diferencas
 					allMatcherProcessed = true;
@@ -146,15 +144,25 @@ public class PreMerge {
 			int lastArrayPosition = this.structuredDiff.size() - 1;
 			//if diff file ended with differences so...
 			if (this.getLeftFileContent(lastArrayPosition) != null && this.getRightFileContent(lastArrayPosition) != null) {
-				bufferedWriterMerge.write(this.doMerge(matcher, lastArrayPosition));
-				System.out.print(this.doMerge(matcher, lastArrayPosition));				
+				this.writeResult(this.doMerge(matcher, lastArrayPosition));				
 			}
 			
-			bufferedWriterMerge.close();
-			return destiny;
+			this.bufferedWriterMerge.flush();
+			return this.hasConflict;
 		} catch (IOException e) {
-			System.out.println("Error accessing the file!!!");
-			return null;
+			throw new MergeException("Error writing the destiny file", e);
+		} finally {
+			try {
+				this.bufferedWriterMerge.close();
+			} catch (IOException e) {
+				throw new MergeException("Error writing the destiny file", e);
+			}
+		}
+	}
+
+	private void doSimpleMergeWithDiff2Result(int firstPosition, int lastPosition) throws IOException {
+		for (int arrayPosition = firstPosition; arrayPosition < lastPosition; arrayPosition++) {
+			this.writeResult(this.doSimpleMerge(arrayPosition));
 		}
 	}
 
@@ -169,23 +177,23 @@ public class PreMerge {
 			ret.append(this.getLeftFileContent(arrayPosition));
 		} else {
 			//conflict
-			ret.append(this.printConflict(matcher, arrayPosition));
+			ret.append(this.printConflict(arrayPosition));
 		}
 		return ret.toString();
 	}
 	
-	private String doSimpleMerge(Matcher matcher, int arrayPosition) {
+	private String doSimpleMerge(int arrayPosition) {
 		StringBuilder ret = new StringBuilder();
 
 		if (arrayPosition % 2 == 0) { //even positions contains content present in both files 
 			ret.append(this.getBothFilesContent(arrayPosition));
 		} else { //odd positions contains the differences
-			ret.append(this.printConflict(matcher, arrayPosition));
+			ret.append(this.printConflict(arrayPosition));
 		}
 		return ret.toString();
 	}
 	
-	private String printConflict(Matcher matcher, int arrayPosition) {
+	private String printConflict(int arrayPosition) {
 		StringBuilder ret = new StringBuilder();
 		
 		ret.append("<<<<<<<<<<<<<\n");
@@ -194,7 +202,42 @@ public class PreMerge {
 		ret.append(this.getRightFileContent(arrayPosition));
 		ret.append(">>>>>>>>>>>>>\n");
 		
+		if (this.hasConflict == null) {
+			this.hasConflict = new Boolean(true);
+		}
+		
 		return ret.toString();
+	}
+	
+	public Boolean mergeWithoutBaseContent() throws MergeException {
+		//print the result of diff2 until the end
+		
+		try {
+			int firstPosition = 1;
+			int lastPosition = this.structuredDiff.size() - 1;
+			
+			if (this.getLeftFileContent(firstPosition) != null && this.getRightFileContent(firstPosition) != null) {
+				this.writeResult(this.doSimpleMerge(firstPosition));
+			}
+			firstPosition = 2;
+
+			this.doSimpleMergeWithDiff2Result(firstPosition, lastPosition);
+			
+			if (this.getLeftFileContent(lastPosition) != null && this.getRightFileContent(lastPosition) != null) {
+				this.writeResult(this.doSimpleMerge(lastPosition));
+			}
+			
+			this.bufferedWriterMerge.flush();
+			return this.hasConflict;
+		} catch (IOException e) {
+			throw new MergeException("Error writing the destiny file", e);
+		} finally {
+			try {
+				this.bufferedWriterMerge.close();
+			} catch (IOException e) {
+				throw new MergeException("Error writing the destiny file", e);
+			}
+		}
 	}
 	
 	public String getLeftFileContent(int position) {
@@ -231,6 +274,11 @@ public class PreMerge {
 			return -1;
 		}
 		return firstCandidate;
+	}
+	
+	private void writeResult(String result) throws IOException {
+		this.bufferedWriterMerge.write(result);
+		System.out.print(result);
 	}
 }
 

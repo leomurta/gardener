@@ -10,20 +10,39 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ *
+ * @author Fernanda
+ */
 public class LCS implements IDiff {
 
     private LCSBean[][] arrayLcs;
     private List<LinesBean> linesFileOne = new ArrayList<LinesBean>();
     private List<LinesBean> columnFileTwo = new ArrayList<LinesBean>();
 
+    /**
+     *
+     */
     public LCS() {
     }
+    /**
+     *
+     * @param linesFileOne
+     * @param columnFileTwo
+     * @param arrayLCS
+     */
     public LCS(List<LinesBean> linesFileOne, List<LinesBean> columnFileTwo, LCSBean[][] arrayLCS) {
         this.linesFileOne = linesFileOne;
         this.columnFileTwo = columnFileTwo;
         this.arrayLcs = arrayLCS;
 
     }
+    /**
+     *
+     * @param fileVersionOne
+     * @param fileVersionTwo
+     * @return
+     */
     public IResultDiff diff(File fileVersionOne, File fileVersionTwo) {
         try {
             start(fileVersionOne, fileVersionTwo);
@@ -38,6 +57,12 @@ public class LCS implements IDiff {
         return result;
     }
 
+    /**
+     *
+     * @param baseFile
+     * @param comparedFile
+     * @throws IOException
+     */
     public void start(File baseFile, File comparedFile) throws IOException {
         String line = null;
         linesFileOne.add(null);
@@ -55,6 +80,10 @@ public class LCS implements IDiff {
         arrayLcs = new LCSBean[linesFileOne.size()][columnFileTwo.size()];
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean lcs() {
 
         int m = linesFileOne.size();
@@ -88,6 +117,10 @@ public class LCS implements IDiff {
         return lineOne.getLine().compareTo(lineTwo.getLine()) == 0;
     }
 
+    /**
+     *
+     * @return
+     */
     public IResultDiff printLCS() {
         List lcs = new ArrayList();
 

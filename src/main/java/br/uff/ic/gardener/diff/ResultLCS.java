@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ *
+ * @author Fernanda
+ */
 public class ResultLCS implements IResultDiff {
 
     private List fileVersionOne;
@@ -12,6 +16,12 @@ public class ResultLCS implements IResultDiff {
     private List lcs;
     private List result;
 
+    /**
+     *
+     * @param fileVersionOne
+     * @param fileVersionTwo
+     * @param lcs
+     */
     public ResultLCS(List fileVersionOne, List fileVersionTwo, List lcs) {
         this.fileVersionOne = fileVersionOne;
         this.fileVersionTwo = fileVersionTwo;
@@ -82,6 +92,13 @@ public class ResultLCS implements IResultDiff {
         setEndLine(lineF2, j, 2, Situation.ADDED);
     }
 
+    /**
+     *
+     * @param line
+     * @param id
+     * @param idFile
+     * @param situation
+     */
     public void setEndLine(LinesBean line, int id, int idFile, Situation situation) {
         if (line != null) {
             if ((line != null) && (!lcs.contains(line))) {
@@ -92,6 +109,13 @@ public class ResultLCS implements IResultDiff {
         }
     }
 
+    /**
+     *
+     * @param line
+     * @param id
+     * @param situation
+     * @param idFile
+     */
     public void setLinesBean(LinesBean line, int id, Situation situation, int idFile) {
         line.setSituation(situation);
         if (idFile == 1) {
@@ -102,30 +126,58 @@ public class ResultLCS implements IResultDiff {
         result.add(line);
     }
 
+    /**
+     *
+     * @return
+     */
     public List getFileVersionOne() {
         return fileVersionOne;
     }
 
+    /**
+     *
+     * @param fileVersionOne
+     */
     public void setFileVersionOne(List fileVersionOne) {
         this.fileVersionOne = fileVersionOne;
     }
 
+    /**
+     *
+     * @return
+     */
     public List getFileVersionTwo() {
         return fileVersionTwo;
     }
 
+    /**
+     *
+     * @param fileVersionTwo
+     */
     public void setFileVersionTwo(List fileVersionTwo) {
         this.fileVersionTwo = fileVersionTwo;
     }
 
+    /**
+     *
+     * @return
+     */
     public List getLcs() {
         return lcs;
     }
 
+    /**
+     *
+     * @param lcs
+     */
     public void setLcs(List lcs) {
         this.lcs = lcs;
     }
 
+    /**
+     *
+     * @return
+     */
     public List getResult() {
         return result;
     }
