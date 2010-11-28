@@ -34,6 +34,7 @@ public class ResultLCS implements IResultDiff {
         result = new ArrayList();
         int i = 0;
         int j = 0;
+        boolean finish = false;
         Iterator itF1 = fileVersionOne.iterator();
         Iterator itF2 = fileVersionTwo.iterator();
 
@@ -42,54 +43,39 @@ public class ResultLCS implements IResultDiff {
         lineF1 = (LinesBean) itF1.next();
         lineF2 = (LinesBean) itF2.next();
 
-        while (itF1.hasNext() && itF2.hasNext()) {
-            if ((lineF1 != null) && (lineF2 != null)) {
-                if ((lcs.contains(lineF1)) && (lcs.contains(lineF2))) {
-                    setLinesBean(lineF1, i, LinesBean.Situation.UNCHANGED, 1);
-                    setLinesBean(lineF2, j, LinesBean.Situation.UNCHANGED, 2);
+        while ((lineF1 != null && lineF2 != null) && (!finish)) {
+            if ((lcs.contains(lineF1)) && (lcs.contains(lineF2))) {
+                setLinesBean(lineF1, i, LinesBean.Situation.UNCHANGED, 1);
+                setLinesBean(lineF2, j, LinesBean.Situation.UNCHANGED, 2);
+                if (itF1.hasNext() && itF2.hasNext()) {
                     lineF1 = (LinesBean) itF1.next();
                     lineF2 = (LinesBean) itF2.next();
                     i++;
                     j++;
                 } else {
-                    if (!lcs.contains(lineF1)) {
-                        setLinesBean(lineF1, i, LinesBean.Situation.REMOVED, 1);
+                    finish = true;
+                }
+            } else {
+                if (!lcs.contains(lineF1)) {
+                    setLinesBean(lineF1, i, LinesBean.Situation.REMOVED, 1);
+                    if (itF1.hasNext()) {
                         lineF1 = (LinesBean) itF1.next();
                         i++;
                     } else {
-                        setLinesBean(lineF2, j, LinesBean.Situation.ADDED, 2);
+                        finish = true;
+                    }
+                } else {
+                    setLinesBean(lineF2, j, LinesBean.Situation.ADDED, 2);
+                    if (itF2.hasNext()) {
                         lineF2 = (LinesBean) itF2.next();
                         j++;
+                    } else {
+                        finish = true;
                     }
                 }
             }
-        }
-        while (itF1.hasNext()) {
-            if (lineF1 != null) {
-                if (!lcs.contains(lineF1)) {
-                    setLinesBean(lineF1, i, LinesBean.Situation.ADDED, 1);
-                } else {
-                    setLinesBean(lineF1, i, LinesBean.Situation.UNCHANGED, 1);
-                }
-            }
-            lineF1 = (LinesBean) itF1.next();
-            i++;
 
         }
-        setEndLine(lineF1, i, 1, Situation.REMOVED);
-
-        while (itF2.hasNext()) {
-            if (lineF2 != null) {
-                if (!lcs.contains(lineF2)) {
-                    setLinesBean(lineF2, j, LinesBean.Situation.ADDED, 2);
-                } else {
-                    setLinesBean(lineF2, j, LinesBean.Situation.UNCHANGED, 2);
-                }
-            }
-            lineF2 = (LinesBean) itF2.next();
-            j++;
-        }
-        setEndLine(lineF2, j, 2, Situation.ADDED);
     }
 
     /**
@@ -103,11 +89,14 @@ public class ResultLCS implements IResultDiff {
         if (line != null) {
             if ((line != null) && (!lcs.contains(line))) {
                 setLinesBean(line, id, situation, idFile);
-            } else {
-                setLinesBean(line, id, LinesBean.Situation.UNCHANGED, idFile);
             }
         }
     }
+//        }//else {
+    //      setLinesBean(line, id, LinesBean.Situation.UNCHANGED, idFile);
+    //}
+    //   }
+    // }
 
     /**
      *

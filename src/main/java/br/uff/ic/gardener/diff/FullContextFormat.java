@@ -21,8 +21,7 @@ public class FullContextFormat implements IFormat {
     @Override
     public void format(IResultDiff resultDiff) {
         LinesBean line = null;
-        boolean isNext = false;
-
+        
         PrintWriter outputWriter = null;
         try {
             outputWriter = WriterFactory.getWriter();
@@ -35,10 +34,7 @@ public class FullContextFormat implements IFormat {
         outputWriter.println();
 
         for (Iterator it = resultDiff.getResult().iterator(); it.hasNext();) {
-            if (!isNext) {
                 line = (LinesBean) it.next();
-                isNext = false; 
-             }
 
            if (line.getSituation() == LinesBean.Situation.REMOVED) {
                 outputWriter.println("- " + line.getLine());
@@ -50,7 +46,6 @@ public class FullContextFormat implements IFormat {
                 //context lines are replicated, so jump extra one
                 if(it.hasNext()){
                     it.next();
-                    isNext = true;
                 }
             }
         }
