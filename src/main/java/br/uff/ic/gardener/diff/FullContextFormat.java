@@ -49,7 +49,6 @@ public class FullContextFormat implements IFormat {
                 outputWriter.println("  " + line.getLine());
 
                 //context lines are replicated, so jump extra one
-                //TODO see why the last has only one during tests of merge package
                 if(it.hasNext()){
                     it.next();
                     isNext = true;
