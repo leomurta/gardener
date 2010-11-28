@@ -1,6 +1,5 @@
 package br.uff.ic.gardener.merge;
 
-import br.uff.ic.gardener.diff.DiffException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.naming.OperationNotSupportedException;
+
+import br.uff.ic.gardener.diff.DiffException;
 
 public class MergeWithRegEx implements IMerge {
 
@@ -139,9 +140,8 @@ public class MergeWithRegEx implements IMerge {
 		} catch (IOException e) {
 			throw new MergeException("Error accessing the file", e);
 		} catch (DiffException dEx){
-                        throw new MergeException("Error on diff", dEx);
-                }
-                finally {
+			throw new br.uff.ic.gardener.merge.DiffException("Error on diff", dEx);
+        } finally {
 			try {
 				if (diffBufferedReader != null) {
 					diffBufferedReader.close();

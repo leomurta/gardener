@@ -7,4 +7,8 @@ public class DiffException extends MergeException {
 	public DiffException(String string) {
 		super(string);
 	}
+	
+	public DiffException(String string, Throwable throwable) {
+		super(string, throwable);
+	} 
 }
