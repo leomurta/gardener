@@ -29,5 +29,19 @@ public class ComClientException extends Exception {
 		uriServ = _uriServ;
 		strCommand = _strCommand;
 	}
+	public ComClientException(String msg, Throwable parent)
+	{
+		this(msg, getDefaultCmd(), null, parent);
+	}
+	
+	public static String getDefaultCmd()
+	{
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		String cmd = "none";
+		if(stack.length > 0)
+			cmd = stack[stack.length-1].getMethodName();
+		return cmd;
+
+	}
 
 }

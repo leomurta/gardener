@@ -27,31 +27,27 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 	/**
 	 * InputStream source of CI
 	 * 	 */
-	private InputStream inputStream;
+	//private InputStream inputStream;
 	
 	
 	public CIWorkspace(URI _uri)
 	{
 		uri = _uri;
-		inputStream = null;
+	//	inputStream = null;
 	}
 	
 	public CIWorkspace(CIWorkspace other)
 	{
 		uri = other.getURI();
-		inputStream = other.getInputStream();
+	//	inputStream = other.getInputStream();
 		dateModified = other.getDateModified();
 	}
-	public CIWorkspace(URI _uri, InputStream _stream)
-	{
-		uri = _uri;
-		inputStream = _stream;
-	}
 	
-	public CIWorkspace(URI _uri, InputStream _stream, Date date)
+	
+	public CIWorkspace(URI _uri, Date date)
 	{
 		uri = _uri;
-		inputStream = _stream;
+	//	inputStream = _stream;
 		dateModified = date;
 	}
 	
@@ -75,10 +71,11 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 		return uri.getPath();
 	}
 	
-	public InputStream getInputStream()
+/*	public InputStream getInputStream()
 	{
 		return inputStream;
 	}
+	*/
 	@Override
 	public int compareTo(CIWorkspace arg0)
 	{

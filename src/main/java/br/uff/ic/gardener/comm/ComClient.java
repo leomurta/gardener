@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.Collection;
 
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 
 /**
@@ -21,7 +22,7 @@ public interface ComClient extends Closeable {
 	 * @return the new revision generate
 	 * @throws ComClientException
 	 */
-	RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items)
+	RevisionID commit(String strProject, String strMessage, String strUser, Collection<ConfigurationItem> items)
 			throws ComClientException;
 	
 	/**
@@ -58,6 +59,16 @@ public interface ComClient extends Closeable {
 	 * @return
 	 */
 	RevisionID getLastRevision(String strProject);
+
+	
+	/**
+	 * generateLog of the server
+	 * @param list list of revisions loggeds
+	 * @param revision the first revision. if equal to null, initiate at Revision 1.
+	 * @param lastRevision the last revision. if equal null, initiate at last Revision
+	 */
+	void generateLog(Collection<RevisionCommited> coll,
+			RevisionID firstRevision, RevisionID lastRevision) throws ComClientException;
 	
 
 }

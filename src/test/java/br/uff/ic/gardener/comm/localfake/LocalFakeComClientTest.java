@@ -2,6 +2,7 @@ package br.uff.ic.gardener.comm.localfake;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,7 +18,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.mongodb.io.StreamUtil;
+
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -30,22 +34,19 @@ import br.uff.ic.gardener.workspace.WorkspaceTest;
 
 public class LocalFakeComClientTest {
 
-	static
 	File pathWS = null;
 	
-	static
 	File pathServ = null;
 	
 	static ComClient comClient = null;
-	@BeforeClass
-	public static void setUpBeforeClass()
+	@Before
+	public void setUpBefore()
 	{
 		try
 		{
 			pathServ = FileHelper.createTemporaryRandomPath();
 			pathWS   = FileHelper.createTemporaryRandomPath();
 			
-			WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
 			
 			//cria serv
 			comClient = new LocalFakeComClient(pathServ);
@@ -59,8 +60,8 @@ public class LocalFakeComClientTest {
 	}
 
 	
-	@AfterClass
-	public static void tearDownAfterClass()
+	@After
+	public  void tearDownAfter()
 	{
 		try
 		{
@@ -81,15 +82,17 @@ public class LocalFakeComClientTest {
 	}
 
 	@Test
-	public void testCheckout() throws FileNotFoundException, ComClientException, LocalFakeComClientException 
+	public void testCheckout() throws ComClientException, LocalFakeComClientException, IOException 
 	{	
+		WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
 		List<ConfigurationItem> coll = new LinkedList<ConfigurationItem>();
 		comClient.checkout("teste", RevisionID.ZERO_REVISION, coll);
 	}
 
 	@Test
-	public void testCommit()
+	public void testCommit() throws IOException
 	{
+		WorkspaceTest.createWorkspaceStructDirAndFiles(pathWS, 2, 2, 2, false);
 		File pathTemp = null;
 		try {
 			pathTemp = FileHelper.createTemporaryRandomPath();
@@ -103,7 +106,7 @@ public class LocalFakeComClientTest {
 			
 				fillColl(pathWS, pathWS, list);
 			
-				comClient.commit("teste", "msg", list);
+				comClient.commit("teste", "msg", "", list);
 			}
 			{
 				List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
@@ -145,6 +148,48 @@ public class LocalFakeComClientTest {
 			coll.add(new ConfigurationItem(FileHelper.getRelative(radixPath, path), new FileInputStream(path), RevisionID.LAST_REVISION));
 		}
 		
+	}
+	
+	@Test
+	public void generateLogTest()
+	{
+		{
+		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
+		for(int i = 1; i <= 20; i++)
+		{
+			File f = new File(pathWS, String.format("%d.txt", i));
+			try {
+				f.createNewFile();
+				list.add(new ConfigurationItem(
+						FileHelper.getRelative(pathWS, f),
+						new ByteArrayInputStream(new byte[]{'a','b', 'c', ':', (byte) i}),
+						new RevisionID(i)
+						));
+				comClient.commit("", String.format("msg:%d", i), String.format("user:%d", i), list);
+			} catch (IOException e) {
+				fail("cannot create file " + f.toString());
+			} catch (ComClientException e) {
+				fail("cannot commClient" + f.toString());
+			}
+		}
+		}
+		
+		//depois que comitou tem de verificar o log
+		List<RevisionCommited> list = new LinkedList<RevisionCommited>();
+		try {
+			comClient.generateLog(list, new RevisionID(1), new RevisionID(20));
+		} catch (ComClientException e) {
+			fail("ComClient cannot generateLog");
+		}
+		
+		int i = 1; 
+		for(RevisionCommited rc: list)
+		{
+			assertEquals(String.format("msg:%d",i), rc.getMessage());
+			assertEquals(String.format("user:%d",i), rc.getUser());
+			assertEquals(new RevisionID(i), rc.getId());			
+			i++;
+		}
 	}
 
 }

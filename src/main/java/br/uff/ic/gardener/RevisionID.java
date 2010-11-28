@@ -89,4 +89,10 @@ public class RevisionID implements Comparable<RevisionID> {
 	public int compareTo(RevisionID arg0) {
 		return (int) (getNumber() - arg0.getNumber());
 	}
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		return this.revision == ((RevisionID)other).getNumber();
+	}
 }

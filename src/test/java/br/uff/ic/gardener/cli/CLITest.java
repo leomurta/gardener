@@ -297,6 +297,32 @@ public class CLITest {
 		assertTrue(ok);
 	}
 	
+	 /** Testa log após alguns commits
+	 */
+	@Test
+	public void SceneTestLog() throws IllegalArgumentException, IOException
+	{
+		CLI.doMain(new String[]{"init", "-w", pathWS.toString(), "-s", getStrServ(pathS), "abobora"});
+		
+
+		//cria as revisões
+		for(int i = 1; i <= 20; i++)
+		{
+			String nameFile = String.format("a_%d.txt", i);
+			File f;
+			f = FileHelper.createFile(pathWS, nameFile);
+			FileHelper.fillFile(f,String.format("file(%d)", i));
+			
+			
+			///faz o commit
+			CLI.doMain("add -w\"%s\" \"%s\"", pathWS.toString(), nameFile);
+			
+			CLI.doMain("-ci -w\"%s\" -s\"%s\" -m\"message(%d)\"", pathWS.toString(), getStrServ(pathS), i);			
+		}
+		
+		//faz o log
+		CLI.doMain("log -s\"%s\" -r\"%s:%s\"", getStrServ(pathS), new RevisionID(1), new RevisionID(20));
+	}
 	/**
 	 * Cria um arquivo a cada revisão. Depois verifica se eles estão no workspace durante vários checkouts
 	 * @throws IOException 

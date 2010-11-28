@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author Fernanda
  */
 public class FullContextFormat implements IFormat {
@@ -21,6 +20,8 @@ public class FullContextFormat implements IFormat {
      */
     @Override
     public void format(IResultDiff resultDiff) {
+        LinesBean line = null;
+        boolean isNext = false;
 
         PrintWriter outputWriter = null;
         try {
@@ -34,9 +35,12 @@ public class FullContextFormat implements IFormat {
         outputWriter.println();
 
         for (Iterator it = resultDiff.getResult().iterator(); it.hasNext();) {
-            LinesBean line = (LinesBean) it.next();
+            if (!isNext) {
+                line = (LinesBean) it.next();
+                isNext = false; 
+             }
 
-            if (line.getSituation() == LinesBean.Situation.REMOVED) {
+           if (line.getSituation() == LinesBean.Situation.REMOVED) {
                 outputWriter.println("- " + line.getLine());
             } else if (line.getSituation() == LinesBean.Situation.ADDED) {
                 outputWriter.println("+ " + line.getLine());
@@ -44,9 +48,10 @@ public class FullContextFormat implements IFormat {
                 outputWriter.println("  " + line.getLine());
 
                 //context lines are replicated, so jump extra one
-                //TODO see why the last has only one during tests of merge package
-                if(it.hasNext())
+                if(it.hasNext()){
                     it.next();
+                    isNext = true;
+                }
             }
         }
         outputWriter.close();
@@ -64,7 +69,6 @@ public class FullContextFormat implements IFormat {
     @Override
     public String getHeader(char formatType, int startLine1F, int finalLine1F, int startLine2F, int finalLine2F) {
         return null;
-
 
     }
 }

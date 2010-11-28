@@ -42,6 +42,42 @@ public class DiffTest {
     }
 
     /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft2Right2FullContext() throws Exception {
+        testDiff("left2", "right2", 'f');
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft3Right3FullContext() throws Exception {
+        testDiff("left3", "right3", 'f');
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft4Right4FullContext() throws Exception {
+        testDiff("left4", "right4", 'f');
+    }
+
+    /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft5Right5FullContext() throws Exception {
+        testDiff("left5", "right5", 'f');
+    }
+
+    /**
      * 
      * @throws Exception
      */

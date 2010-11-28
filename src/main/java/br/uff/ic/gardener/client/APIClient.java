@@ -3,6 +3,8 @@ package br.uff.ic.gardener.client;
 import java.io.File;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 
@@ -32,6 +35,8 @@ public class APIClient {
 	private ComClient comClient = null;
 
 	private Workspace workspace = null;
+	
+	private String strUser = "anonymus";
 	
 	private URI getURIServ()
 	{
@@ -143,7 +148,7 @@ public class APIClient {
 		List<ConfigurationItem> listCI = new LinkedList<ConfigurationItem>();
 		try {
 			this.getWorkspace().getCIsToCommit(listCI);
-			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, listCI);
+			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, getUser(), listCI);
 			this.getWorkspace().setCommited(id);
 			return id;
 		} catch (WorkspaceException e) {
@@ -207,13 +212,31 @@ public class APIClient {
 	 * Update the workspace to the last revision
 	 */
 	public void update() throws TransationException{
-		List<ConfigurationItem> list = new LinkedList<ConfigurationItem>();
+		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
+		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
 		try {
-			getComClient().checkout("", getComClient().getLastRevision(""), list);
+			getComClient().checkout("", RevisionID.LAST_REVISION, listServ);
+			getWorkspace().getCIsToCommit(listWork);
+			Collections.sort(listServ);
+			Collections.sort(listWork);
+			
+			Iterator<ConfigurationItem> is = listServ.iterator();
+			Iterator<ConfigurationItem> iw = listWork.iterator();
+			
+			while(is.hasNext() && iw.hasNext())
+			{
+				ConfigurationItem ciServ = is.next();
+				ConfigurationItem ciWork = iw.next();
+				//faz o merge
+			}
+			
+			
 		} catch (ComClientException e) {
 			throw new TransationException("Cannot realize update transation", e);
 		} catch (APIClientException e) {
 			throw new TransationException("Cannot realize update transation", e);
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
 		}
 		
 	}
@@ -227,6 +250,27 @@ public class APIClient {
 	{
 		if(workspace != null)workspace.close();
 		if(comClient != null)comClient.close();
+	}
+	
+	/**
+	 * generateLog of the server
+	 * @param list list of revisions logged
+	 * @param revision the first revision. if equal to null, initiate at Revision 1.
+	 * @param lastRevision the last revision. if equal null, initiate at last Revision
+	 */
+	public void generateLog(Collection<RevisionCommited> coll,
+			RevisionID firstRevision, RevisionID lastRevision) throws APIClientException, ComClientException
+	{
+			getComClient().generateLog(coll, firstRevision, lastRevision);
+	}
+
+	public void setUser(String _strUser) {
+		strUser = _strUser;
+	}
+	
+	public final String getUser()
+	{
+		return strUser;
 	}
 
 }
