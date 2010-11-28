@@ -33,6 +33,15 @@ public class DiffTest {
     }
 
     /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft1Right1FullContext() throws Exception {
+        testDiff("left1", "right1", 'f');
+    }
+
+    /**
      * 
      * @throws Exception
      */
@@ -142,6 +151,5 @@ public class DiffTest {
         File fDiffRef = new File(fileOutName + "_ref" + ext);
 
         TestHelper.assertResult(WriterFactory.getFile(), fDiffRef, 2);
-
     }
 }
