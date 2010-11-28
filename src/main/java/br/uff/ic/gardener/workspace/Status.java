@@ -5,7 +5,7 @@ package br.uff.ic.gardener.workspace;
  * @author Marcos
  *
  */
-enum Status
+public enum Status
 {
 	UNVER("Unversioned", "UNVER"),
 	ADD("Added", "ADD"),

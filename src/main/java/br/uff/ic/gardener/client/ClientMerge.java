@@ -75,6 +75,7 @@ public class ClientMerge {
 		File f = new File(pathTemp, Long.toString(fileID)+".tmp");
 		try {
 			f.createNewFile();
+			fileID++;
 		} catch (IOException e) {
 			throw new ClientMergeException("Error in create file" + f.toString(), e);
 		}
