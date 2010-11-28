@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author Fernanda
  */
 public class FullContextFormat implements IFormat {
@@ -70,7 +69,6 @@ public class FullContextFormat implements IFormat {
     @Override
     public String getHeader(char formatType, int startLine1F, int finalLine1F, int startLine2F, int finalLine2F) {
         return null;
-
 
     }
 }
