@@ -173,15 +173,15 @@ public class DiffTest {
     public void testDiff(String orig, String dest, char format) throws Exception {
         String subDir = TestHelper.getCurrentPath() + "/diff/";
         String ext = ".txt";
-        File fLao = new File(subDir + orig + ext);
-        File fTzu = new File(subDir + dest + ext);
+        File fOrig = new File(subDir + orig + ext);
+        File fDest = new File(subDir + dest + ext);
         String fileOutName = subDir + "diff_" + format + "_" + orig + "_" + dest;
 
         //Delete previous
         new File(fileOutName + ext).delete();
 
         WriterFactory.setWriter(fileOutName + ext);
-        Diff diff = new Diff(fLao, fTzu, format);
+        Diff diff = new Diff(fOrig, fDest, format);
         diff.setOutputFormat();
 
         File fDiffRef = new File(fileOutName + "_ref" + ext);
