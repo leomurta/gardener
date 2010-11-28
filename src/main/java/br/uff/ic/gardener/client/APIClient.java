@@ -18,6 +18,7 @@ import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 
@@ -140,12 +141,12 @@ public class APIClient {
 	 * @throws APIClientException 
 	 * @throws ComClientException 
 	 */
-	public RevisionID commit(String msg) throws TransationException
+	public RevisionID commit(String msg, String user) throws TransationException
 	{
 		List<ConfigurationItem> listCI = new LinkedList<ConfigurationItem>();
 		try {
 			this.getWorkspace().getCIsToCommit(listCI);
-			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, listCI);
+			RevisionID id = this.getComClient().commit(this.getWorkspace().getProjectName(), msg, user, listCI);
 			this.getWorkspace().setCommited(id);
 			return id;
 		} catch (WorkspaceException e) {
@@ -247,6 +248,18 @@ public class APIClient {
 	{
 		if(workspace != null)workspace.close();
 		if(comClient != null)comClient.close();
+	}
+	
+	/**
+	 * generateLog of the server
+	 * @param list list of revisions logged
+	 * @param revision the first revision. if equal to null, initiate at Revision 1.
+	 * @param lastRevision the last revision. if equal null, initiate at last Revision
+	 */
+	public void generateLog(Collection<RevisionCommited> coll,
+			RevisionID firstRevision, RevisionID lastRevision) throws APIClientException, ComClientException
+	{
+			getComClient().generateLog(coll, firstRevision, lastRevision);
 	}
 
 }

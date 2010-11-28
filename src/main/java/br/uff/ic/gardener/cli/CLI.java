@@ -7,6 +7,8 @@ package br.uff.ic.gardener.cli;
 
 import java.io.File;
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,16 +20,21 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.ExampleMode;
 import org.kohsuke.args4j.Option;
 
+import com.mongodb.io.StreamUtil;
+
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.TransationException;
 import br.uff.ic.gardener.client.APIClient;
 import br.uff.ic.gardener.client.APIClientException;
+import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.diff.Diff;
 import br.uff.ic.gardener.util.ANDFileFilter;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.GlobFilenameFilter;
 import br.uff.ic.gardener.util.NotDirectoryFileFilter;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
+import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 
@@ -65,6 +72,9 @@ public class CLI {
 	@Option(name = "-status", aliases = "--status", metaVar = "STATUS", usage = "Show status of workspace")
 	private boolean bStatus = false;
 	
+	@Option(name = "-log", aliases = "--log", metaVar = "LOG", usage = "Show log of system")
+	private boolean bLog = false;
+	
 	@Option(name = "-m", aliases = "--message", metaVar = "MESSAGE", usage="Message to transations (Checkout, Checkin)")
 	private String strMessage = "";
 	
@@ -81,7 +91,18 @@ public class CLI {
 	@SuppressWarnings("unused")
 	@Option(name = "-r", aliases = "--revision", metaVar = "REVISION", usage = "Specify the revision in checkout")
 	private void setRevision(String strRevision) {
-		revision = RevisionID.fromString(strRevision);
+		int pos = -1;
+		if((pos = strRevision.indexOf(':')) > 0)
+		{
+			String temp1 = strRevision.substring(0,pos);
+			String temp2 = strRevision.substring(pos+1, strRevision.length());
+			revision = RevisionID.fromString(temp1);
+			lastRevision = RevisionID.fromString(temp2);
+		}else
+		{
+			revision = RevisionID.fromString(strRevision);
+			lastRevision = null;
+		}
 	}
 	
 	/**
@@ -114,7 +135,12 @@ public class CLI {
 	@Option(name = "-u", aliases="--UnifiedFormat", metaVar="DIFF_UNIFIED_FORMAT", usage = "Use Unified Format")
 	private boolean bDiffUnifiedFormat = false;
 	
+	/**
+	 * Revision or first revision
+	 */
 	private RevisionID revision = RevisionID.LAST_REVISION;
+	
+	private RevisionID lastRevision = null;
 
 	/**
 	 * Define possible operations to CLI
@@ -123,7 +149,7 @@ public class CLI {
 	 *
 	 */
 	private enum OPERATION {
-		INIT, CHECKOUT, COMMIT, UPDATE, DIFF, ADD, REMOVE, RENAME, STATUS, NULL
+		INIT, CHECKOUT, COMMIT, UPDATE, DIFF, ADD, REMOVE, RENAME, STATUS, LOG, NULL
 	}
 
 	// private OPERATION operation = OPERATION.NULL;
@@ -153,6 +179,9 @@ public class CLI {
 			return OPERATION.RENAME;
 		}else if(bStatus){
 			return OPERATION.STATUS;
+		}else if(bLog)
+		{
+			return OPERATION.LOG;
 		}
 		else
 			return OPERATION.NULL;
@@ -294,24 +323,6 @@ public class CLI {
 			args = preParser(args);
 			// parse the arguments.
 			parser.parseArgument(args);
-			
-		/*	//trata do uriWorkspace e do uriServ
-			// trata URI sem file://
-			if (uriWorkspace.getHost() == null
-					|| uriWorkspace.getHost() == "") {
-				try {
-					uriWorkspace = new URI(
-							"file",
-							"", 
-							uriWorkspace.getPath(),
-							uriWorkspace.getFragment()
-							);
-				} catch (URISyntaxException e) {
-					e.printStackTrace();
-					return;
-				}
-			}
-			*/
 
 			if (uriServ != null) {
 				// trata URI sem file://
@@ -386,11 +397,14 @@ public class CLI {
 					onCheckout();
 			break;
 			case COMMIT:
-					onCommit(strMessage);
+					onCommit();
 			break;
 			
 			case STATUS:
 				onStatus();
+			break;
+			case LOG:
+				onLog();
 			break;
 			default:
 				// this will redirect the output to the specified output
@@ -409,6 +423,8 @@ public class CLI {
 		catch(APIClientException e)
 		{
 			printError("Controller error:", e, parser);
+		} catch (ComClientException e) {
+			printError("ComClinet error:", e, parser);
 		}
 	}
 	
@@ -420,6 +436,22 @@ public class CLI {
 		{
 			System.out.println(ci.toString());
 		}		
+	}
+	
+	private void onLog() throws APIClientException, ComClientException
+	{
+		LinkedList<RevisionCommited> list = new LinkedList<RevisionCommited>();
+		getClient().generateLog(list, revision, lastRevision);
+		
+		for(RevisionCommited rc: list)
+		{
+			String s = rc.getId().toString();
+			System.out.printf("Revision :%s%s", s, UtilStream.getLineSeperator());
+			DateFormat d = new SimpleDateFormat();
+			System.out.printf("\tDate   : %s%s", d.format(rc.getDateCommit()), UtilStream.getLineSeperator());
+			System.out.printf("\tUser   : %s%s", rc.getUser(), UtilStream.getLineSeperator());
+			System.out.printf("\tMessage: %s%s", rc.getMessage(), UtilStream.getLineSeperator());
+		}
 	}
 
 	/**
@@ -471,8 +503,8 @@ public class CLI {
 	 *
 	 * @throws WorkspaceException
 	 */
-	private void onCommit(String message) throws TransationException {
-			getClient().commit(message);
+	private void onCommit() throws TransationException {
+			getClient().commit(this.strMessage, "cli");
 	}
 
 	/**
