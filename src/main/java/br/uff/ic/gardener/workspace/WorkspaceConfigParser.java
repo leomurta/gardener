@@ -198,7 +198,6 @@ public class WorkspaceConfigParser
 					list.add(
 							new CIWorkspaceStatus(
 									new URI(strFile), 
-									generateInputStream(strFile),
 									Status.ADD,
 									workspace.getCheckoutTime(),
 									null));					
@@ -208,7 +207,6 @@ public class WorkspaceConfigParser
 					list.add(
 							new CIWorkspaceStatus(
 									new URI(strFile), 
-									null,
 									Status.REM,
 									workspace.getCheckoutTime(),
 									null
@@ -220,7 +218,6 @@ public class WorkspaceConfigParser
 						list.add(
 								new CIWorkspaceStatus(
 										new URI(strFile), 
-										generateInputStream(strFile),
 										Status.ADD,
 										workspace.getCheckoutTime(),
 										new URI(strFileOld)

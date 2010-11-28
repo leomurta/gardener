@@ -297,14 +297,14 @@ public class Workspace {
 					throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
 				}
 				
-				try {
-					CIWorkspace ci = new CIWorkspace(e.getUri(), new FileInputStream(f), new Date());
+				//try {
+					CIWorkspace ci = new CIWorkspace(e.getUri(), new Date());
 					this.listICContent.add(ci);
-				} catch (FileNotFoundException e1) {
+				/*} catch (FileNotFoundException e1) {
 					throw new WorkspaceException("Cannot open file", e1);
-				}
+			}*/
 			}
-
+			Collections.sort(listICContent);
 			this.saveConfig();
 		} catch (WorkspaceConfigParserException e) {
 			reset();
@@ -312,6 +312,16 @@ public class Workspace {
 		}
 	}
 
+	private 	static Collection<File> tempColl = new ArrayList<File>();
+	public void removeFile(File file) throws WorkspaceException 
+	{
+		synchronized(tempColl)
+		{
+			tempColl.clear();
+			tempColl.add(file);
+			removeFiles(tempColl);
+		}
+	}
 	
 	public void removeFiles(Collection<File> listFiles) throws WorkspaceException 
 	{
@@ -326,8 +336,23 @@ public class Workspace {
 					CIWorkspace ci = containItem(f);
 					if(ci != null)
 					{
-						listNewOperations.add(new CIWorkspaceStatus(ci.getURI(), null, Status.REM));
-						f.delete();
+						if(ci instanceof CIWorkspaceStatus && ((CIWorkspaceStatus)ci).getStatus() == Status.REM)
+						{
+							throw new WorkspaceException(null, String.format("O o arquivo %s já foi removido do Workspace", f.toString()), null);
+						}
+						
+						if(f.delete())
+							listNewOperations.add(new CIWorkspaceStatus(FileHelper.getRelative(getPath(), f), Status.REM));
+						else
+						{
+							while(qtdRemove > 0)
+							{
+								listNewOperations.removeLast();
+								qtdRemove--;
+							}
+							throw new WorkspaceException(null, String.format("Não foi possível remover o arquivo %s", f.toString()), null);
+						}
+							
 						qtdRemove ++;
 					}else
 					{
@@ -336,7 +361,7 @@ public class Workspace {
 							listNewOperations.removeLast();
 							qtdRemove--;
 						}
-						throw new WorkspaceException(null, String.format("O arquivo %s já foi removido do workspace", f.toString()), null);
+						throw new WorkspaceException(null, String.format("O arquivo %s não existe no workspace", f.toString()), null);
 					}
 				}
 			}
@@ -380,7 +405,7 @@ public class Workspace {
 						
 						URI uri = FileHelper.getRelative(getPath(), f);
 						
-						listNewOperations.add(new CIWorkspaceStatus(uri, null, Status.ADD));
+						listNewOperations.add(new CIWorkspaceStatus(uri, Status.ADD));
 						qtdAdd ++;
 					}else
 					{
@@ -429,7 +454,7 @@ public class Workspace {
 			File fileNew = new File(getPath(), strNewName);
 			fileSource.renameTo(fileNew);		
 			
-			listNewOperations.add(new CIWorkspaceStatus(getParser().getRelativeURI(fileSource.toURI()), null, Status.RENAME));
+			listNewOperations.add(new CIWorkspaceStatus(getParser().getRelativeURI(fileSource.toURI()), Status.RENAME));
 			saveConfig();
 		}catch(WorkspaceConfigParserException e)
 		{
@@ -537,19 +562,19 @@ public class Workspace {
 					list.add(f);
 				else if(f.isFile())
 				{
-					try {
+				//	try {
 						collReal.add(
 								new CIWorkspaceStatus(
 										FileHelper.getRelative(getPath(), f),
-										new FileInputStream(f),
+										/*new FileInputStream(f),*/
 										Status.UNVER,
 										new Date(f.lastModified()),
 										null
 									)
 								);
-					} catch (FileNotFoundException e) {
+				/*	} catch (FileNotFoundException e) {
 						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
-					}
+					}*/
 				}
 			}
 		}
@@ -581,7 +606,8 @@ public class Workspace {
 	
 		Collection<CIWorkspace> collOriginal = this.getOriginalCIContent();//já ordenado
 		
-		PriorityQueue<CIWorkspaceStatus> queueNew = new PriorityQueue<CIWorkspaceStatus>();
+		//PriorityQueue<CIWorkspaceStatus> queueNew = new PriorityQueue<CIWorkspaceStatus>();
+		List<CIWorkspaceStatus> queueNew = new ArrayList<CIWorkspaceStatus>(this.getOperations().size() + this.getNewOperations().size());
 		
 		for(CIWorkspaceStatus ciw: this.getOperations())
 		{
@@ -592,11 +618,14 @@ public class Workspace {
 		{
 			queueNew.add(ciw);
 		}
+		Collections.sort(queueNew);
 		
-		PriorityQueue<CIWorkspaceStatus> queueReal = new PriorityQueue<CIWorkspaceStatus>();
+		//PriorityQueue<CIWorkspaceStatus> queueReal = new PriorityQueue<CIWorkspaceStatus>();
+		List<CIWorkspaceStatus> queueReal = new ArrayList<CIWorkspaceStatus>(queueNew.size());
 		
 		try {
 			loadRealICContent(queueReal);
+			Collections.sort(queueReal);
 		} catch (WorkspaceConfigParserException e) {
 			throw new WorkspaceException(null, "Não foi possível verificar o conteúdo atual do workspace", e);
 		}
@@ -610,20 +639,23 @@ public class Workspace {
 		CIWorkspaceStatus real = itReal.hasNext()?itReal.next():null;
 		
 		while(or != null || mod != null || real != null)
-		{
+		{	
 			if(minus(or, mod) && minus(or, real))
 			{
 				//5 caso, só 1
-				coll.add(new CIWorkspaceStatus(or, Status.VER_MISSED));
+				coll.add(new CIWorkspaceStatus(or, Status.VER_MISSED));				
 				or 	= pop(itOr);
 			}else if(minus(mod, or) && minus((CIWorkspace)mod, real))
 			{
 				//6 caso só 1
-				coll.add(new CIWorkspaceStatus(mod, Status.VER_MISSED));
+				if(mod.getStatus() == Status.REM)
+					coll.add(mod);
+				else
+					coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+				
 				mod	= pop(itMod);
 			}else if(minus(real, or) && minus((CIWorkspace)real,mod))
 			{
-				//7 caso só 1
 				coll.add(new CIWorkspaceStatus(real, Status.UNVER));
 				real= pop(itReal);
 			}
@@ -638,7 +670,12 @@ public class Workspace {
 			}else if(equals(or, mod))
 			{
 				//2 caso
-				coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+				if(mod.getStatus() == Status.REM)
+					coll.add(mod);
+				else
+					coll.add(new CIWorkspaceStatus(mod, mod.getStatus().getMissed()));
+					
+				
 				or 	= pop(itOr);
 				mod	= pop(itMod);
 			}else if(equals(mod, real))
@@ -778,6 +815,7 @@ public class Workspace {
 				throw new WorkspaceException(op, "Status invalid to setCommited operation", null);
 			}
 		}
+		Collections.sort(listICContent);
 		
 		this.listNewOperations.clear();
 		listOperations.clear();
@@ -822,20 +860,22 @@ public class Workspace {
 	{
 		checkoutTime = new Date();
 		currentRevision = RevisionID.NEW_REVISION;
-		closeAll(listICContent);
+	//	closeAll(listICContent);
 		listICContent.clear();
 		
-		closeAll(listNewOperations);
+	//	closeAll(listNewOperations);
 		listNewOperations.clear();
 		
-		closeAll(listOperations);
+	//	closeAll(listOperations);
 		listOperations.clear();
 		
 		servSource = null;
 		strProjectName = "";
 	}
 
-	private static void closeAll(Iterable<? extends CIWorkspace> list) {
+	
+
+	/*private static void closeAll(Iterable<? extends CIWorkspace> list) {
 		for(CIWorkspace ci : list)
 		{
 			InputStream is = ci.getInputStream();
@@ -849,6 +889,6 @@ public class Workspace {
 			}
 		}
 		
-	}
+	}*/
 }
 

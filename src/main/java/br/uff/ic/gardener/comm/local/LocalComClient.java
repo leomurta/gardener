@@ -11,6 +11,7 @@ import java.util.Date;
 
 
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -37,9 +38,22 @@ public class LocalComClient implements ComClient {
 		throw new ComClientException("Not implemented","checkout", null, null );
 	}
 
+
 	@Override
-	public RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items)
+	public void generateLog(Collection<RevisionCommited> coll,
+			RevisionID firstRevision, RevisionID lastRevision)
 			throws ComClientException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	@Override
+	public RevisionID commit(String strProject, String strMessage,
+			String strUser, Collection<ConfigurationItem> items)
+			throws ComClientException
+	{
+
 		
 		File pathTemp = null;
 		try {
@@ -70,7 +84,7 @@ public class LocalComClient implements ComClient {
 			throw new ComClientException("Não foi possível transformar os inputstreams para files temporários", "commit", getURIServ(), e);
 		}
 		
-		long r = 0;//Server.getInstance().getLastRevision(strProject);
+		long r = 0;
 		return new RevisionID(r);
 	}
 
@@ -92,8 +106,5 @@ public class LocalComClient implements ComClient {
 	public RevisionID getLastRevision(String strProject) {
 		return RevisionID.ZERO_REVISION;
 	}
-	
-	
-	
 	
 }

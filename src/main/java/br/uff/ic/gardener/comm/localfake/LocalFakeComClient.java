@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -17,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import java.util.Collection;
 
 import br.uff.ic.gardener.CIType;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
@@ -122,6 +124,24 @@ public class LocalFakeComClient implements ComClient {
 		try {
 			items.clear();
 			ZipEntry entry = null;
+			
+			//read the log file
+			{
+				ByteArrayOutputStream propOut = new ByteArrayOutputStream();
+				entry = zos.getNextEntry();
+				if(!entry.getName().equals("config"))
+				{
+					zos.close();
+					throw new LocalFakeComClientException("Cannot load config file in zip revision", "checkout", this.getURIServ(), null);
+				}
+				
+				UtilStream.copy(zos, propOut);
+				/*
+				ByteArrayInputStream propIn = new ByteArrayInputStream(propOut.toByteArray());
+				Properties prop = new Properties();
+				prop.load(propIn);*/
+				//não tem pq resgatar
+			}
 
 			while ((entry = zos.getNextEntry()) != null) {
 				ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -159,7 +179,7 @@ public class LocalFakeComClient implements ComClient {
 	}
 	
 	@Override
-	public RevisionID commit(String strProject, String strMessage, Collection<ConfigurationItem> items) throws ComClientException 
+	public RevisionID commit(String strProject, String strMessage, String strUser, Collection<ConfigurationItem> items) throws ComClientException 
 	{
 		// create a ZipOutputStream to zip the data to
 
@@ -170,11 +190,21 @@ public class LocalFakeComClient implements ComClient {
 		try {
 			zos = new ZipOutputStream(new FileOutputStream(getPathOfRevision(newRevision)));
 
+			//write the log file
+			{
+				ByteArrayOutputStream propOut = new ByteArrayOutputStream();
+				Properties prop = new Properties();
+				prop.setProperty("user", strUser );
+				prop.setProperty("message", strMessage);
+				prop.setProperty("date", Long.toString((new Date()).getTime()));
+				prop.store(propOut, "config of revision");
+				
+				zipInputStream("config", new ByteArrayInputStream(propOut.toByteArray()),zos);
+			}
 			// assuming that there is a directory named inFolder (If there
 			// isn't create one) in the same directory as the one the code runs
 			// from,
 			// call the zipDir method
-
 			for (ConfigurationItem ci : items) {
 				zipInputStream(ci.getStringID(),ci.getItemAsInputStream(), zos);
 			}
@@ -330,6 +360,78 @@ public class LocalFakeComClient implements ComClient {
 	public void init(String strProject) {
 		//fazNada pq ignora conceito de projeto
 	}
+	
+	/**
+	 * generateLog of the server
+	 * @param list list of revisions loggeds
+	 * @param revision the first revision. if equal to null, initiate at Revision 1.
+	 * @param lastRevision the last revision. if equal null, initiate at last Revision
+	 * @throws LocalFakeComClientException 
+	 */
+	@Override
+	public
+	void generateLog(Collection<RevisionCommited> coll,
+			RevisionID firstRevision, RevisionID lastRevision) throws ComClientException
+	{
+		if(firstRevision == null)
+			firstRevision = new RevisionID(1);
+		
+		if(lastRevision == null)
+			lastRevision = RevisionID.LAST_REVISION;
+		
+		if(firstRevision.compareTo(lastRevision)>= 0)
+			throw new LocalFakeComClientException("The fist revision should be smaller than last revision", null);
+		
+		///lê os itens
+		for(long i = firstRevision.getNumber(); i<=lastRevision.getNumber(); i++)
+		{
+			RevisionID r = new RevisionID(i);
+			
+			InputStream input=  null;
+			ZipInputStream zos = null;
+			
+			try {
+				input = new FileInputStream(getPathOfRevision(r));
+				zos = new ZipInputStream(input);
+			} catch (FileNotFoundException e) {
+				throw new ComClientException(
+						"Não foi possível achar o arquivo de revisão.", "generateLog", getURIServ(), e);
+			}
+			
+			ByteArrayOutputStream propOut = new ByteArrayOutputStream();
+			ZipEntry entry = null;
+			Properties prop = new Properties();
+			try {
+				entry = zos.getNextEntry();
+			
+				if(!entry.getName().equals("config"))
+				{
+					zos.close();
+					throw new LocalFakeComClientException("Cannot load config file in zip revision", "checkout", this.getURIServ(), null);
+				}
+				UtilStream.copy(zos, propOut);
+				prop.load(new ByteArrayInputStream(propOut.toByteArray()));
+				zos.close();
+			} catch (IOException e) {
+				try {
+					zos.close();
+				} catch (IOException e1) {
+				}
+				throw new LocalFakeComClientException("Error in get config in the zip of revision",e);
+			}
+			
+			String strUser = null;
+			String strMessage = null;
+			String strDate = null;
+			strUser = prop.getProperty("user" );
+			strMessage = prop.getProperty("message");
+			strDate = prop.getProperty("date");
+			RevisionCommited rc = new RevisionCommited(new RevisionID(i), strUser, strMessage, new Date(Long.parseLong(strDate)));
+			coll.add(rc);
+		}		
+	}
+	
+	
 
 	@Override
 	public RevisionID getLastRevision(String strProject) 
