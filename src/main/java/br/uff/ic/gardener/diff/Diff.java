@@ -28,7 +28,7 @@ public class Diff {
      * Runs the diff according to the comparison algorithm
      * @return Object IResultDiff
      */
-    public IResultDiff compare() {
+    public IResultDiff compare() throws DiffException {
         IDiff comparator = AlgorithmsFactory.getComparator(fileVersionOne, fileVersionTwo);
         return comparator.diff(fileVersionOne, fileVersionTwo);
     }
@@ -55,7 +55,7 @@ public class Diff {
     /**
      *
      */
-    public void setOutputFormat() {
+    public void setOutputFormat() throws DiffException {
         IResultDiff resultDiff = this.compare();
         this.createOutputFormat(resultDiff, format);
     }

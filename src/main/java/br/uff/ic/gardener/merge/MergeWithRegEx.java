@@ -1,5 +1,6 @@
 package br.uff.ic.gardener.merge;
 
+import br.uff.ic.gardener.diff.DiffException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -63,7 +64,7 @@ public class MergeWithRegEx implements IMerge {
 		return mergeContentStructured.merge(matcher);
 	}
 
-	private void buildMergeContentStructuredAndRegEx(File file1, File file2, StringBuilder diffRegex, MergeContentStructured mergeContentStructured) throws DiffException, MergeException {
+	private void buildMergeContentStructuredAndRegEx(File file1, File file2, StringBuilder diffRegex, MergeContentStructured mergeContentStructured) throws MergeException {
 		
 		boolean readingDifferences = false;
 		boolean readingEquals = false;
@@ -137,7 +138,10 @@ public class MergeWithRegEx implements IMerge {
 			fileDiff.delete();
 		} catch (IOException e) {
 			throw new MergeException("Error accessing the file", e);
-		} finally {
+		} catch (DiffException dEx){
+                        throw new MergeException("Error on diff", dEx);
+                }
+                finally {
 			try {
 				if (diffBufferedReader != null) {
 					diffBufferedReader.close();

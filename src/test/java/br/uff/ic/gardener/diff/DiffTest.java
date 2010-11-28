@@ -78,6 +78,15 @@ public class DiffTest {
     }
 
     /**
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDiffLeft6Right6FullContext() throws Exception {
+        testDiff("left6", "right6", 'f');
+    }
+
+    /**
      * 
      * @throws Exception
      */
