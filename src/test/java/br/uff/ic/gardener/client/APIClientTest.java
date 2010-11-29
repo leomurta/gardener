@@ -102,9 +102,9 @@ public class APIClientTest {
 		
 		//faz o update
 		{
-			APIClient client2 = new APIClient(ws2, new URI(getStrServ(fServ)));
+			APIClient client2 = new APIClient(fWS, new URI(getStrServ(fServ)));
 			List<Conflict> listC = new LinkedList<Conflict>();
-			client2.update(listC);			
+			client2.update(listC);
 		}
 		
 		//compara conteúdo dos workspaces
@@ -119,14 +119,14 @@ public class APIClientTest {
 	@Test
 	public void SceneStatus2()
 	{
-		client.init("noname");
+	/*	client.init("noname");
 			
 		File f1 = new File(fWS, "1.txt");
 		FileHelper.fillFile(f1,"1", "B", "Y", "C", "D", "E", "F");
 		
 		FileHelper.fillFile(f2,"A", "B", "C", "D", "E", "F");
 		
-		FileHelper.fillFile(f3,"A", "B", "C", "D", "E", "F");
+		FileHelper.fillFile(f3,"A", "B", "C", "D", "E", "F");*/
 	/*	1
 		B
 		Y
@@ -150,7 +150,7 @@ public class APIClientTest {
 		F*/
 
 
-		List<File> list = new LinkedList<File>();
+		/*List<File> list = new LinkedList<File>();
 		//FileHelper.findFiles(fWS, list, "**", true);
 		list.add(f1);
 		client.addFiles(list);
@@ -162,7 +162,7 @@ public class APIClientTest {
 		list.clear();
 		list.add(f2);
 		client.addFiles(list);
-		client.commit("segundo commit");
+		client.commit("segundo commit");*/
 	}
 
 }
