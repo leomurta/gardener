@@ -100,11 +100,11 @@ public class CLI {
 			String temp1 = strRevision.substring(0,pos);
 			String temp2 = strRevision.substring(pos+1, strRevision.length());
 			revision = RevisionID.fromString(temp1);
-			lastRevision = RevisionID.fromString(temp2);
+			prevRevision = RevisionID.fromString(temp2);
 		}else
 		{
 			revision = RevisionID.fromString(strRevision);
-			lastRevision = null;
+			prevRevision = null;
 		}
 	}
 	
@@ -143,7 +143,7 @@ public class CLI {
 	 */
 	private RevisionID revision = RevisionID.LAST_REVISION;
 	
-	private RevisionID lastRevision = null;
+	private RevisionID prevRevision = null;
 
 	/**
 	 * Define possible operations to CLI
@@ -455,14 +455,20 @@ public class CLI {
 	private void onLog() throws APIClientException, ComClientException
 	{
 		LinkedList<RevisionCommited> list = new LinkedList<RevisionCommited>();
-		getClient().generateLog(list, revision, lastRevision);
+		getClient().generateLog(list, revision, prevRevision);
 		
 		for(RevisionCommited rc: list)
 		{
 			String s = rc.getId().toString();
 			System.out.printf("Revision :%s%s", s, UtilStream.getLineSeperator());
 			DateFormat d = new SimpleDateFormat();
-			System.out.printf("\tDate   : %s%s", d.format(rc.getDateCommit()), UtilStream.getLineSeperator());
+			String strDate = "-";
+			if(rc.getDateCommit() !=null)
+			{
+				strDate = d.format(rc.getDateCommit());
+			}
+			
+			System.out.printf("\tDate   : %s%s", strDate, UtilStream.getLineSeperator());
 			System.out.printf("\tUser   : %s%s", rc.getUser(), UtilStream.getLineSeperator());
 			System.out.printf("\tMessage: %s%s", rc.getMessage(), UtilStream.getLineSeperator());
 		}

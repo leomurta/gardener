@@ -143,11 +143,9 @@ public class Workspace implements Closeable{
 	public void setServSource(URI _servSource) 
 	{
 		this.servSource = _servSource;
-		System.out.println("Workspace:setServSource: " + servSource!=null?servSource.toString():"null");
 	}
 
 	public URI getServSource() {
-		System.out.println("Workspace:getServSource: " + (servSource!=null?servSource.toString():"null"));
 		return servSource;
 	}
 

@@ -371,19 +371,34 @@ public class LocalFakeComClient implements ComClient {
 	@Override
 	public
 	void generateLog(Collection<RevisionCommited> coll,
-			RevisionID firstRevision, RevisionID lastRevision) throws ComClientException
+			RevisionID revision, RevisionID prevRevision) throws ComClientException
 	{
-		if(firstRevision == null)
-			firstRevision = new RevisionID(1);
+		if(prevRevision == null)
+			prevRevision = RevisionID.ZERO_REVISION;
 		
-		if(lastRevision == null)
-			lastRevision = RevisionID.LAST_REVISION;
+		if(revision == null)
+			revision = RevisionID.LAST_REVISION;
 		
-		if(firstRevision.compareTo(lastRevision)>= 0)
+		if(revision.equals(RevisionID.LAST_REVISION))
+			revision = this.getLastRevision();
+			
+		if(revision.compareTo(prevRevision)< 0)
 			throw new LocalFakeComClientException("The fist revision should be smaller than last revision", null);
 		
+		if(prevRevision.equals(RevisionID.ZERO_REVISION))
+		{
+			RevisionCommited rc = new RevisionCommited(
+					RevisionID.ZERO_REVISION,
+					"system", 
+					"", 
+					null);
+			
+			coll.add(rc);
+			prevRevision = RevisionID.generateNewRevision(RevisionID.ZERO_REVISION.getNumber());
+		}
+		
 		///lê os itens
-		for(long i = firstRevision.getNumber(); i<=lastRevision.getNumber(); i++)
+		for(long i = prevRevision.getNumber(); i<=revision.getNumber(); i++)
 		{
 			RevisionID r = new RevisionID(i);
 			

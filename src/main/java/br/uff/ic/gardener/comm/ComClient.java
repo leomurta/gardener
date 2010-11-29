@@ -63,7 +63,7 @@ public interface ComClient extends Closeable {
 	
 	/**
 	 * generateLog of the server
-	 * @param list list of revisions loggeds
+	 * @param list list of revisions logged
 	 * @param revision the first revision. if equal to null, initiate at Revision 1.
 	 * @param lastRevision the last revision. if equal null, initiate at last Revision
 	 */
