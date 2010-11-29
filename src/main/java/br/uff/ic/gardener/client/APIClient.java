@@ -230,13 +230,10 @@ public class APIClient {
 			
 			ConfigurationItem ciServ = null;
 			ConfigurationItem ciWork = null;
+			ciServ = is.next();
+			ciWork = iw.next();
 			while(is.hasNext() && iw.hasNext())
-			{
-				if(ciServ == null)
-					ciServ = is.next();
-				if(ciWork == null)
-					ciWork = iw.next();
-				
+			{				
 				//faz o merge
 				
 				String strServ = ciServ.getUri().getPath();
@@ -251,7 +248,7 @@ public class APIClient {
 						conflicts.add(new Conflict(ciServ.getUri(), ciWork.getUri()));
 					}
 					ciServ =is.next();
-					ciWork = is.next();
+					ciWork = iw.next();
 				}else if (0 < diff) //strServ é menor. Grava ele no disco
 				{
 					addCIWorkspace(ciServ);
@@ -259,7 +256,7 @@ public class APIClient {
 					
 				}else //strServ é maior. faz nada, mantém o do ws
 				{
-					ciWork = is.next();
+					ciWork = iw.next();
 				}
 			}
 			
@@ -297,9 +294,6 @@ public class APIClient {
 			
 			return merge.lastConflict();
 		} catch (WorkspaceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MergeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClientMergeException e) {

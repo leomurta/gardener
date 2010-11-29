@@ -44,19 +44,41 @@ public class ClientMerge {
 		pathTemp = FileHelper.createTemporaryRandomPath();
 	}
 	
-	public InputStream merge(
+	public InputStream merge(		
 			ConfigurationItem ciServ,
-			ConfigurationItem ciWork,
-			ConfigurationItem ciBase) throws MergeException, ClientMergeException
+			ConfigurationItem ciWork
+			) throws ClientMergeException
 	{
-		lastConflict = false;
-		IMerge realMerge =  new MergeWithRegEx();
 		//cria arquivos
 		File f1 	= createFile(ciServ);
 		File f2 	= createFile(ciWork);
-		File fBase	= createFile(ciBase);
-		File fDest  = createFile();
+		File fBase	= f1;
+		File fDest  = internalMerge(f1, f2, fBase);
+		
+		f1.delete();
+		f2.delete();
+		//fBase.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 
+		
+		
+	}
+	
+	private File internalMerge(File f1, File f2, File fBase) throws ClientMergeException
+	{
+		lastConflict = false;
+		IMerge realMerge =  new MergeWithRegEx();
 		//faz o merge	
+		File fDest = createFile();
 		try
 		{
 			Boolean b = realMerge.merge(f1, f2, fBase, fDest);
@@ -69,18 +91,67 @@ public class ClientMerge {
 		f1.delete();
 		f2.delete();
 		fBase.delete();
+		
+		return fDest;
+	}
+	
+	public InputStream merge(
+			ConfigurationItem ciServ,
+			ConfigurationItem ciWork,
+			ConfigurationItem ciBase) throws MergeException, ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(ciServ);
+		File f2 	= createFile(ciWork);
+		File fBase	= createFile(ciBase);
+		File fDest  = internalMerge(f1, f2, fBase);
+		
+		f1.delete();
+		f2.delete();
+		fBase.delete();
+		
 		try {
 			
-			return new FileInputStream(fDest);
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
 		} catch (FileNotFoundException e) {
 			throw new ClientMergeException("Error at create File Destiny", e);
-		} 
-		
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 		
 	}
-	public InputStream merge(ConfigurationItem ciServ,
+	/*public InputStream merge(ConfigurationItem ciServ,
 			ConfigurationItem ciWork) throws MergeException, ClientMergeException
 	{
-		return merge(ciServ, ciWork, ciServ);
+		lastConflict = false;
+		IMerge realMerge =  new MergeWithRegEx();
+		//cria arquivos
+		File f1 	= createFile(ciServ);
+		File f2 	= createFile(ciWork);
+		File fDest  = createFile();
+		//faz o merge	
+		try
+		{
+			Boolean b = realMerge.merge(f1, f2, f1, fDest);
+			lastConflict = (b!=null)?b:false;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		f1.delete();
+		f2.delete();
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 
 	}
 	
 	
@@ -107,13 +178,18 @@ public class ClientMerge {
 		f2.delete();
 		try {
 			
-			return new FileInputStream(fDest);
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
 		} catch (FileNotFoundException e) {
 			throw new ClientMergeException("Error at create File Destiny", e);
+		
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
 		} 
 		
 	}
-
+*/
 	
 	private File createFile() throws ClientMergeException
 	{
@@ -131,7 +207,8 @@ public class ClientMerge {
 		FileOutputStream fOut = null;
 		try {
 			fOut = new FileOutputStream(f);
-			UtilStream.copy(ci.getItemAsInputStream(), fOut);
+			InputStream in = ci.getItemAsInputStream();
+			UtilStream.copy(in, fOut);
 			fOut.close();
 		} catch (FileNotFoundException e) {
 			throw new ClientMergeException("Cannot open file " + f.toString(), e);
