@@ -115,6 +115,7 @@ public class FileHelper {
 		{
 			
 			path = queuePath.remove();
+			//File[] childs = path.listFiles(new ORFileFilter(filter, new NameFileFilter(strGlob)));
 			File[] childs = path.listFiles(filter);
 			for(File fileChild: childs)
 			{

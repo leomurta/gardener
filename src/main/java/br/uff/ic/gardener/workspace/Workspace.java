@@ -117,8 +117,8 @@ public class Workspace implements Closeable{
 		return checkoutTime;
 	}
 
-	public void setCheckoutTime(Date checkoutTime) {
-		this.checkoutTime = checkoutTime;
+	public void setCheckoutTime(Date _checkoutTime) {
+		this.checkoutTime = _checkoutTime;
 	}
 
 	public RevisionID getCurrentRevision() {
@@ -212,7 +212,7 @@ public class Workspace implements Closeable{
 		
 		for(CIWorkspace ciFor: this.listICContent)
 		{
-			if(ciFor.equals(uri))
+			if(ciFor.getStringID().equals(uri.getPath()))
 				return ciFor;
 		}
 		return null;
@@ -228,7 +228,7 @@ public class Workspace implements Closeable{
 	 * @throws URISyntaxException 
 	 * @Deprecated
 	 */
-	private static CIWorkspace containItem(Collection<CIWorkspaceStatus> coll, URI uri) throws URISyntaxException
+	private static CIWorkspace containItem(Collection<? extends CIWorkspace> coll, URI uri) throws URISyntaxException
 	{
 		
 		for(CIWorkspace op: coll)
@@ -301,6 +301,7 @@ public class Workspace implements Closeable{
 				this.listICContent.add(ci);
 			}
 			Collections.sort(listICContent);
+			this.setCheckoutTime(new Date());
 			this.saveConfig();
 		} catch (WorkspaceConfigParserException e) {
 			reset();
@@ -440,7 +441,10 @@ public class Workspace implements Closeable{
 		try
 		{
 			CIWorkspace ci = containItem(fileSource);
-			if(ci != null)
+			
+	//		containItem(listICContent, uri)
+			
+			if(ci == null)
 			{
 				throw new WorkspaceError(fileSource, "renamed file has have a operation: " + ci.toString(), null);
 			}
@@ -831,7 +835,7 @@ public class Workspace implements Closeable{
 		listOperations.clear();
 		
 		this.currentRevision = id;
-		this.checkoutTime = new Date();//NOW
+		setCheckoutTime(new Date());//NOW
 		try
 		{
 			getParser().save();

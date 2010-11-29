@@ -579,6 +579,12 @@ public class CLI {
 					));
 		}
 
+		if(listFile.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
+		
 		getClient().addFiles(listFile);
 		
 		URI uriBase = pathWorkspace.toURI();
@@ -601,8 +607,16 @@ public class CLI {
 		LinkedList<File> listFile = new LinkedList<File>(); 
 		for(String strGlob: coll)
 		{
-			FileHelper.findFiles(CLI.getActualPath(), listFile, strGlob, false);
+			FileHelper.findFiles(pathWorkspace, listFile, strGlob, false);
 		}
+		
+		if(listFile.size() == 0)
+		{
+			System.err.printf("Nenhum arquivo encontrado");
+			return;
+		}
+		
+		
 		getClient().removeFiles(listFile);
 		
 		for(File f: listFile)
