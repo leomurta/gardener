@@ -104,6 +104,12 @@ public class CIWorkspace implements Comparable<CIWorkspace>
 		}
 	}
 	
+	@Override
+	public String toString()
+	{
+		return String.format("(%s)", uri.getPath());
+	}
+	
 	public Date getDateModified()
 	{
 		return dateModified;

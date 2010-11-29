@@ -62,7 +62,7 @@ public class CIWorkspaceStatus extends CIWorkspace
 	{
 		return status;
 	}
-	
+
 	public URI getOldURI()
 	{
 		return oldURI;

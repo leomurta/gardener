@@ -16,39 +16,39 @@ import org.junit.Test;
 
 public class MergeTest {
     
-    private File test1Left;
-    private File test1Right;
-    private File test1Base;
-    private File test1Result;
-    private File test1ExpectedResult;
+    protected File test1Left;
+    protected File test1Right;
+    protected File test1Base;
+    protected File test1Result;
+    protected File test1ExpectedResult;
     
-    private File test2Left;
-    private File test2Right;
-    private File test2Base;
-    private File test2Result;
-    private File test2ExpectedResult;
+    protected File test2Left;
+    protected File test2Right;
+    protected File test2Base;
+    protected File test2Result;
+    protected File test2ExpectedResult;
     
-    private File test3Left;
-    private File test3Right;
-    private File test3Base;
-    private File test3Result;
-    private File test3ExpectedResult;
+    protected File test3Left;
+    protected File test3Right;
+    protected File test3Base;
+    protected File test3Result;
+    protected File test3ExpectedResult;
 
-    private File test4Left;
-    private File test4Right;
-    private File test4Base;
-    private File test4Result;
-    private File test4ExpectedResult;
+    protected File test4Left;
+    protected File test4Right;
+    protected File test4Base;
+    protected File test4Result;
+    protected File test4ExpectedResult;
 
-    private File test5Left;
-    private File test5Right;
-    private File test5Result;
-    private File test5ExpectedResult;
+    protected File test5Left;
+    protected File test5Right;
+    protected File test5Result;
+    protected File test5ExpectedResult;
 
-    private File test6Left;
-    private File test6Right;
-    private File test6Result;
-    private File test6ExpectedResult;
+    protected File test6Left;
+    protected File test6Right;
+    protected File test6Result;
+    protected File test6ExpectedResult;
     
     @Before
     public void setUp() throws Exception {
@@ -202,7 +202,7 @@ public class MergeTest {
 		return new File(path);
     }
 	
-	private String convertFileToString(File file) {
+	protected String convertFileToString(File file) {
 		StringBuilder result = new StringBuilder();
 
 		try {

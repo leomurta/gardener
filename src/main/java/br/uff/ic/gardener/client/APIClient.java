@@ -1,5 +1,6 @@
 package br.uff.ic.gardener.client;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -288,7 +289,9 @@ public class APIClient {
 	 */
 	private boolean merge(ConfigurationItem ciServ, ConfigurationItem ciWork) {
 		try {
-			InputStream in = merge.merge(ciServ, ciWork, getWorkspace());
+			InputStream in = merge.merge(ciServ, ciWork);
+			forceClose(ciServ.getItemAsInputStream());
+			forceClose(ciWork.getItemAsInputStream());
 			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciServ.getRevision());
 			getWorkspace().replaceCI(ci);
 			
@@ -316,8 +319,17 @@ public class APIClient {
 
 	public void forceClose() throws WorkspaceException, APIClientException 
 	{
-		if(workspace != null)workspace.close();
-		if(comClient != null)comClient.close();
+		forceClose(workspace);
+		forceClose(comClient);
+	}
+	
+	private static void forceClose(Closeable c)
+	{
+		if(c!= null)
+			try {
+				c.close();
+			} catch (IOException e) {
+			}
 	}
 	
 	/**

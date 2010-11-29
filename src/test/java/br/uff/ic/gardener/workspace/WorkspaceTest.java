@@ -52,7 +52,11 @@ public class WorkspaceTest{
 	@After
 	public void tearDown() throws WorkspaceException
 	{
-		workspace.close();
+		try {
+			workspace.close();
+		} catch (IOException e) {
+			fail(e.getStackTrace().toString());
+		}
 		FileHelper.deleteDirTree(pathWS);
 	}
 	

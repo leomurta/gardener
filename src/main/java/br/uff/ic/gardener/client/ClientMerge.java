@@ -13,7 +13,6 @@ import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.merge.MergeWithRegEx;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.Workspace;
 
 /**
  * classe que encapsula o trabalho de merge
@@ -45,18 +44,27 @@ public class ClientMerge {
 		pathTemp = FileHelper.createTemporaryRandomPath();
 	}
 	
-	public InputStream merge(ConfigurationItem ciServ,
-			ConfigurationItem ciWork, Workspace workspace) throws MergeException, ClientMergeException
+	public InputStream merge(
+			ConfigurationItem ciServ,
+			ConfigurationItem ciWork,
+			ConfigurationItem ciBase) throws MergeException, ClientMergeException
 	{
 		lastConflict = false;
 		IMerge realMerge =  new MergeWithRegEx();
 		//cria arquivos
 		File f1 	= createFile(ciServ);
 		File f2 	= createFile(ciWork);
-		File fBase	= createFile();
+		File fBase	= createFile(ciBase);
 		File fDest  = createFile();
-		//faz o merge		
-		lastConflict = realMerge.merge(f1, f2, fBase, fDest);
+		//faz o merge	
+		try
+		{
+			Boolean b = realMerge.merge(f1, f2, fBase, fDest);
+			lastConflict = (b!=null)?b:false;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		
 		f1.delete();
 		f2.delete();
@@ -66,7 +74,44 @@ public class ClientMerge {
 			return new FileInputStream(fDest);
 		} catch (FileNotFoundException e) {
 			throw new ClientMergeException("Error at create File Destiny", e);
+		} 
+		
+	}
+	public InputStream merge(ConfigurationItem ciServ,
+			ConfigurationItem ciWork) throws MergeException, ClientMergeException
+	{
+		return merge(ciServ, ciWork, ciServ);
+	}
+	
+	
+	public InputStream merge2(ConfigurationItem ciServ,
+			ConfigurationItem ciWork) throws MergeException, ClientMergeException
+	{
+		lastConflict = false;
+		IMerge realMerge =  new MergeWithRegEx();
+		//cria arquivos
+		File f1 	= createFile(ciServ);
+		File f2 	= createFile(ciWork);
+		File fDest  = createFile();
+		//faz o merge	
+		try
+		{
+			Boolean b = realMerge.merge(f1, f2, fDest);
+			lastConflict = (b!=null)?b:false;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
 		}
+		
+		f1.delete();
+		f2.delete();
+		try {
+			
+			return new FileInputStream(fDest);
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} 
+		
 	}
 
 	

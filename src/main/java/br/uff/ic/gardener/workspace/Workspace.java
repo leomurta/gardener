@@ -1,5 +1,6 @@
 package br.uff.ic.gardener.workspace;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.UtilStream;
 
-public class Workspace {
+public class Workspace implements Closeable{
 
 	/**
 	 * Project name of workspace
@@ -241,11 +242,10 @@ public class Workspace {
 
 	/**
 	 * Close the things
-	 * @throws WorkspaceException 
 	 */
-	public void close() throws WorkspaceException
+	@Override
+	public void close() throws IOException
 	{
-		//this.saveConfig();
 		reset();
 	}
 
@@ -880,7 +880,7 @@ public class Workspace {
 		ConfigurationItem ciOld = null;
 		for(CIWorkspace ciIt: listICContent)
 		{
-			if(ciIt.equals(ci))
+			if(ciIt.getURI().getPath().equals(ci.getUri().getPath()))
 			{
 				ciOld = new ConfigurationItem(ciIt.getURI(), null, RevisionID.ZERO_REVISION);
 				break;
