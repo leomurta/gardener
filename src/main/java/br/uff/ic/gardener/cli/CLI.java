@@ -338,8 +338,6 @@ public class CLI {
 				if (uriServ.getScheme() == null || uriServ.getScheme() == "") {
 					uriServ = (new File(uriServ).toURI());
 				}
-			} else {
-				uriServ = pathWorkspace.toURI();
 			}
 			
 			switch (getOperation()) {

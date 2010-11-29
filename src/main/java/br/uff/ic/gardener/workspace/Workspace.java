@@ -140,11 +140,14 @@ public class Workspace implements Closeable{
 		strProjectName = _str;
 	}
 
-	public void setServSource(URI servSource) {
-		this.servSource = servSource;
+	public void setServSource(URI _servSource) 
+	{
+		this.servSource = _servSource;
+		System.out.println("Workspace:setServSource: " + servSource!=null?servSource.toString():"null");
 	}
 
 	public URI getServSource() {
+		System.out.println("Workspace:getServSource: " + (servSource!=null?servSource.toString():"null"));
 		return servSource;
 	}
 
@@ -258,8 +261,9 @@ public class Workspace implements Closeable{
 	 * @throws WorkspaceException
 	 */
 	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceException {
-	
+		URI serv = getServSource();
 		reset();
+		setServSource(serv);
 		try {
 			setCurrentRevision(revision);
 			// erase content
@@ -272,10 +276,8 @@ public class Workspace implements Closeable{
 			//save content
 			for (ConfigurationItem e : list) {
 				File f = null;
-				File fUndo = null;
-				try {
+					try {
 					f = FileHelper.createFile(this.getPath(), e.getStringID());
-					fUndo = FileHelper.createFile(this.getPathUnmodified(), e.getStringID());
 				} catch (IllegalArgumentException ee) {
 					throw new WorkspaceConfigParserException("Do not create file in repository",f.toString(), ee);
 				} catch (IOException eee) {
@@ -290,11 +292,9 @@ public class Workspace implements Closeable{
 				try {
 
 					OutputStream out = new FileOutputStream(f);
-					OutputStream undoOut = new FileOutputStream(fUndo);
-					UtilStream.copy(e.getItemAsInputStream(), out, undoOut);
+					UtilStream.copy(e.getItemAsInputStream(), out);
 					out.close();
-					undoOut.close();
-
+				
 				} catch (IOException e1) {
 					throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
 				}
@@ -310,9 +310,9 @@ public class Workspace implements Closeable{
 		}
 	}
 
-	private File getPathUnmodified() {
+	/*private File getPathUnmodified() {
 		return new File(getPath(), ".unmodified");
-	}
+	}*/
 
 	private 	static Collection<File> tempColl = new ArrayList<File>();
 	public void removeFile(File file) throws WorkspaceException 
@@ -798,24 +798,11 @@ public class Workspace implements Closeable{
 			{
 			case ADD:
 				listICContent.add(op);
-				try {
-					FileHelper.createAndCopy(FileHelper.createFile(getPath(), op.getStringID()), this.getPathUnmodified());
-				} catch (IllegalArgumentException e) {
-					listICContent = backup;
-					throw new WorkspaceException("Illegal copy parameters", e);
-				} catch (IOException e) {
-					listICContent = backup;
-					throw new WorkspaceException("Cannot copy files", e);
-				}
+				
 				break;
 			case REM:
 				listICContent.remove(op);
-				File f = new File(getPathUnmodified(), op.getStringID());
-				if(!f.delete())
-				{
-					listICContent = backup;
-					throw new WorkspaceException("Cannot remove the file: " + f.toString(), null);
-				}
+				
 				break;
 			case RENAME:
 				CIWorkspace ciRenamed = null;
@@ -876,14 +863,6 @@ public class Workspace implements Closeable{
 			i.remove();
 			current = new CIWorkspace(current, op.getOldURI());
 			listICContent.add(current);
-			//now rename in the unmodified
-			{
-				File f = new File(getPathUnmodified(),op.getURI().getPath());
-				if(!f.renameTo(new File(getPathUnmodified(), op.getOldURI().getPath())))
-				{
-					throw new WorkspaceException("Cannot rename file " + f.toString(),null);
-				}
-			}
 			return current;
 		}
 		return null;		
