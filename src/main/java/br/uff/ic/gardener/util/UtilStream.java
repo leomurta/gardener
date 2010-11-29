@@ -137,6 +137,26 @@ public class UtilStream {
             output.write(buffer, 0, byteRead);
         }
     }
+    
+    public static void copy(InputStream input, OutputStream... vec) throws IOException {
+    	copy(input, BUFFER, vec);
+    }
+    
+    /**
+    * Copy to varius outputstreams
+    * @param input
+    * @param output
+    * @param buffer
+    * @throws IOException
+    */
+   public static void copy(InputStream input, byte[] buffer, OutputStream... vec) throws IOException {
+       int byteRead = 0;
+
+       while ((byteRead = input.read(buffer)) > 0) {
+           for(OutputStream o: vec)
+        	   o.write(buffer, 0, byteRead);
+       }
+   }
 
     /**
      * Convert InputStream to String (only support UTF-8).

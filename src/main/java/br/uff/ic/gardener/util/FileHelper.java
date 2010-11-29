@@ -4,10 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -90,6 +93,7 @@ public class FileHelper {
 		f.createNewFile();
 		return f;
 	}
+	
 	
 	
 	/**
@@ -313,5 +317,47 @@ public class FileHelper {
     	ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     	return bis;
     }
+
+    /**
+     * create and copy files
+     * @param source file source
+     * @param to path destiny
+     * @throws IOException 
+     */
+	public static void createAndCopy(File source, File to) throws IllegalArgumentException, IOException {
+		
+		if(!source.isFile())
+			throw new IllegalArgumentException("Source is not a file", null);
+		
+		if(!to.isDirectory())
+			throw new IllegalArgumentException("to is not a directory");
+		
+		File newFile = new File(to, source.getName());
+		try {
+			newFile.createNewFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//
+		FileChannel fcSource = null;
+		FileChannel fcDest = null;
+		
+			try {
+				fcSource = new FileInputStream(source).getChannel();
+				fcDest = new FileOutputStream(newFile).getChannel();
+				fcDest.transferFrom(fcSource, 0, fcDest.size());
+			} catch (FileNotFoundException e) {
+				throw new Error("Erro inesperado", e);
+			} finally {
+			if(fcSource != null) {
+				fcSource.close();
+			}
+			if(fcDest != null) {
+				fcDest.close();
+			}
+		}
+	}
 
 }

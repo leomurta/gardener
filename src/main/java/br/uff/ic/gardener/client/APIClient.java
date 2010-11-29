@@ -18,6 +18,7 @@ import br.uff.ic.gardener.client.ClientMerge.ClientMergeException;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
+import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -213,35 +214,48 @@ public class APIClient {
 	}
 
 	/**
+	 * S = W = B -> Merge do arquivo
+	 * S = W < B -> Conflito no arquivo pq o servidor tem um artefato igual a um criado no ws
+	 * S > W = B -> Remove arquivo no W
+	 * S > W > B -> Mesmo arquivo removido no S e no W. Deixar como estar
+	 * S > W < B -> Novo arquivo no WS. Manter
+	 * S < W < B -> Novo arquivo no servidor. Adicionar.
 	 * Update the workspace to the last revision
 	 */
 	public void update(Collection<Conflict> conflicts) throws TransationException{
 		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
 		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
+		List<ConfigurationItem> listBase = new LinkedList<ConfigurationItem>();
 		try {
 			getComClient().checkout("", RevisionID.LAST_REVISION, listServ);
+			getUnmodifiedWorkspace(listBase);
 			getWorkspace().getCIsToCommit(listWork);
 			Collections.sort(listServ);
 			Collections.sort(listWork);
+			Collections.sort(listBase);
 			
 			Iterator<ConfigurationItem> is = listServ.iterator();
 			Iterator<ConfigurationItem> iw = listWork.iterator();
+			Iterator<ConfigurationItem> ib = listWork.iterator();
 			
 			ConfigurationItem ciServ = null;
 			ConfigurationItem ciWork = null;
+			ConfigurationItem ciBase = null;
 			ciServ = is.next();
 			ciWork = iw.next();
-			while(is.hasNext() && iw.hasNext())
+			ciBase = ib.next();
+			while(is.hasNext() && iw.hasNext() && ib.hasNext())
 			{				
 				//faz o merge
 				
 				String strServ = ciServ.getUri().getPath();
 				String strWork = ciWork.getUri().getPath();
+				String strBase = ciWork.getUri().getPath();
 				
 				final int diff = strServ.compareTo(strWork);
 				if(0 == diff)//mesmo item
 				{
-					boolean conflict = merge(ciServ,ciWork);
+					boolean conflict = merge(ciServ, ciWork, ciBase);
 					if(conflict)
 					{
 						conflicts.add(new Conflict(ciServ.getUri(), ciWork.getUri()));
@@ -272,6 +286,16 @@ public class APIClient {
 		
 	}
 
+	/**
+	 * Return the workspace CIs without modifications by user
+	 * @param listBase
+	 * @throws APIClientException 
+	 * @throws WorkspaceException 
+	 */
+	private void getUnmodifiedWorkspace(List<ConfigurationItem> listBase) throws WorkspaceException, APIClientException {
+		getWorkspace().getUnmodifiedWorkspace(listBase);
+	}
+
 	private void addCIWorkspace(ConfigurationItem ci) throws WorkspaceException, APIClientException
 	{
 		getWorkspace().addNewCI(ci);
@@ -283,12 +307,12 @@ public class APIClient {
 	 * @param ciWork
 	 * @return if it cause conflict
 	 */
-	private boolean merge(ConfigurationItem ciServ, ConfigurationItem ciWork) {
+	private boolean merge(ConfigurationItem ciLast, ConfigurationItem ciWork, ConfigurationItem ciBase) {
 		try {
-			InputStream in = merge.merge(ciServ, ciWork);
-			forceClose(ciServ.getItemAsInputStream());
+			InputStream in = merge.merge(ciLast, ciWork, ciBase);
+			forceClose(ciLast.getItemAsInputStream());
 			forceClose(ciWork.getItemAsInputStream());
-			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciServ.getRevision());
+			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciLast.getRevision());
 			getWorkspace().replaceCI(ci);
 			
 			return merge.lastConflict();

@@ -51,7 +51,7 @@ public class ClientMerge {
 		//cria arquivos
 		File f1 	= createFile(ciServ);
 		File f2 	= createFile(ciWork);
-		File fBase	= f1;
+		File fBase	= f2;
 		File fDest  = internalMerge(f1, f2, fBase);
 		
 		f1.delete();
@@ -136,13 +136,22 @@ public class ClientMerge {
 		return fDest;
 	}
 	
+	/**
+	 * 
+	 * @param ciLast ci of the Last version in the serv
+	 * @param ciWork ci of workspace (a version <= ciLast and it can be modified by user.
+	 * @param ciBase ci in the same version of workspace
+	 * @return
+	 * @throws MergeException
+	 * @throws ClientMergeException
+	 */
 	public InputStream merge(
-			ConfigurationItem ciServ,
+			ConfigurationItem ciLast,
 			ConfigurationItem ciWork,
-			ConfigurationItem ciBase) throws MergeException, ClientMergeException
+			ConfigurationItem ciBase) throws ClientMergeException
 	{
 		//cria arquivos
-		File f1 	= createFile(ciServ);
+		File f1 	= createFile(ciLast);
 		File f2 	= createFile(ciWork);
 		File fBase	= createFile(ciBase);
 		File fDest  = internalMerge(f1, f2, fBase);

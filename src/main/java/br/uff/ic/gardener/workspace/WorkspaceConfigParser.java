@@ -11,9 +11,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 
+import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TokenizerWithQuote;
@@ -354,118 +357,6 @@ public class WorkspaceConfigParser
 		return new NotFilenameFilter(STR_FILE_PROFILE, STR_FILE_OPERATION); 
 	}
 	
-/*
-	public void loadRealICContent(Collection<CIWorkspaceStatus> collReal) throws WorkspaceConfigParserException {
-		Queue<File> list = new LinkedList<File>();
-		list.add(this.directory);
-		while(list.size() > 0)
-		{
-			File current = list.remove();
-			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
-			for(File f: files)
-			{
-				if(f.isDirectory())
-					list.add(f);
-				else if(f.isFile())
-				{
-					try {
-						collReal.add(
-								new CIWorkspaceStatus(
-										FileHelper.getRelative(directory, f),
-										new FileInputStream(f),
-										Status.UNVER,
-										new Date(f.lastModified()),
-										null
-									)
-								);
-					} catch (FileNotFoundException e) {
-						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
-					}
-				}
-			}
-		}
-	}
-	*/
-	/*
-	public void loadICToCommit(Collection<ConfigurationItem> collDest) throws WorkspaceConfigParserException
-	{
-		Queue<File> list = new LinkedList<File>();
-		list.add(this.directory);
-		while(list.size() > 0)
-		{
-			File current = list.remove();
-			File[] files = current.listFiles(WorkspaceConfigParser.getNotFileConfigFilter());
-			for(File f: files)
-			{
-				if(f.isDirectory())
-					list.add(f);
-				else if(f.isFile())
-				{
-					try {
-						collDest.add(
-								new ConfigurationItem( 
-										FileHelper.getRelative(directory, f),
-										new FileInputStream(f),
-										RevisionID.NEW_REVISION
-									)
-								);
-					} catch (FileNotFoundException e) {
-						throw new WorkspaceConfigParserException("Can not open a file", f.toString(), e);
-					}
-				}
-			}
-		}
-	}*/
-
-	/*
-	public void checkout(RevisionID revision, Collection<ConfigurationItem> list) throws WorkspaceConfigParserException 
-	{
-		LinkedList<CIWorkspace> listOut =new LinkedList<CIWorkspace>();
-		// erase content
-		File[] listContent = this.directory.listFiles();
-		for(File f: listContent)
-		{
-			FileHelper.deleteDirTree(f);
-		}
-
-		//save content
-		for (ConfigurationItem e : list) {
-			File f = null;
-			try {
-				f = FileHelper.createFile(this.directory, e.getStringID());
-			} catch (IllegalArgumentException ee) {
-				throw new WorkspaceConfigParserException("Do not create file in repository",f.toString(), ee);
-			} catch (IOException eee) {
-				throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), eee);
-			}
-			try {
-				f.createNewFile();
-			} catch (IOException e1) {
-				throw new WorkspaceConfigParserException("Do not create file in repository", f.toString(), e1);
-			}
-
-			try {
-
-				OutputStream out = new FileOutputStream(f);
-				UtilStream.copy(e.getItemAsInputStream(), out);
-				out.close();
-
-			} catch (IOException e1) {
-				throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
-			}
-			
-			try {
-				CIWorkspace ci = new CIWorkspace(e.getUri(), new FileInputStream(f), new Date());
-				listOut.add(ci);
-			} catch (FileNotFoundException e1) {
-				throw new WorkspaceConfigParserException("Cannot open file", f.toString(), e1);
-			}
-		}
-
-		getWorkspace().addContent(listOut);
-		this.save();		
-		
-	}*/
 
 
 
@@ -505,4 +396,38 @@ public class WorkspaceConfigParser
 		}
 	}
 
+	public void getUnmodifiedFiles(Collection<ConfigurationItem> coll) throws WorkspaceConfigParserException 
+	{
+		File path = new File(getPath(), ".unmodified"); 
+		internalGetUmmodifiedFiles(path, path, coll);
+	}
+
+	private void internalGetUmmodifiedFiles(final File radixPath, final File path, Collection<ConfigurationItem> coll) throws WorkspaceConfigParserException
+	{
+		File[] files = path.listFiles();
+		
+		for(File file: files)
+		{
+			if(file.isDirectory())
+				internalGetUmmodifiedFiles(radixPath, file, coll);
+			else if(file.isFile())
+			{
+				try
+				{
+					InputStream in = new FileInputStream(file);
+					ConfigurationItem ci = new ConfigurationItem(
+							FileHelper.getRelative(radixPath, file),
+							in,
+							getWorkspace().getCurrentRevision()
+							);
+					coll.add(ci);
+				}catch(FileNotFoundException e)
+				{
+					throw new WorkspaceConfigParserException("Cannot open file", "internalGetunmodifiedFiles", e);
+				}
+				
+			}
+				
+		}
+	}
 }

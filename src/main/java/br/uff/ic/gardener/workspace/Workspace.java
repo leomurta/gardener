@@ -272,8 +272,10 @@ public class Workspace implements Closeable{
 			//save content
 			for (ConfigurationItem e : list) {
 				File f = null;
+				File fUndo = null;
 				try {
 					f = FileHelper.createFile(this.getPath(), e.getStringID());
+					fUndo = FileHelper.createFile(this.getPathUnmodified(), e.getStringID());
 				} catch (IllegalArgumentException ee) {
 					throw new WorkspaceConfigParserException("Do not create file in repository",f.toString(), ee);
 				} catch (IOException eee) {
@@ -288,19 +290,17 @@ public class Workspace implements Closeable{
 				try {
 
 					OutputStream out = new FileOutputStream(f);
-					UtilStream.copy(e.getItemAsInputStream(), out);
+					OutputStream undoOut = new FileOutputStream(fUndo);
+					UtilStream.copy(e.getItemAsInputStream(), out, undoOut);
 					out.close();
+					undoOut.close();
 
 				} catch (IOException e1) {
 					throw new WorkspaceConfigParserException("Do not copy data from repository", f.toString(), e1);
 				}
 				
-				//try {
-					CIWorkspace ci = new CIWorkspace(e.getUri(), new Date());
-					this.listICContent.add(ci);
-				/*} catch (FileNotFoundException e1) {
-					throw new WorkspaceException("Cannot open file", e1);
-			}*/
+				CIWorkspace ci = new CIWorkspace(e.getUri(), new Date());
+				this.listICContent.add(ci);
 			}
 			Collections.sort(listICContent);
 			this.saveConfig();
@@ -308,6 +308,10 @@ public class Workspace implements Closeable{
 			reset();
 			throw new WorkspaceException("Cannot checkout", e);
 		}
+	}
+
+	private File getPathUnmodified() {
+		return new File(getPath(), ".unmodified");
 	}
 
 	private 	static Collection<File> tempColl = new ArrayList<File>();
@@ -733,7 +737,7 @@ public class Workspace implements Closeable{
 		listNewOperations.clear();		
 	}
 
-	public void loadICToCommit(Collection<ConfigurationItem> collDest) throws WorkspaceConfigParserException
+	private void loadICToCommit(Collection<ConfigurationItem> collDest) throws WorkspaceConfigParserException
 	{
 		Queue<File> list = new LinkedList<File>();
 		list.add(getPath());
@@ -794,12 +798,35 @@ public class Workspace implements Closeable{
 			{
 			case ADD:
 				listICContent.add(op);
+				try {
+					FileHelper.createAndCopy(FileHelper.createFile(getPath(), op.getStringID()), this.getPathUnmodified());
+				} catch (IllegalArgumentException e) {
+					listICContent = backup;
+					throw new WorkspaceException("Illegal copy parameters", e);
+				} catch (IOException e) {
+					listICContent = backup;
+					throw new WorkspaceException("Cannot copy files", e);
+				}
 				break;
 			case REM:
 				listICContent.remove(op);
+				File f = new File(getPathUnmodified(), op.getStringID());
+				if(!f.delete())
+				{
+					listICContent = backup;
+					throw new WorkspaceException("Cannot remove the file: " + f.toString(), null);
+				}
 				break;
 			case RENAME:
-				CIWorkspace ciRenamed = renameCIInCommit(op);
+				CIWorkspace ciRenamed = null;
+				try
+				{
+					ciRenamed = renameCIInCommit(op);
+				}catch(WorkspaceException e)
+				{
+					listICContent = backup;
+					throw e;
+				}
 				//
 				if(ciRenamed == null)
 				{
@@ -830,7 +857,7 @@ public class Workspace implements Closeable{
 		}
 	}
 
-	private CIWorkspace renameCIInCommit(CIWorkspaceStatus op)
+	private CIWorkspace renameCIInCommit(CIWorkspaceStatus op) throws WorkspaceException
 	{
 		Iterator<CIWorkspace> i = listICContent.iterator();
 		CIWorkspace current = null;
@@ -849,6 +876,14 @@ public class Workspace implements Closeable{
 			i.remove();
 			current = new CIWorkspace(current, op.getOldURI());
 			listICContent.add(current);
+			//now rename in the unmodified
+			{
+				File f = new File(getPathUnmodified(),op.getURI().getPath());
+				if(!f.renameTo(new File(getPathUnmodified(), op.getOldURI().getPath())))
+				{
+					throw new WorkspaceException("Cannot rename file " + f.toString(),null);
+				}
+			}
 			return current;
 		}
 		return null;		
@@ -935,6 +970,15 @@ public class Workspace implements Closeable{
 		Collection<File> c = new ArrayList<File>(1);
 		c.add(f);		
 		addFiles(c);		
+	}
+
+	public void getUnmodifiedWorkspace(List<ConfigurationItem> list) throws WorkspaceException 
+	{
+		try {
+			parser.getUnmodifiedFiles(list);
+		} catch (WorkspaceConfigParserException e) {
+			throw new WorkspaceException("Problem in generate unmodified files",e);
+		}		
 	}
 }
 
