@@ -10,7 +10,18 @@
  */
 package br.uff.ic.gardener.gui;
 
-import java.awt.ComponentOrientation;
+import br.uff.ic.gardener.RevisionCommited;
+import br.uff.ic.gardener.RevisionID;
+import br.uff.ic.gardener.TransationException;
+import br.uff.ic.gardener.client.APIClient;
+import br.uff.ic.gardener.client.APIClientException;
+import br.uff.ic.gardener.comm.ComClientException;
+import br.uff.ic.gardener.workspace.WorkspaceException;
+import java.io.File;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
@@ -18,7 +29,6 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 
 /**
  *
@@ -43,37 +53,42 @@ public class MainFrame extends javax.swing.JFrame {
         buttonGroup1 = new javax.swing.ButtonGroup();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
-        jSeparator2 = new javax.swing.JSeparator();
         checkoutButton = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         revNoCheckinjTextField1 = new javax.swing.JTextField();
-        jRadioButton2 = new javax.swing.JRadioButton();
-        jRadioButton1 = new javax.swing.JRadioButton();
+        jRadioButtonRevN = new javax.swing.JRadioButton();
+        jRadioButtonHEAD = new javax.swing.JRadioButton();
         jLabel5 = new javax.swing.JLabel();
-        pathWorkingSpaceCheckout = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
-        checkoutPathBrowser = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jSeparator1 = new javax.swing.JSeparator();
-        jLabel2 = new javax.swing.JLabel();
-        checkinBrowserjButton = new javax.swing.JButton();
         checkinjButton5 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         commitMessagejTextArea = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
         userField = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
-        pathWorkDirCheckin = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         logButton = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         logTextArea = new javax.swing.JTextArea();
+        jPanel3 = new javax.swing.JPanel();
+        pathAddFile = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        addFileButton = new javax.swing.JButton();
+        addFindFileButton = new javax.swing.JButton();
+        jPanel5 = new javax.swing.JPanel();
+        projectNameField = new javax.swing.JTextField();
+        jLabel9 = new javax.swing.JLabel();
+        initButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTree1 = new javax.swing.JTree();
         urlRepo = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        checkoutBrowserjButton1 = new javax.swing.JButton();
+        listDir = new javax.swing.JButton();
+        pathWorkspace = new javax.swing.JTextField();
+        pathBrowserButton = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setFont(new java.awt.Font("Tahoma", 0, 14));
@@ -88,12 +103,12 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel6.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel6.setEnabled(false);
 
-        buttonGroup1.add(jRadioButton2);
-        jRadioButton2.setText("Revison no.:");
+        buttonGroup1.add(jRadioButtonRevN);
+        jRadioButtonRevN.setText("Revison no.:");
 
-        buttonGroup1.add(jRadioButton1);
-        jRadioButton1.setSelected(true);
-        jRadioButton1.setText("HEAD");
+        buttonGroup1.add(jRadioButtonHEAD);
+        jRadioButtonHEAD.setSelected(true);
+        jRadioButtonHEAD.setText("HEAD");
 
         jLabel5.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel5.setText("Revision");
@@ -107,9 +122,9 @@ public class MainFrame extends javax.swing.JFrame {
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(17, 17, 17)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jRadioButton1)
+                            .addComponent(jRadioButtonHEAD)
                             .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addComponent(jRadioButton2)
+                                .addComponent(jRadioButtonRevN)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(revNoCheckinjTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel6Layout.createSequentialGroup()
@@ -122,23 +137,13 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
                 .addComponent(jLabel5)
                 .addGap(18, 18, 18)
-                .addComponent(jRadioButton1)
+                .addComponent(jRadioButtonHEAD)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jRadioButton2)
+                    .addComponent(jRadioButtonRevN)
                     .addComponent(revNoCheckinjTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(24, Short.MAX_VALUE))
         );
-
-        jLabel11.setFont(new java.awt.Font("Tahoma", 0, 12));
-        jLabel11.setText("Working directory:");
-
-        checkoutPathBrowser.setText("...");
-        checkoutPathBrowser.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkoutPathBrowserActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -147,44 +152,21 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel11)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(pathWorkingSpaceCheckout, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(checkoutPathBrowser, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(checkoutButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jSeparator2, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE))
+                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(checkoutButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(pathWorkingSpaceCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkoutPathBrowser, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(53, 53, 53)
-                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(19, 19, 19)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(90, 90, 90)
                 .addComponent(checkoutButton, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(123, 123, 123))
+                .addGap(86, 86, 86))
         );
 
         jTabbedPane1.addTab("Checkout", jPanel2);
-
-        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 12));
-        jLabel2.setText("Working directory:");
-
-        checkinBrowserjButton.setText("...");
-        checkinBrowserjButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkinBrowserjButtonActionPerformed(evt);
-            }
-        });
 
         checkinjButton5.setText("OK");
         checkinjButton5.addActionListener(new java.awt.event.ActionListener() {
@@ -201,60 +183,39 @@ public class MainFrame extends javax.swing.JFrame {
         jLabel6.setText("Commit message:");
 
         jLabel7.setFont(new java.awt.Font("Tahoma", 0, 12));
-        jLabel7.setText("User");
+        jLabel7.setText("User:");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(pathWorkDirCheckin, javax.swing.GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(checkinBrowserjButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(14, 14, 14))
-                    .addComponent(jLabel6)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(checkinjButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addContainerGap(328, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(userField, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(311, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(jSeparator1, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
+                    .addComponent(checkinjButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel7)
-                        .addContainerGap(405, Short.MAX_VALUE))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(userField, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.LEADING))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(32, 32, 32)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(checkinBrowserjButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pathWorkDirCheckin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(13, 13, 13)
-                .addComponent(jLabel7)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(userField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel7)
+                    .addComponent(userField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(5, 5, 5)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(checkinjButton5)
                 .addContainerGap())
         );
@@ -286,14 +247,99 @@ public class MainFrame extends javax.swing.JFrame {
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(23, 23, 23)
                 .addComponent(logButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Log", jPanel4);
+
+        jLabel1.setText("Arquivo a ser adicionado:");
+
+        addFileButton.setText("Adicionar");
+        addFileButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFileButtonActionPerformed(evt);
+            }
+        });
+
+        addFindFileButton.setText("...");
+        addFindFileButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFindFileButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(addFileButton, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .addComponent(pathAddFile, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(addFindFileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel1))
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(56, 56, 56)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(pathAddFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(addFindFileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 110, Short.MAX_VALUE)
+                .addComponent(addFileButton)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Add", jPanel3);
+
+        jLabel9.setText("Nome do projeto:");
+
+        initButton.setText("Init");
+        initButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                initButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel9)
+                .addGap(18, 18, 18)
+                .addComponent(projectNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(200, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap(380, Short.MAX_VALUE)
+                .addComponent(initButton)
+                .addContainerGap())
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(41, 41, 41)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(projectNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(145, 145, 145)
+                .addComponent(initButton)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Init", jPanel5);
 
         jScrollPane2.setViewportView(jTree1);
 
@@ -305,12 +351,16 @@ public class MainFrame extends javax.swing.JFrame {
         jLabel3.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel3.setText("Repository");
 
-        checkoutBrowserjButton1.setText("OK");
-        checkoutBrowserjButton1.addActionListener(new java.awt.event.ActionListener() {
+        listDir.setText("OK");
+
+        pathBrowserButton.setText("...");
+        pathBrowserButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkoutBrowserjButton1ActionPerformed(evt);
+                pathBrowserButtonActionPerformed(evt);
             }
         });
+
+        jLabel2.setText("Workspace:");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -321,44 +371,60 @@ public class MainFrame extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 210, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 206, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel4)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(urlRepo, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(checkoutBrowserjButton1))
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 444, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(listDir)))
+                        .addGap(6, 6, 6)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(pathWorkspace, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(pathBrowserButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 444, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.LEADING, 0, 0, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jLabel3)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel2))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(urlRepo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(checkoutBrowserjButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(listDir, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(pathBrowserButton, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(pathWorkspace, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(8, 8, 8)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTabbedPane1, 0, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private String selectFile() {
+    private String selectDir() {
 
         String filePath = "None";
 
@@ -382,34 +448,75 @@ public class MainFrame extends javax.swing.JFrame {
         return filePath;
     }
 
-    private void checkinBrowserjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkinBrowserjButtonActionPerformed
+    private String selectFile() {
+
+        String filePath = "None";
+
+        JFileChooser chooser = new JFileChooser();
+        //chooser.setCurrentDirectory(new java.io.File("."));
+        chooser.setDialogTitle("Selecione o diretório desejado");
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        //
+        // disable the "All files" option.
+        //
+        // chooser.setAcceptAllFileFilterUsed(false);
+        //
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            // System.out.println("getCurrentDirectory(): "
+            //    +  chooser.getCurrentDirectory());
+
+            filePath = chooser.getSelectedFile().toString();
+        } else {
+            System.out.println("No Selection");
+        }
+        return filePath;
+    }
+
+    private void pathBrowserButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pathBrowserButtonActionPerformed
         // TODO add your handling code here:
-        pathWorkDirCheckin.setText(this.selectFile());
+        pathWorkspace.setText(this.selectDir());
 
-
-    }//GEN-LAST:event_checkinBrowserjButtonActionPerformed
-
-    private void checkoutPathBrowserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkoutPathBrowserActionPerformed
-//
-        pathWorkingSpaceCheckout.setText(this.selectFile());
-
-}//GEN-LAST:event_checkoutPathBrowserActionPerformed
+    }//GEN-LAST:event_pathBrowserButtonActionPerformed
 
     private void checkoutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkoutButtonActionPerformed
 
         //get the url from where we want our files:
-        String urlToPass = pathWorkingSpaceCheckout.getText();
+        String urlToPass = pathWorkspace.getText();
 
-        //TODO when the "HEAD or revision option works, get the chosen option and store it
+        //TODO gotta check if strings are ok.
 
-        //TODO give the URL to the guy who will take care of all the "getting the files" thing: the ClientAPI!
+        String _uriWorkspace = pathWorkspace.getText();
+        String _uriServer = urlRepo.getText();
+        RevisionID rev = null;
 
-        //TODO in case of success, show a "success message" :)
+        if (jRadioButtonHEAD.isSelected()) {
+            rev = RevisionID.LAST_REVISION; // será que ele considera isso mesmo?
+        } else {
+            String revN = revNoCheckinjTextField1.getText();
+            rev = new RevisionID(Long.parseLong(revN));
+        }
 
-        //TODO in case of failure, show a "failure" message :(
+        try {
+            if (isAPIClientOn()) {
+
+                //checkout
+                try {
+                    apiClient.checkout(rev);
+                } catch (TransationException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
 
 
+            } else {
+                JOptionPane.showMessageDialog(null, "Ocorreu um erro. Verifique se o workspace e a URL para o servidor estão definidos.");
+            }
 
+
+        } catch (APIClientException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        JOptionPane.showMessageDialog(null, "Checkout feito em: " + pathWorkspace.getText());
 
     }//GEN-LAST:event_checkoutButtonActionPerformed
 
@@ -417,73 +524,115 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         //getting the url:
-        // String url = urlCheckinTextField.getText();
-        String url = urlRepo.getText();
+        String uriWorkspace = pathWorkspace.getText();
+        String urlRep = urlRepo.getText();
+
         //get the commit message
         String commitMessage = commitMessagejTextArea.getText();
+        try {
+            //        try {
+            //            if (apiClient == null) {
+            //                apiClient = new APIClient(new File(uriWorkspace), URI.create(urlRep));
+            //            }
+            //        } catch (APIClientException ex) {
+            //            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            //        }
+            if (isAPIClientOn()) {
 
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Nivel 0");
+                apiClient.setUser(userField.getText());
 
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Nivel 1");
-        top.add(node);
+                try {
+                    RevisionID revID = apiClient.commit(commitMessage);
+                    JOptionPane.showMessageDialog(this, "New revision created under no. " + revID.toString() + ".\n", "Commit OK", JOptionPane.PLAIN_MESSAGE);
+                } catch (TransationException ex) {
+                    // Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    JOptionPane.showMessageDialog(null, "Ocorreu um problema ao realizar o commit", "Erro", JOptionPane.ERROR);
+                }
 
-        top.add(new DefaultMutableTreeNode("Nivel 2"));
-
-        DefaultMutableTreeNode n3 = new DefaultMutableTreeNode("Arquivo1");
-        top.add(n3);
-
-        n3.add(new DefaultMutableTreeNode("Arquivo2"));
-        //  DefaultTreeModel tm = ;
-        //adding the tree structure in the jTree
-        //jTree1.setModel(new DefaultTreeModel(top));
-        DefaultTreeModel dtm = (DefaultTreeModel) jTree1.getModel();
-
-        dtm.setRoot(top);
-
-        JOptionPane.showMessageDialog(this, "New revision created under no. x\n4 arquivos modificados", "Commit OK", JOptionPane.PLAIN_MESSAGE);
-
-
-        //TODO give the info for the CLientAPI method responsible for doing the checkin
+            } else {
+                JOptionPane.showMessageDialog(null, "Ocorreu um erro. Verifique se o workspace e a URL para o servidor estão definidos.");
+            }
+        } catch (APIClientException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }//GEN-LAST:event_checkinjButton5ActionPerformed
 
-    private void checkoutBrowserjButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkoutBrowserjButton1ActionPerformed
-        // TODO add your handling code here:
-
-        //buscar a lista para exibir
-
-        //montar a lista de diretórios e jogar na jTree
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Nivel 0");
-
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Nivel 1");
-        top.add(node);
-
-        top.add(new DefaultMutableTreeNode("Nivel 2"));
-
-
-        node.add(new DefaultMutableTreeNode("Arquivo1"));
-
-        //  DefaultTreeModel tm = ;
-        //adding the tree structure in the jTree
-        jTree1.setModel(new DefaultTreeModel(top));
-
-
-    }//GEN-LAST:event_checkoutBrowserjButton1ActionPerformed
-
     private void logButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logButtonActionPerformed
+        try {
+
+            if (isAPIClientOn()) {
+                try {
+                    ArrayList<RevisionCommited> coll = new ArrayList<RevisionCommited>();
+                    apiClient.generateLog(coll, RevisionID.ZERO_REVISION, RevisionID.LAST_REVISION);
+
+                    for (RevisionCommited revisionCommited : coll) {
+                        logTextArea.append(revisionCommited + "\n");
+                    }
+
+                } catch (ComClientException ex) {
+                    JOptionPane.showMessageDialog(null, "Problema ao gerar o log");
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            } else {
+                JOptionPane.showMessageDialog(null, "Ocorreu um erro. Verifique se o workspace e a URL para o servidor estão definidos.");
+            }
+
+        } catch (APIClientException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_logButtonActionPerformed
+
+    private void addFindFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFindFileButtonActionPerformed
+        // TODO add your handling code here:
+        pathAddFile.setText(this.selectFile());
+
+    }//GEN-LAST:event_addFindFileButtonActionPerformed
+
+    private void addFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFileButtonActionPerformed
         // TODO add your handling code here:
 
-        //get the log from the file selected
 
-        TreePath tp = jTree1.getSelectionModel().getSelectionPath();
-        String[] path = (String[]) tp.getPath();
+//        try {
+//            if (apiClient == null) {
+//                apiClient = new APIClient(new File(uriWorkspace), URI.create(urlRep));
+//            }
+//        } catch (APIClientException ex) {
+//            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        ArrayList<File> listFiles = new ArrayList<File>();
+        File file = new File(pathAddFile.getText());
+        listFiles.add(file);
+        try {
+            apiClient.addFiles(listFiles);
 
-        logTextArea.setText("Log para "+path[path.length-1]+"\n Nada!");
-        
+            JOptionPane.showMessageDialog(null, "Arquivo adicionado com sucesso.");
 
+        } catch (APIClientException ex) {
+            //  Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "Problema na APICLient ao adicionar o arquivo.");
+        } catch (WorkspaceException ex) {
+            //  Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "Problema no Workspace ao adicionar o arquivo.\n Verifique se o arquivo já não está adicionado.");
+        }
 
+    }//GEN-LAST:event_addFileButtonActionPerformed
 
-    }//GEN-LAST:event_logButtonActionPerformed
+    private void initButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_initButtonActionPerformed
+        try {
+            // TODO add your handling code here:
+            //urlRepo.getText();
+            apiClient.init(projectNameField.getText());
+        } catch (APIClientException ex) {
+            // Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "Problema ao criar projeto no servidor");
+        } catch (WorkspaceException ex) {
+            // Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "Problema ao criar projeto no servidor");
+        }
+
+    }//GEN-LAST:event_initButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -515,38 +664,44 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
     }
+    APIClient apiClient;
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addFileButton;
+    private javax.swing.JButton addFindFileButton;
     private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.JButton checkinBrowserjButton;
     private javax.swing.JButton checkinjButton5;
-    private javax.swing.JButton checkoutBrowserjButton1;
     private javax.swing.JButton checkoutButton;
-    private javax.swing.JButton checkoutPathBrowser;
     private javax.swing.JTextArea commitMessagejTextArea;
-    private javax.swing.JLabel jLabel11;
+    private javax.swing.JButton initButton;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
-    private javax.swing.JRadioButton jRadioButton1;
-    private javax.swing.JRadioButton jRadioButton2;
+    private javax.swing.JRadioButton jRadioButtonHEAD;
+    private javax.swing.JRadioButton jRadioButtonRevN;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTree jTree1;
+    private javax.swing.JButton listDir;
     private javax.swing.JButton logButton;
     private javax.swing.JTextArea logTextArea;
-    private javax.swing.JTextField pathWorkDirCheckin;
-    private javax.swing.JTextField pathWorkingSpaceCheckout;
+    private javax.swing.JTextField pathAddFile;
+    private javax.swing.JButton pathBrowserButton;
+    private javax.swing.JTextField pathWorkspace;
+    private javax.swing.JTextField projectNameField;
     private javax.swing.JTextField revNoCheckinjTextField1;
     private javax.swing.JTextField urlRepo;
     private javax.swing.JTextField userField;
@@ -565,6 +720,21 @@ public class MainFrame extends javax.swing.JFrame {
      */
     public void setUrlCheckoutTextField(String path) {
         urlRepo.setText(path);
+    }
+
+    private boolean isAPIClientOn() throws APIClientException {
+        String pathWork = pathWorkspace.getText();
+        String urlServer = urlRepo.getText();
+        if (pathWork.equals("") || urlServer.equals("")) {
+            return false;
+        }
+        if (apiClient == null) {
+            apiClient = new APIClient(new File(pathWork), URI.create(urlServer));
+            return true;
+        }
+
+        return false;
+
     }
 
     private void initLogTree() {
