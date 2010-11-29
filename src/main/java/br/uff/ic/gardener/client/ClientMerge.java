@@ -1,7 +1,6 @@
 package br.uff.ic.gardener.client;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +57,48 @@ public class ClientMerge {
 		f1.delete();
 		f2.delete();
 		//fBase.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 
+		
+		
+	}
+	
+	/**
+	 * Two away merge	
+	 */
+	public InputStream merge2(
+	ConfigurationItem ciServ,
+	ConfigurationItem ciWork
+	) throws ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(ciServ);
+		File f2 	= createFile(ciWork);
+		
+		lastConflict = false;
+		IMerge realMerge =  new MergeWithRegEx();
+		//faz o merge	
+		File fDest = createFile();
+		try
+		{
+			Boolean b = realMerge.merge(f1, f2, fDest);
+			lastConflict = (b!=null)?b:false;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		f1.delete();
+		f2.delete();
 		
 		try {
 			

@@ -1,6 +1,5 @@
 package br.uff.ic.gardener.workspace;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 

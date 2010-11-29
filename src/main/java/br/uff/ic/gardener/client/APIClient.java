@@ -18,7 +18,6 @@ import br.uff.ic.gardener.client.ClientMerge.ClientMergeException;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
-import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;

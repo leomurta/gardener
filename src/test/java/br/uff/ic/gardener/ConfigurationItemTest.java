@@ -8,8 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -22,7 +20,6 @@ import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
-import br.uff.ic.gardener.util.UtilStream;
 
 /**
  * Test the Configuration Item in principal the FileInputStream stress-open capacity 

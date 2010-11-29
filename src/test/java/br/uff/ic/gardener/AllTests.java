@@ -1,6 +1,6 @@
 package br.uff.ic.gardener;
 
-import org.junit.runner.RunWith;
+/*import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
@@ -11,7 +11,7 @@ import br.uff.ic.gardener.workspace.WorkspaceTest;
 import br.uff.ic.gardener.util.FileHelperTest;
 import br.uff.ic.gardener.util.TokenizerWithQuoteTest;
 import br.uff.ic.gardener.patch.PatchTest;
-
+*/
 //@RunWith(Suite.class)
 //@SuiteClasses({ 
 //	WorkspaceTest.class, 

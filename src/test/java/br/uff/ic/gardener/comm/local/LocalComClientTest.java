@@ -2,12 +2,10 @@ package br.uff.ic.gardener.comm.local;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -15,15 +13,11 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 
-import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.util.FileHelper;
-import br.uff.ic.gardener.util.TestWithTemporaryPath;
-import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.workspace.WorkspaceTest;
 
 public class LocalComClientTest {

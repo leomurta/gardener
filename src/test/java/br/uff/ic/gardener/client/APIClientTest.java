@@ -15,9 +15,7 @@ import org.junit.Test;
 
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.util.FileHelper;
-import br.uff.ic.gardener.workspace.Workspace;
-import br.uff.ic.gardener.workspace.WorkspaceException;
-import br.uff.ic.gardener.workspace.WorkspaceTest;
+
 
 /**
  * @author Marcos

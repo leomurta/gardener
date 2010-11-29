@@ -20,7 +20,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.ExampleMode;
 import org.kohsuke.args4j.Option;
 
-import com.mongodb.io.StreamUtil;
 
 import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
@@ -38,7 +37,6 @@ import br.uff.ic.gardener.util.TokenizerWithQuote;
 import br.uff.ic.gardener.util.UtilStream;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.WorkspaceException;
-import br.uff.ic.gardener.workspace.WorkspaceOperation.Operation;
 
 
 /**

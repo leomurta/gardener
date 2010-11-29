@@ -127,6 +127,7 @@ public class WorkspaceTest{
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static void createWorkspaceStruct(File filePath, boolean fillProfile) throws IOException
 	{
 		

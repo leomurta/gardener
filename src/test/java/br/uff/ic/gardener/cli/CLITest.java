@@ -21,16 +21,13 @@ import java.util.zip.ZipOutputStream;
 
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import br.uff.ic.gardener.comm.localfake.LocalFakeComClient;
 import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
-import br.uff.ic.gardener.workspace.WorkspaceTest;
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
 

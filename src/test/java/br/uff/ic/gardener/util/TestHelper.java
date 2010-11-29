@@ -4,7 +4,6 @@
  */
 package br.uff.ic.gardener.util;
 
-import br.uff.ic.gardener.util.FileHelper;
 import br.uff.ic.gardener.util.TextHelper;
 import br.uff.ic.gardener.util.UtilStream;
 import java.io.ByteArrayOutputStream;

@@ -240,16 +240,7 @@ public class WorkspaceConfigParser
 		}
 		
 	}
-	private InputStream generateInputStream(String strFile) {
-		File file = new File(directory, strFile);
-		try
-		{
-			return new FileInputStream(file);
-		}catch(FileNotFoundException e)
-		{
-			return null;
-		}
-	}
+	
 
 	/**
 	 * Append operations in the operation file
