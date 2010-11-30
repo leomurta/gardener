@@ -2,6 +2,8 @@ package br.uff.ic.gardener.diff;
 import java.io.File;
 import java.util.List;
 
+import br.uff.ic.gardener.diff.DiffException;
+
 /**
  *
  * @author Fernanda
@@ -27,8 +29,9 @@ public class Diff {
     /**
      * Runs the diff according to the comparison algorithm
      * @return Object IResultDiff
+     * @throws br.uff.ic.gardener.diff.DiffException 
      */
-    public IResultDiff compare() throws DiffException {
+    public IResultDiff compare() throws DiffException, br.uff.ic.gardener.diff.DiffException {
         IDiff comparator = AlgorithmsFactory.getComparator(fileVersionOne, fileVersionTwo);
         return comparator.diff(fileVersionOne, fileVersionTwo);
     }

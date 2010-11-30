@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,6 +19,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import com.mongodb.io.StreamUtil;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.RevisionID;
@@ -308,10 +311,6 @@ public class Workspace implements Closeable{
 			throw new WorkspaceException("Cannot checkout", e);
 		}
 	}
-
-	/*private File getPathUnmodified() {
-		return new File(getPath(), ".unmodified");
-	}*/
 
 	private 	static Collection<File> tempColl = new ArrayList<File>();
 	public void removeFile(File file) throws WorkspaceException 
@@ -953,13 +952,71 @@ public class Workspace implements Closeable{
 		addFiles(c);		
 	}
 
-	public void getUnmodifiedWorkspace(List<ConfigurationItem> list) throws WorkspaceException 
-	{
+
+	public InputStream getCIStream(CIWorkspaceStatus ciWork) {
+		File f = null; 
+		f = new File(getPath(), ciWork.getStringID());
 		try {
-			parser.getUnmodifiedFiles(list);
-		} catch (WorkspaceConfigParserException e) {
-			throw new WorkspaceException("Problem in generate unmodified files",e);
-		}		
+			return new FileInputStream(f);
+		} catch (FileNotFoundException e) {
+			return null;
+		}
+	}
+
+	public void replaceCI(CIWorkspace ciWork, InputStream in) throws WorkspaceException {
+		File f = new File(getPath(), ciWork.getStringID());
+		if(!f.exists())
+			throw new WorkspaceException("Cannot find file to replace", null);
+		
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(f);
+			UtilStream.copy(in, out);
+		} catch (FileNotFoundException e) {
+			throw new WorkspaceException("File to replace not found", e);
+		} catch (IOException e) {
+			throw new WorkspaceException("problems in replace file: " + f.toString(), e);
+		}finally
+		{
+			try {
+				if(out != null)
+					out.close();
+			} catch (IOException e) {
+				
+			}
+		}
+	}
+
+	public void createAndAddFile(URI uri, InputStream in) throws WorkspaceException {
+		File f = new File(getPath(), uri.getPath());
+		if(f.exists())
+			throw new WorkspaceException("File exists: " + f.toString(), null);
+		
+		OutputStream out = null;
+		
+		try {
+			f = FileHelper.createFile(getPath(), uri.getPath());
+			
+			out = new FileOutputStream(f);
+			UtilStream.copy(in, out);
+		} catch (IllegalArgumentException e) {
+			throw new WorkspaceException("arguments to create file " + f.toString() + "Invalids", e);
+		} catch (IOException e) {
+			throw new WorkspaceException("IO exception for file " + f.toString(), e);
+		}
+		finally
+		{
+			if(out != null)
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+		
+		Collection<File> coll = new ArrayList<File>(1);
+		coll.add(f);
+		this.addFiles(tempColl);
 	}
 }
 

@@ -5,7 +5,6 @@
 
 package br.uff.ic.gardener.cli;
 
-import br.uff.ic.gardener.diff.DiffException;
 import java.io.File;
 import java.net.URI;
 import java.text.DateFormat;
@@ -534,10 +533,12 @@ public class CLI {
 		getClient().init(string);
 	}
 
-	private void onUpdate() throws TransationException
+	private void onUpdate() throws APIClientException
 	{
 		List<Conflict> list =  new LinkedList<Conflict>();
+	
 		getClient().update(list);
+		
 		for(Conflict c: list)
 		{
 			System.out.println(String.format("The workspace file: %s has have conflict", c.getPathB().getPath()));
@@ -677,13 +678,13 @@ public class CLI {
 			throw new TransationException(str.toString());
 		}
 		
-                try {
+       /*         try {
                     Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
                     diff.setOutputFormat();
                 } catch (DiffException ex) {
                     throw new TransationException("Erro fatal durante execução do diff", ex);
                 }
-        
+        */
 		//usem estas variáveis
 		bDiffIgnoreWhiteSpaces = false;
 			

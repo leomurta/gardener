@@ -3,8 +3,10 @@ package br.uff.ic.gardener.client;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
 import br.uff.ic.gardener.ConfigurationItem;
 import br.uff.ic.gardener.merge.IMerge;
@@ -42,6 +44,85 @@ public class ClientMerge {
 	{
 		pathTemp = FileHelper.createTemporaryRandomPath();
 	}
+
+	public InputStream merge(		
+			InputStream inS,
+			InputStream inW,
+			InputStream inO
+			) throws ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(inS);
+		File f2 	= createFile(inW);
+		File fBase	= createFile(inO);
+		File fDest  = internalMerge(f1, f2, fBase);
+		
+		f1.delete();
+		f2.delete();
+		fBase.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 				
+	}
+	
+	public InputStream merge(		
+			Reader inS,
+			Reader inW
+			) throws ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(inS);
+		File f2 	= createFile(inW);
+		File fDest  = internalMerge(f1, f2);
+		
+		f1.delete();
+		f2.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 			
+	}
+	public InputStream merge(		
+			InputStream inS,
+			InputStream inW
+			) throws ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(inS);
+		File f2 	= createFile(inW);
+		File fDest  = internalMerge(f1, f2);
+		
+		f1.delete();
+		f2.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 				
+	}
+	
+	
 	
 	public InputStream merge(		
 			ConfigurationItem ciServ,
@@ -67,9 +148,7 @@ public class ClientMerge {
 			throw new ClientMergeException("Error at create File Destiny", e);
 		} catch (IOException e) {
 			throw new ClientMergeException("Error at generate InputStream", e);
-		} 
-		
-		
+		} 				
 	}
 	
 	/**
@@ -132,6 +211,27 @@ public class ClientMerge {
 		f1.delete();
 		f2.delete();
 		fBase.delete();
+		
+		return fDest;
+	}
+	
+	private File internalMerge(File f1, File f2) throws ClientMergeException
+	{
+		lastConflict = false;
+		IMerge realMerge =  new MergeWithRegEx();
+		//faz o merge	
+		File fDest = createFile();
+		try
+		{
+			Boolean b = realMerge.merge(f1, f2, fDest);
+			lastConflict = (b!=null)?b:false;
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		f1.delete();
+		f2.delete();
 		
 		return fDest;
 	}
@@ -252,6 +352,7 @@ public class ClientMerge {
 		}
 		return f;
 	}
+	
 	private File createFile(ConfigurationItem ci) throws ClientMergeException {
 		File f = createFile();
 		FileOutputStream fOut = null;
@@ -268,6 +369,46 @@ public class ClientMerge {
 		
 		return f;
 	}
+	
+
+	private File createFile(Reader in) throws ClientMergeException {
+		File f = createFile();
+		FileWriter fOut = null;
+		try {
+			fOut = new FileWriter(f);
+			//in.r
+			char[] cbuf = new char[1024];
+			in.read(cbuf);
+			int byteRead = 0;
+	        while ((byteRead = in.read(cbuf)) > 0) {
+	        	fOut.write(cbuf, 0, byteRead);
+	        }
+			fOut.close();
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Cannot open file " + f.toString(), e);
+		} catch (IOException e) {
+			throw new ClientMergeException("File output problem: " + f.toString(), e);
+		}
+		
+		return f;
+	}
+	
+	private File createFile(InputStream in) throws ClientMergeException {
+		File f = createFile();
+		FileOutputStream fOut = null;
+		try {
+			fOut = new FileOutputStream(f);
+			UtilStream.copy(in, fOut);
+			fOut.close();
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Cannot open file " + f.toString(), e);
+		} catch (IOException e) {
+			throw new ClientMergeException("File output problem: " + f.toString(), e);
+		}
+		
+		return f;
+	}
+
 
 	public void close()
 	{

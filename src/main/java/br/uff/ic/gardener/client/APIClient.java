@@ -4,6 +4,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,7 +20,9 @@ import br.uff.ic.gardener.client.ClientMerge.ClientMergeException;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
+import br.uff.ic.gardener.workspace.CIWorkspace;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
+import br.uff.ic.gardener.workspace.Status;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
 import br.uff.ic.gardener.ConfigurationItem;
@@ -108,7 +112,6 @@ public class APIClient {
 		} catch (IOException e) {
 			throw new APIClientException("Cannot create ClientMerge and generate IOException", e);
 		}
-		getWorkspace();
 		workspace.setServSource(_uriServ);		
 	}
 	
@@ -244,6 +247,192 @@ public class APIClient {
 		return true; 
 	}
 	
+	
+	/**
+	 * S W B ->Merge 3Way
+	 * S W _ ->Merge 2Way
+	 * _ W B ->Nothing
+	 * S _ B ->Conflito, ws removeu um arquivo
+	 * S _ _ ->Adiciona S
+	 * _ W _ ->Faz anda, W deve ser um add
+	 * _ _ B ->inconsistente, deveria ter informação de remoção em W.
+	 * @param collConflict collection of conflicts  
+	 */
+	public void update(Collection<Conflict> collConflict) throws APIClientException
+	{
+		List<ConfigurationItem> listS = new LinkedList<ConfigurationItem>(); //new version in the Serv
+		List<ConfigurationItem> listO = new LinkedList<ConfigurationItem>(); //Original version
+		
+		List<CIWorkspaceStatus> listW = new LinkedList<CIWorkspaceStatus>(); //modifications in the workspace
+		
+		try {
+			getComClient().checkout("", RevisionID.LAST_REVISION, listS);
+			getComClient().checkout("", getWorkspace().getCurrentRevision(), listO);
+			getWorkspace().getStatus(listW);
+			Collections.sort(listS);
+			Collections.sort(listO);
+			Collections.sort(listW);
+		} catch (ComClientException e) {
+			throw new APIClientException("Cannot get versions to update", e);
+		} catch (WorkspaceException e) {
+			throw new APIClientException("Cannot get workspace status to update", e);
+		}
+		
+		Iterator<ConfigurationItem> itS = listS.iterator();
+		Iterator<CIWorkspaceStatus> itW = listW.iterator();
+		Iterator<ConfigurationItem> itO = listO.iterator();
+		ConfigurationItem ciS = null;
+		ConfigurationItem ciO = null;
+		CIWorkspaceStatus ciW = null;
+		
+		
+			ciS = next(itS);		
+			ciO = next(itO);		
+			ciW = next(itW);
+		
+		while(ciS != null || ciO  != null && ciW != null)
+		{
+			
+			int S_O = compareCI(ciS, ciO);
+			
+			int S_W = compareCI(ciS, ciW);
+			
+			int W_O = compareCI(ciO, ciW);
+			
+			if((0 == S_O)  && (0 == W_O) &&  (0 == S_W)) //igual
+			{
+				//faz 3Way merge
+				boolean conflict = merge(ciS,ciW, ciO);
+				if(conflict)
+				{
+					collConflict.add(new Conflict(ciS.getUri(), ciW.getURI()));
+				}
+				ciS = next(itS);		
+				ciO = next(itO);		
+				ciW = next(itW);
+				
+			}else if(0 == S_O)
+			{	
+				throw new APIClientException("Not implemented", null);
+			}else if(0 == S_W)
+			{
+				boolean conflict = merge(ciS,ciW);
+				if(conflict)
+				{
+					collConflict.add(new Conflict(ciS.getUri(), ciW.getURI()));
+				}
+				ciS = next(itS);		
+				ciW = next(itW);
+			}else if(0 == W_O)
+			{
+				throw new APIClientException("Not implemented", null);
+			}else
+			{ 
+				//os três diferentes
+				if(S_W < 0 && S_O < 0) //S<W && S<O S menor
+				{
+					//novo no servidor
+					try {
+						getWorkspace().createAndAddFile(ciS.getUri(), ciS.getItemAsInputStream());
+					} catch (WorkspaceException e) {
+						throw new APIClientException("Problem in create file to Update", e);
+					}
+					finally
+					{
+						forceClose(ciS.getItemAsInputStream());
+					}
+					ciS = next(itS);
+				}else if(S_W > 0 && W_O < 0) //W<O && W<S W menor
+				{
+					//adicionado
+					ciW = next(itW);
+				}else if(S_O > 0 && W_O > 0)//O<S && O<W O menor
+				{
+					//inconsistente!
+					throw new APIClientException("Inconsistent state: Cannnot exist only original file", null);
+					//ciO = next(itO);
+				}
+				
+			}
+		}
+	}
+	
+	private boolean merge(ConfigurationItem ciS, CIWorkspaceStatus ciW) {
+		boolean conflict = false;
+		try {
+			switch(ciW.getStatus())
+			{
+			
+				case ADD:
+				case MOD:
+				case VER:
+				case UNVER:
+				//case RENAME:
+					Reader inS = new InputStreamReader(ciS.getItemAsInputStream());
+					Reader inW = new InputStreamReader(getWorkspace().getCIStream(ciW));
+					InputStream in = merge.merge(inS, inW);
+					forceClose(inS);
+					forceClose(inW);
+					getWorkspace().replaceCI(ciW, in);
+					conflict = merge.lastConflict();
+				break;
+				default:
+					conflict = true;
+			}			
+		} catch (ClientMergeException e) {
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			e.printStackTrace();
+		} catch (WorkspaceException e) {
+			e.printStackTrace();
+		}
+		return conflict; 
+	}
+
+	private static int compareCI(ConfigurationItem a, ConfigurationItem b)
+	{
+		if(a == null)
+		{
+			if(b == null)
+				return 0;
+			else
+				return Integer.MAX_VALUE;
+		}else
+		{
+			if(b == null)
+				return Integer.MIN_VALUE;
+		}
+		String sA = a.getStringID();
+		String sB = b.getStringID();
+		return sA.compareTo(sB);	
+	}
+	
+	private static int compareCI(ConfigurationItem a, CIWorkspaceStatus b)
+	{
+		if(a == null)
+		{
+			if(b == null)
+				return 0;
+			else
+				return Integer.MAX_VALUE;
+		}else
+		{
+			if(b == null)
+				return Integer.MIN_VALUE;
+		}
+		
+		String sA = a.getStringID();
+		String sB = b.getStringID();
+		return sA.compareTo(sB);		
+	}
+	
+	private static <T> T next(Iterator<T> it)
+	{
+		if(it.hasNext())
+			return it.next();
+		else
+			return null;
+	}
 	/**
 	 * S = W = B -> Merge do arquivo
 	 * S = W < B -> Conflito no arquivo pq o servidor tem um artefato igual a um criado no ws
@@ -252,7 +441,7 @@ public class APIClient {
 	 * S > W < B -> Novo arquivo no WS. Manter
 	 * S < W < B -> Novo arquivo no servidor. Adicionar.
 	 * Update the workspace to the last revision
-	 */
+	 
 	public void update(Collection<Conflict> conflicts) throws TransationException{
 		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
 		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
@@ -308,23 +497,23 @@ public class APIClient {
 			e.printStackTrace();
 		}
 		
-	}
+	}*/
 
 	/**
 	 * Return the workspace CIs without modifications by user
 	 * @param listBase
 	 * @throws APIClientException 
 	 * @throws WorkspaceException 
-	 */
+	
 	private void getUnmodifiedWorkspace(List<ConfigurationItem> listBase) throws WorkspaceException, APIClientException {
 		getWorkspace().getUnmodifiedWorkspace(listBase);
-	}
+	} 
 
 	private void addCIWorkspace(ConfigurationItem ci) throws WorkspaceException, APIClientException
 	{
 		getWorkspace().addNewCI(ci);
 	}
-	
+	*/
 	
 
 	/**
@@ -332,29 +521,41 @@ public class APIClient {
 	 * @param ciServ
 	 * @param ciWork
 	 * @return if it cause conflict
-	 
-	private boolean merge(ConfigurationItem ciLast, ConfigurationItem ciWork, ConfigurationItem ciBase) {
+	 */
+	private boolean merge(ConfigurationItem ciS, CIWorkspaceStatus ciWork, ConfigurationItem ciBase) {
+		boolean conflict = false;
 		try {
-			InputStream in = merge.merge(ciLast, ciWork, ciBase);
-			forceClose(ciLast.getItemAsInputStream());
-			forceClose(ciWork.getItemAsInputStream());
-			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciLast.getRevision());
-			getWorkspace().replaceCI(ci);
+			switch(ciWork.getStatus())
+			{
 			
-			return merge.lastConflict();
-		} catch (WorkspaceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				case ADD:
+				case MOD:
+				case VER:
+				case UNVER:
+				//case RENAME:
+					InputStream inS = ciS.getItemAsInputStream();
+					InputStream inO = ciBase.getItemAsInputStream();
+					InputStream inW = getWorkspace().getCIStream(ciWork);
+					InputStream in = merge.merge(inS, inW, inO);
+					forceClose(inS);
+					forceClose(inO);
+					forceClose(inW);
+					getWorkspace().replaceCI(ciWork, in);
+					conflict = merge.lastConflict();
+				break;
+				default:
+					conflict = true;
+			}			
 		} catch (ClientMergeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (APIClientException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WorkspaceException e) {
 			e.printStackTrace();
 		}
-		return true; 
+		return conflict; 
 	}
-	*/
+
 	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {
 		getWorkspace().getStatus(coll);
 		

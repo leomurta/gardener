@@ -283,8 +283,8 @@ public class WorkspaceConfigParser
 			OutputStream outputStream = new FileOutputStream(new File(directory, STR_FILE_PROFILE));
 			PrintStream ps = new PrintStream(outputStream, true);
 			
-			ps.printf("%s %s%s", STR_SERV_ORIGIN, getWorkspace().getServSource()!=null?workspace.getServSource().toString():"null", UtilStream.getLineSeperator());
-			ps.printf("%s %s%s", STR_REVISION, getWorkspace().getCurrentRevision().toString(), UtilStream.getLineSeperator());
+			ps.printf("%s \"%s\"%s", STR_SERV_ORIGIN, getWorkspace().getServSource()!=null?workspace.getServSource().toString():"null", UtilStream.getLineSeperator());
+			ps.printf("%s \"%s\"%s", STR_REVISION, getWorkspace().getCurrentRevision().toString(), UtilStream.getLineSeperator());
 			ps.printf("%s %d%s", STR_LAST_TIMESTAMP_CHECKOUT, getWorkspace().getCheckoutTime().getTime(), UtilStream.getLineSeperator());
 			
 			for(CIWorkspace ci: getWorkspace().getWorkspaceVersionedContent())
