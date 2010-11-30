@@ -2,13 +2,18 @@ package br.uff.ic.gardener.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -307,6 +312,16 @@ public class FileHelper {
      */
     public static void fillFile( String strFile, String... strVec ) throws IOException {
         fillFile( new File( strFile ), strVec );
+    }
+    
+    public static CharArrayReader generateCharsFromFile(File f) throws IOException
+    {
+    	Reader fin = new FileReader(f);
+    	CharArrayWriter wos = new CharArrayWriter();
+    	UtilStream.copy(fin,wos);    	
+    	fin.close();
+    	wos.close();
+    	return  new CharArrayReader(wos.toCharArray());
     }
     
     public static ByteArrayInputStream generateByteInputStreamFromFile(File f) throws IOException

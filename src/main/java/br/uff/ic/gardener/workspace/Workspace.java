@@ -6,9 +6,13 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -963,6 +967,30 @@ public class Workspace implements Closeable{
 		}
 	}
 
+	public void replaceCI(CIWorkspace ciWork, Reader in) throws WorkspaceException {
+		File f = new File(getPath(), ciWork.getStringID());
+		if(!f.exists())
+			throw new WorkspaceException("Cannot find file to replace", null);
+		
+		Writer out = null;
+		try {
+			out = new FileWriter(f);
+			UtilStream.copy(in, out);
+		} catch (FileNotFoundException e) {
+			throw new WorkspaceException("File to replace not found", e);
+		} catch (IOException e) {
+			throw new WorkspaceException("problems in replace file: " + f.toString(), e);
+		}finally
+		{
+			try {
+				if(out != null)
+					out.close();
+			} catch (IOException e) {
+				
+			}
+		}
+	}
+	
 	public void replaceCI(CIWorkspace ciWork, InputStream in) throws WorkspaceException {
 		File f = new File(getPath(), ciWork.getStringID());
 		if(!f.exists())

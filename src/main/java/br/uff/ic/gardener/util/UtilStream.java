@@ -9,7 +9,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 
 import java.util.Random;
 
@@ -252,6 +254,15 @@ public class UtilStream {
             p.printf("%d%s", i, UtilStream.getLineSeperator());
         }
     }
+
+	public static void copy(Reader in, Writer out) throws IOException {
+		int byteRead = 0;
+		char[] buffer = new char[1024];
+
+        while ((byteRead = in.read(buffer)) > 0) {
+            out.write(buffer, 0, byteRead);
+        }
+	}
 }
 
 

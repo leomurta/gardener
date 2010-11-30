@@ -370,10 +370,11 @@ public class APIClient {
 				//case RENAME:
 					Reader inS = new InputStreamReader(ciS.getItemAsInputStream());
 					Reader inW = new InputStreamReader(getWorkspace().getCIStream(ciW));
-					InputStream in = merge.merge(inS, inW);
+					Reader in = merge.merge(inS, inW);
 					forceClose(inS);
 					forceClose(inW);
 					getWorkspace().replaceCI(ciW, in);
+					in.close();
 					conflict = merge.lastConflict();
 				break;
 				default:
@@ -384,6 +385,9 @@ public class APIClient {
 		} catch (APIClientException e) {
 			e.printStackTrace();
 		} catch (WorkspaceException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return conflict; 

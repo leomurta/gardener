@@ -46,6 +46,34 @@ public class ClientMerge {
 	}
 
 	public InputStream merge(		
+			Reader inS,
+			Reader inW,
+			Reader inO
+			) throws ClientMergeException
+	{
+		//cria arquivos
+		File f1 	= createFile(inS);
+		File f2 	= createFile(inW);
+		File fBase	= createFile(inO);
+		File fDest  = internalMerge(f1, f2, fBase);
+		
+		f1.delete();
+		f2.delete();
+		fBase.delete();
+		
+		try {
+			
+			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			fDest.delete();
+			return is;
+		} catch (FileNotFoundException e) {
+			throw new ClientMergeException("Error at create File Destiny", e);
+		} catch (IOException e) {
+			throw new ClientMergeException("Error at generate InputStream", e);
+		} 				
+	}
+	
+	public InputStream merge(		
 			InputStream inS,
 			InputStream inW,
 			InputStream inO
@@ -73,7 +101,7 @@ public class ClientMerge {
 		} 				
 	}
 	
-	public InputStream merge(		
+	public Reader merge(		
 			Reader inS,
 			Reader inW
 			) throws ClientMergeException
@@ -88,7 +116,7 @@ public class ClientMerge {
 		
 		try {
 			
-			InputStream is = FileHelper.generateByteInputStreamFromFile(fDest);
+			Reader is = FileHelper.generateCharsFromFile(fDest);
 			fDest.delete();
 			return is;
 		} catch (FileNotFoundException e) {
@@ -377,12 +405,7 @@ public class ClientMerge {
 		try {
 			fOut = new FileWriter(f);
 			//in.r
-			char[] cbuf = new char[1024];
-			in.read(cbuf);
-			int byteRead = 0;
-	        while ((byteRead = in.read(cbuf)) > 0) {
-	        	fOut.write(cbuf, 0, byteRead);
-	        }
+			UtilStream.copy(in, fOut);
 			fOut.close();
 		} catch (FileNotFoundException e) {
 			throw new ClientMergeException("Cannot open file " + f.toString(), e);
