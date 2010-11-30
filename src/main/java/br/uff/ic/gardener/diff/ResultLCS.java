@@ -22,7 +22,7 @@ public class ResultLCS implements IResultDiff {
      * @param fileVersionTwo
      * @param lcs
      */
-    public ResultLCS(List fileVersionOne, List fileVersionTwo, List lcs) {
+    public ResultLCS(List fileVersionOne, List fileVersionTwo, List lcs) throws DiffException {
         this.fileVersionOne = fileVersionOne;
         this.fileVersionTwo = fileVersionTwo;
         this.lcs = lcs;
@@ -30,74 +30,61 @@ public class ResultLCS implements IResultDiff {
         loadResult();
     }
 
-    private void loadResult() {
+    private void loadResult() throws DiffException {
         result = new ArrayList();
         int i = 0;
         int j = 0;
-        boolean finish = false;
+
         Iterator itF1 = fileVersionOne.iterator();
         Iterator itF2 = fileVersionTwo.iterator();
 
-        LinesBean lineF1 = (LinesBean) itF1.next();
-        LinesBean lineF2 = (LinesBean) itF2.next();
-        lineF1 = (LinesBean) itF1.next();
-        lineF2 = (LinesBean) itF2.next();
+        LinesBean lineF1 = getNext(itF1);
+        LinesBean lineF2 = getNext(itF2);
 
-        while ((lineF1 != null && lineF2 != null) && (!finish)) {
-            if ((lcs.contains(lineF1)) && (lcs.contains(lineF2))) {
-                setLinesBean(lineF1, i, LinesBean.Situation.UNCHANGED, 1);
-                setLinesBean(lineF2, j, LinesBean.Situation.UNCHANGED, 2);
-                if (itF1.hasNext() && itF2.hasNext()) {
-                    lineF1 = (LinesBean) itF1.next();
-                    lineF2 = (LinesBean) itF2.next();
-                    i++;
-                    j++;
-                } else {
-                    finish = true;
-                }
-            } else {
-                if (!lcs.contains(lineF1)) {
-                    setLinesBean(lineF1, i, LinesBean.Situation.REMOVED, 1);
-                    if (itF1.hasNext()) {
-                        lineF1 = (LinesBean) itF1.next();
-                        i++;
-                    } else {
-                        finish = true;
-                    }
-                } else {
-                    setLinesBean(lineF2, j, LinesBean.Situation.ADDED, 2);
-                    if (itF2.hasNext()) {
-                        lineF2 = (LinesBean) itF2.next();
-                        j++;
-                    } else {
-                        finish = true;
-                    }
-                }
+        while ((lineF1 != null) || (lineF2 != null)) {
+
+            if (isContext(lineF1,lineF2)) {
+                //Context
+                setLinesBean(lineF1, i++, LinesBean.Situation.UNCHANGED, 1);
+                lineF1 = getNext(itF1);
+
+                setLinesBean(lineF2, j++, LinesBean.Situation.UNCHANGED, 2);
+                lineF2 = getNext(itF2);
+            } else if (isRemoving(lineF1,lineF2)) {
+                //Removed
+                setLinesBean(lineF1, i++, LinesBean.Situation.REMOVED, 1);
+                lineF1 = getNext(itF1);
+            } else if (isAdding(lineF1,lineF2)){
+                //Addition
+                setLinesBean(lineF2, j++, LinesBean.Situation.ADDED, 2);
+                lineF2 = getNext(itF2);
+            } else{
+                throw new DiffException(DiffException.MSG_INVALIDOPTION);
             }
-
-        }
+        }//while
     }
 
-    /**
-     *
-     * @param line
-     * @param id
-     * @param idFile
-     * @param situation
-     */
-    public void setEndLine(LinesBean line, int id, int idFile, Situation situation) {
-        if (line != null) {
-            if ((line != null) && (!lcs.contains(line))) {
-                setLinesBean(line, id, situation, idFile);
-            }
+    private boolean isContext(LinesBean lineF1,LinesBean lineF2){
+        if( (lineF1 == null) || (lineF2 == null)){
+            return false;
         }
+        return (lcs.contains(lineF1)) && (lcs.contains(lineF2));
     }
-//        }//else {
-    //      setLinesBean(line, id, LinesBean.Situation.UNCHANGED, idFile);
-    //}
-    //   }
-    // }
 
+    private boolean isAdding(LinesBean lineF1,LinesBean lineF2){
+        if( (lineF2 == null)){
+            return false;
+        }
+        return !lcs.contains(lineF2);
+    }
+
+    private boolean isRemoving(LinesBean lineF1,LinesBean lineF2){
+        if( (lineF1 == null)){
+            return false;
+        }
+        return !lcs.contains(lineF1);
+    }
+    
     /**
      *
      * @param line
@@ -169,5 +156,16 @@ public class ResultLCS implements IResultDiff {
      */
     public List getResult() {
         return result;
+    }
+
+    private LinesBean getNext(Iterator it) {
+        Object obj = null;
+        if (it.hasNext()) {
+            obj = it.next();
+            if (obj == null) {
+                return getNext(it);
+            }
+        }
+        return (LinesBean) obj;
     }
 }

@@ -5,6 +5,7 @@
 
 package br.uff.ic.gardener.cli;
 
+import br.uff.ic.gardener.diff.DiffException;
 import java.io.File;
 import java.net.URI;
 import java.text.DateFormat;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -673,8 +676,13 @@ public class CLI {
 			
 			throw new TransationException(str.toString());
 		}
-		Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
-        diff.setOutputFormat();
+		
+                try {
+                    Diff diff = new Diff(collFiles.get(0), collFiles.get(1), getContextFormat() );
+                    diff.setOutputFormat();
+                } catch (DiffException ex) {
+                    throw new TransationException("Erro fatal durante execução do diff", ex);
+                }
         
 		//usem estas variáveis
 		bDiffIgnoreWhiteSpaces = false;

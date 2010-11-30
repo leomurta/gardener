@@ -37,13 +37,15 @@ public class LCS implements IDiff {
         this.arrayLcs = arrayLCS;
 
     }
+
     /**
      *
      * @param fileVersionOne
      * @param fileVersionTwo
      * @return
      */
-    public IResultDiff diff(File fileVersionOne, File fileVersionTwo) {
+    @Override
+    public IResultDiff diff(File fileVersionOne, File fileVersionTwo) throws DiffException{
         try {
             start(fileVersionOne, fileVersionTwo);
         } catch (IOException ex) {
@@ -121,7 +123,7 @@ public class LCS implements IDiff {
      *
      * @return
      */
-    public IResultDiff printLCS() {
+    public IResultDiff printLCS() throws DiffException {
         List lcs = new ArrayList();
 
         printLCS(lcs, linesFileOne.size()-1, columnFileTwo.size()-1);

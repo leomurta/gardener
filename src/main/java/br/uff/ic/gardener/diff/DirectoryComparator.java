@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class DirectoryComparator implements IDiff{
+public class DirectoryComparator implements IDiff{
 
     private LCSBean[][] arrayLcs;
     private List<LinesBean> linesFileOne = new ArrayList<LinesBean>();
@@ -31,7 +31,8 @@ class DirectoryComparator implements IDiff{
         return lines;
     }
 
-    public IResultDiff diff(File fileVersionOne, File fileVersionTwo) {
+    @Override
+    public IResultDiff diff(File fileVersionOne, File fileVersionTwo) throws DiffException{
         try {
             start(fileVersionOne, fileVersionTwo);
         } catch (IOException ex) {

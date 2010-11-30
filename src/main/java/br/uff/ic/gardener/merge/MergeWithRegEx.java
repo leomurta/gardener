@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 
 import javax.naming.OperationNotSupportedException;
 
+import br.uff.ic.gardener.diff.DiffException;
+
 public class MergeWithRegEx implements IMerge {
 
 	@Override
@@ -63,7 +65,7 @@ public class MergeWithRegEx implements IMerge {
 		return mergeContentStructured.merge(matcher);
 	}
 
-	private void buildMergeContentStructuredAndRegEx(File file1, File file2, StringBuilder diffRegex, MergeContentStructured mergeContentStructured) throws DiffException, MergeException {
+	private void buildMergeContentStructuredAndRegEx(File file1, File file2, StringBuilder diffRegex, MergeContentStructured mergeContentStructured) throws MergeException {
 		
 		boolean readingDifferences = false;
 		boolean readingEquals = false;
@@ -137,7 +139,9 @@ public class MergeWithRegEx implements IMerge {
 			fileDiff.delete();
 		} catch (IOException e) {
 			throw new MergeException("Error accessing the file", e);
-		} finally {
+		} catch (DiffException dEx){
+			throw new br.uff.ic.gardener.merge.DiffException("Error on diff", dEx);
+        } finally {
 			try {
 				if (diffBufferedReader != null) {
 					diffBufferedReader.close();

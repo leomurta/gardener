@@ -14,5 +14,5 @@ public interface IDiff {
      * @param fileVersionTwo
      * @return
      */
-    public IResultDiff diff(File fileVersionOne, File fileVersionTwo);
+    public IResultDiff diff(File fileVersionOne, File fileVersionTwo)throws DiffException;
 }

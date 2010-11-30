@@ -24,179 +24,96 @@ import br.uff.ic.gardener.util.TestHelper;
  */
 public class PatchTest {
 
-    /** Field description */
-    private InputStream inputLao;
-    /** Field description */
-    private InputStream inputTzu;
-    /** Field description */
-    private InputStream patchUnified;
-    /** Field description */
-    private InputStream patchOrigNewUnified;
-    /** Field description */
-    private InputStream patchOrigNewNormal;
-    /** Field description */
-    private InputStream patchOrigNewContext;
-    /** Field description */
-    private InputStream patchNormal;
-    /** Field description */
-    private InputStream patchContext;
-    /** Field description */
-    private InputStream inputOriginal;
-    /** Field description */
-    private InputStream inputNew;
-
     /**
+     * Test of applyPatchToFile method, of class Patch.
      *
      * @throws Exception
      */
-    @Before
-    public void setUp() throws Exception {
+    @Test
+    public void testApplyPatchToFile_UC_1() throws Exception {
+        testApplyPatchToFile(Format.Unified, Match.Complete, "lao", "tzu");
+    }
+
+    @Test
+    public void testApplyPatchToFile_UC_2() throws Exception {
+        testApplyPatchToFile(Format.Unified, Match.Complete, "ori", "new");
+    }
+
+    @Test
+    public void testApplyPatchToFile_UN_1() throws Exception {
+        testApplyPatchToFile(Format.Unified, Match.None, "lao", "tzu");
+    }
+
+    @Test
+    public void testApplyPatchToFile_UN_2() throws Exception {
+        testApplyPatchToFile(Format.Unified, Match.None, "ori", "new");
+    }
+
+    @Test
+    public void testApplyPatchToFile_CC_1() throws Exception {
+        testApplyPatchToFile(Format.Context, Match.Complete, "lao", "tzu");
+    }
+
+    @Test
+    public void testApplyPatchToFile_LC_1() throws Exception {
+        testApplyPatchToFile(Format.LessContext, Match.Complete, "lao", "tzu");
+    }
+
+    @Test
+    public void testApplyPatchToFile_CC_2() throws Exception {
+        testApplyPatchToFile(Format.Context, Match.Complete, "ori", "new");
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_NN_1() throws Exception {
+        testApplyPatchToFile(Format.Normal, Match.None, "lao", "tzu");
+    }
+
+    /**
+     * Method description
+     *
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testApplyPatchToFile_NN_2() throws Exception {
+        testApplyPatchToFile(Format.Normal, Match.None, "ori", "new");
+    }
+
+    protected void testApplyPatchToFile(Format format,Match match, String input,String output) throws Exception {
+        Type type = Type.ObjectOriented;
+
+        String fmt = "";
+        if (format == Format.Context) {
+            fmt = "c";
+        } else if (format == Format.LessContext) {
+            fmt = "l";
+        } else if (format == Format.Unified) {
+            fmt = "u";
+        } else if (format == Format.Normal) {
+            fmt = "n";
+        }
+
+        String patchFile = "patch_"+input+"_"+output+"_"+fmt;
+
+        testApplyPatchToFile(format, type, match, input, output, patchFile);
+    }
+
+    protected void testApplyPatchToFile(Format format,Type type,Match match,String input,String output,String patch) throws Exception {
         String subdir = "/patch/";
-        inputLao = TestHelper.getResourceFile("lao.txt", subdir);
-        inputTzu = TestHelper.getResourceFile("tzu.txt", subdir);
-        patchUnified = TestHelper.getResourceFile("unifiedFormat.txt", subdir);
-        patchOrigNewUnified = TestHelper.getResourceFile("ori-new UnifiedFormat.txt", subdir);
-        patchOrigNewNormal = TestHelper.getResourceFile("ori-new NormalFormat.txt", subdir);
-        patchOrigNewContext = TestHelper.getResourceFile("ori-new ContextFormat.txt", subdir);
-        patchNormal = TestHelper.getResourceFile("normalFormat.txt", subdir);
-        patchContext = TestHelper.getResourceFile("contextFormat.txt", subdir);
-        inputOriginal = TestHelper.getResourceFile("original.txt", subdir);
-        inputNew = TestHelper.getResourceFile("new.txt", subdir);
-    }
+        String ext = ".txt";
+        InputStream inputFile = TestHelper.getResourceFile(input + ext, subdir);
+        InputStream outputFile = TestHelper.getResourceFile(output + ext, subdir);
+        InputStream patchFile = TestHelper.getResourceFile(patch + ext, subdir);
 
-    /**
-     * Test of applyPatchToFile method, of class Patch.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_UOC_1() throws Exception {
-        Format format = Format.Unified;
-        Type type = Type.ObjectOriented;
-        Match match = Match.Complete;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
-        TestHelper.assertResult(inputTzu, result);
-        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        TestHelper.assertResult(inputNew, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_UOC_2() throws Exception {
-        Format format = Format.Unified;
-        Type type = Type.ObjectOriented;
-        Match match = Match.Complete;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        TestHelper.assertResult(inputNew, result);
-    }
-
-    /**
-     * Test of applyPatchToFile method, of class Patch.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_UON_1() throws Exception {
-        Format format = Format.Unified;
-        Type type = Type.ObjectOriented;
-        Match match = Match.None;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputLao, patchUnified, format, match, type);
-        TestHelper.assertResult(inputTzu, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_UON_2() throws Exception {
-        Format format = Format.Unified;
-        Type type = Type.ObjectOriented;
-        Match match = Match.None;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewUnified, format, match, type);
-        TestHelper.assertResult(inputNew, result);
-    }
-
-    /**
-     * Test of applyPatchToFile method, of class Patch.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_COC_1() throws Exception {
-        Format format = Format.Context;
-        Type type = Type.ObjectOriented;
-        Match match = Match.Complete;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputLao, patchContext, format, match, type);
-        TestHelper.assertResult(inputTzu, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_COC_2() throws Exception {
-        Format format = Format.Context;
-        Type type = Type.ObjectOriented;
-        Match match = Match.Complete;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewContext, format, match, type);
-        TestHelper.assertResult(inputNew, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_NON_1() throws Exception {
-        Format format = Format.Normal;
-        Type type = Type.ObjectOriented;
-        Match match = Match.None;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputLao, patchNormal, format, match, type);
-        TestHelper.assertResult(inputTzu, result);
-    }
-
-    /**
-     * Method description
-     *
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testApplyPatchToFile_NON_2() throws Exception {
-        Format format = Format.Normal;
-        Type type = Type.ObjectOriented;
-        Match match = Match.None;
-        OutputStream result = null;
-
-        result = Patch.applyPatchToFile(inputOriginal, patchOrigNewNormal, format, match, type);
-        TestHelper.assertResult(inputNew, result);
+        OutputStream result = Patch.applyPatchToFile(inputFile, patchFile, format, match, type);
+        TestHelper.assertResult(outputFile, result);
     }
 
     /**
@@ -239,7 +156,7 @@ public class PatchTest {
      *
      * @throws Exception
      */
-    //@Test
+    @Test
     public void testDiffPatchLaoTzuLessContextComplete() throws Exception {
         testDiffPatch("lao", "tzu", 'l', Match.Complete);
     }
