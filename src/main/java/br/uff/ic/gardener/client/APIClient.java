@@ -18,7 +18,6 @@ import br.uff.ic.gardener.client.ClientMerge.ClientMergeException;
 import br.uff.ic.gardener.comm.ComClient;
 import br.uff.ic.gardener.comm.ComClientException;
 import br.uff.ic.gardener.comm.ComFactory;
-import br.uff.ic.gardener.merge.MergeException;
 import br.uff.ic.gardener.workspace.CIWorkspaceStatus;
 import br.uff.ic.gardener.workspace.Workspace;
 import br.uff.ic.gardener.workspace.WorkspaceException;
@@ -85,9 +84,13 @@ public class APIClient {
 		try
 		{
 			workspace = new Workspace(_uriWorkspace);
+			merge = new ClientMerge();
 		}catch(WorkspaceException e)
 		{
 			throw new APIClientException("Can not create Workspace", e);
+		} catch (IOException e) {
+			throw new APIClientException("Can not create Workspace, ioexception" +
+					"", e);
 		}
 	}
 	/**Constructor that Sets Workspace URI and initialize the workspace attribute
@@ -214,6 +217,34 @@ public class APIClient {
 	}
 
 	/**
+	 * faz merge de dos CIs. Nunca dá exceção pq a política por enquanto é deixar o erro do merge dentro do arquivo
+	 * @param ciServ
+	 * @param ciWork
+	 * @return if it cause conflict
+	 */
+	private boolean merge(ConfigurationItem ciServ, ConfigurationItem ciWork) {
+		try {
+			InputStream in = merge.merge(ciServ, ciWork);
+			forceClose(ciServ.getItemAsInputStream());
+			forceClose(ciWork.getItemAsInputStream());
+			ConfigurationItem ci = new ConfigurationItem(ciWork.getUri(), in, ciServ.getRevision());
+			getWorkspace().replaceCI(ci);
+			
+			return merge.lastConflict();
+		} catch (WorkspaceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClientMergeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (APIClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true; 
+	}
+	
+	/**
 	 * S = W = B -> Merge do arquivo
 	 * S = W < B -> Conflito no arquivo pq o servidor tem um artefato igual a um criado no ws
 	 * S > W = B -> Remove arquivo no W
@@ -225,37 +256,30 @@ public class APIClient {
 	public void update(Collection<Conflict> conflicts) throws TransationException{
 		List<ConfigurationItem> listServ = new LinkedList<ConfigurationItem>();
 		List<ConfigurationItem> listWork = new LinkedList<ConfigurationItem>();
-		List<ConfigurationItem> listBase = new LinkedList<ConfigurationItem>();
 		try {
 			getComClient().checkout("", RevisionID.LAST_REVISION, listServ);
-			getUnmodifiedWorkspace(listBase);
 			getWorkspace().getCIsToCommit(listWork);
 			Collections.sort(listServ);
 			Collections.sort(listWork);
-			Collections.sort(listBase);
 			
 			Iterator<ConfigurationItem> is = listServ.iterator();
 			Iterator<ConfigurationItem> iw = listWork.iterator();
-			Iterator<ConfigurationItem> ib = listWork.iterator();
 			
 			ConfigurationItem ciServ = null;
 			ConfigurationItem ciWork = null;
-			ConfigurationItem ciBase = null;
 			ciServ = is.next();
 			ciWork = iw.next();
-			ciBase = ib.next();
-			while(is.hasNext() && iw.hasNext() && ib.hasNext())
+			while(is.hasNext() && iw.hasNext())
 			{				
 				//faz o merge
 				
 				String strServ = ciServ.getUri().getPath();
 				String strWork = ciWork.getUri().getPath();
-				String strBase = ciWork.getUri().getPath();
 				
 				final int diff = strServ.compareTo(strWork);
 				if(0 == diff)//mesmo item
 				{
-					boolean conflict = merge(ciServ, ciWork, ciBase);
+					boolean conflict = merge(ciServ,ciWork);
 					if(conflict)
 					{
 						conflicts.add(new Conflict(ciServ.getUri(), ciWork.getUri()));
@@ -300,13 +324,15 @@ public class APIClient {
 	{
 		getWorkspace().addNewCI(ci);
 	}
+	
+	
 
 	/**
 	 * faz merge de dos CIs. Nunca dá exceção pq a política por enquanto é deixar o erro do merge dentro do arquivo
 	 * @param ciServ
 	 * @param ciWork
 	 * @return if it cause conflict
-	 */
+	 
 	private boolean merge(ConfigurationItem ciLast, ConfigurationItem ciWork, ConfigurationItem ciBase) {
 		try {
 			InputStream in = merge.merge(ciLast, ciWork, ciBase);
@@ -328,7 +354,7 @@ public class APIClient {
 		}
 		return true; 
 	}
-
+	*/
 	public void status(Collection<CIWorkspaceStatus> coll) throws WorkspaceException, APIClientException {
 		getWorkspace().getStatus(coll);
 		

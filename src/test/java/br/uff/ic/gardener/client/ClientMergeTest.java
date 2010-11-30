@@ -46,9 +46,7 @@ public class ClientMergeTest extends MergeTest {
     				new ConfigurationItem(new URI("base"), new FileInputStream(base), RevisionID.LAST_REVISION)
     				);
     		hasConflict = merge.lastConflict();
-		} catch (MergeException e) {
-			fail(e.getStackTrace().toString());
-		} catch (FileNotFoundException e) {
+    	}catch (FileNotFoundException e) {
 			fail(e.getStackTrace().toString());
 		} catch (ClientMergeException e) {
 			fail(e.getStackTrace().toString());
