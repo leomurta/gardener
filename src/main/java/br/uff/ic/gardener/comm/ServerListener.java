@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Cleyton
+ * @author Cleyton e Fábio
  */
 public class ServerListener extends Communication implements Runnable {
 

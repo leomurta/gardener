@@ -30,7 +30,7 @@ import java.util.zip.Deflater;
 
 /**
  *
- * @author Cleyton
+ * @author Cleyton e Fábio
  */
 public class ClientCommunication extends Communication {
 

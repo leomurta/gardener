@@ -28,7 +28,7 @@ import java.util.zip.Inflater;
 
 /**
  *
- * @author Cleyton
+ * @author Cleyton e Fábio
  */
 public class Communication {
 
