@@ -7,6 +7,7 @@ package br.uff.ic.gardener.comm;
 //import br.uff.ic.gardener.server.Project;
 import br.uff.ic.gardener.CIType;
 import br.uff.ic.gardener.ConfigurationItem;
+import br.uff.ic.gardener.RevisionCommited;
 import br.uff.ic.gardener.RevisionID;
 import br.uff.ic.gardener.server.Server;
 import br.uff.ic.gardener.util.FileHelper;
@@ -21,6 +22,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +34,6 @@ import java.util.logging.Logger;
 public class ServerListener extends Communication implements Runnable {
 
     ServerSocket serverSocket;
-    //int filesize = 6022386; // filesize temporarily hardcoded
     Socket mySocket;
 
     public ServerListener() {
@@ -62,6 +63,11 @@ public class ServerListener extends Communication implements Runnable {
                         if (intent.compareTo("LR") == 0) {
                             String revN = doLastRevision();
                             sendMessage(revN);
+                        } else {
+                            if (intent.compareTo("LG") == 0) {
+                                sendLog();
+                                /// sendMessage(revN);
+                            }
                         }
                     }
                 }
@@ -80,6 +86,7 @@ public class ServerListener extends Communication implements Runnable {
         }
         System.out.println("InetAdress: " + serverSocket.getInetAddress().getHostAddress() + " Port: " + serverSocket.getLocalPort());
 
+        //enquanto vivo...
         while (true) {
             try {
                 //1- abrir o servidor socket
@@ -101,8 +108,6 @@ public class ServerListener extends Communication implements Runnable {
 
                 //4 - de acordo com cada opção, uma operação vai ser executada
                 doOperation(intent);
-                //nota: por enquanto, elefaz uma operação e para, mas podemos
-                //colocar a execução num looping para esperar a próxima solicitação.
 
             } catch (IOException ex) {
                 Logger.getLogger(ServerListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -131,29 +136,36 @@ public class ServerListener extends Communication implements Runnable {
         //1 - servidor precisa dar um "ack" para continuar o processo de envio de informações
         sendMessage("ack");
 
-        //recebo o projeto de onde eu quero os itens
-        String project = receiveMessage();
-        sendMessage("ack");
-        //recebo qual a revisão eu quero
-        String revN = receiveMessage();
+//recebo o projeto de onde eu quero os itens
+//        String project = receiveMessage();
+//        sendMessage("ack");
+//        //recebo qual a revisão eu quero
+//        String revN = receiveMessage();
+
+        String fullString = receiveMessage();
+        String[] splitted = fullString.split(":");
+        String project = splitted[0];
+        String revN = splitted[1];
+
+        System.out.println("Received project " + project + " and revN " + revN);
+
         sendMessage("ack");
 
         // envio os arquivos
         //TODO precisa chamar o checkout do servidor (que não está implementado)
         ArrayList<ConfigurationItem> items = new ArrayList<ConfigurationItem>();
 
-
         // TESTS PURPOSES
-         //ArrayList<ConfigurationItem> itemsz = new ArrayList<ConfigurationItem>();
+        //ArrayList<ConfigurationItem> itemsz = new ArrayList<ConfigurationItem>();
 
-            File file = FileHelper.createTemporaryRandomFile();
-            FileOutputStream finp = new FileOutputStream(file);
+        File file = FileHelper.createTemporaryRandomFile();
+        FileOutputStream finp = new FileOutputStream(file);
 
-            UtilStream.fillRandomData(finp, 34);
-            finp.close();
+        UtilStream.fillRandomData(finp, 34);
+        finp.close();
 
-            ConfigurationItem item;
-            InputStream in = new FileInputStream(file);
+        ConfigurationItem item;
+        InputStream in = new FileInputStream(file);
         try {
             item = new ConfigurationItem(new URI("/foo/bar"), in, CIType.file, new RevisionID(0), "cleyton");
             items.add(item);
@@ -166,7 +178,6 @@ public class ServerListener extends Communication implements Runnable {
         // TESTS PURPOSES
 
         sendConfigurationItems(items);
-
 
     }
 
@@ -185,22 +196,23 @@ public class ServerListener extends Communication implements Runnable {
         // Na sequência, receberemos o projeto, usuário, msg, e os arquivos.
 
         // recebendo o projeto
-        project = receiveMessage();
-        //manipula o resultado
-        sendMessage("ack");
-
-//        // recebendo o usuário
-//        user = receiveMessage();
+//        project = receiveMessage();
 //        //manipula o resultado
 //        sendMessage("ack");
-
-        message = receiveMessage();
+//
+//        message = receiveMessage();
         //manipula o resultado
+
+        String full = receiveMessage();
+        String[] splitted = full.split(":");
+        project = splitted[0];
+        message = splitted[1];
+
         sendMessage("ack");
 
-        //TODO receber itens
+        //receber itens
 
-        System.out.println(project + " " + message + " time to get the item");
+        System.out.println(project + " " + message + " ok! in Checkin!");
 
         Collection<ConfigurationItem> configItems = receiveConfigurationItems();
 
@@ -217,32 +229,28 @@ public class ServerListener extends Communication implements Runnable {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-//        do {
-//            //leia e armazene em mybytearray
-//            bytesRead =
-//                    is.read(mybytearray, current, (mybytearray.length - current));
-//            //enquanto houver bytes ainda...
-//            if (bytesRead >= 0) {
-//                current += bytesRead;
-//            }
-//        } while (bytesRead > -1);
-//
     private void doInit() throws IOException {
 
         sendMessage("ack");
         //receber nome do projeto que eu quero criar
-        String project = receiveMessage();
+//        String project = receiveMessage();
+//
+//        sendMessage("ack");
+//        //receber nome do projeto que eu quero criar
+//        String user = receiveMessage();
 
-        sendMessage("ack");
-        //receber nome do projeto que eu quero criar
-        String user = receiveMessage();
+        String project;
+        String user;
+
+        String[] splitted = receiveMessage().split(":");
+        project = splitted[0];
+        user = splitted[1];
+
+        System.out.println("Project " + project + " created by user " + user);
 
         //criar a parada
         // Server server = Server.getInstance();
-
         // server.init(project, project);
-
-        //tchau
 
     }
 
@@ -252,9 +260,41 @@ public class ServerListener extends Communication implements Runnable {
 
         //receive project name
         String project = receiveMessage();
+        System.out.println("Last revision from project " + project);
 
-        return String.valueOf(Server.getInstance().getLastRevision(project));
+        //return String.valueOf(Server.getInstance().getLastRevision(project));
+        return "20102";
+    }
 
+    private void sendLog() throws IOException {
+        sendMessage("ack");
+
+//        String first = receiveMessage();
+//
+//        sendMessage("ack");
+//
+//        String last = receiveMessage();
+
+        String fullString = receiveMessage();
+
+        String[] splitter = fullString.split(":");
+
+        String first = splitter[0];
+        String last = splitter[1];
+
+        System.out.println("Getting log from " + first + " to " + last + ".");
+
+        Collection<RevisionCommited> items = new ArrayList<RevisionCommited>();
+
+        RevisionCommited commit = new RevisionCommited(RevisionID.NEW_REVISION, "cslaviero", "messageTest", Calendar.getInstance().getTime());
+
+        items.add(commit);
+        items.add(commit);
+        items.add(commit);
+        items.add(commit);
+        items.add(commit);
+
+        this.sendRevisionCommitedList(items);
     }
 
     public static void main(String[] args) {
