@@ -62,16 +62,11 @@ public class ContextPatcher extends BasicPatcher implements Patcher {
         for (DeltaItem item : delta.getDeltaItens()) {
             ApplyDeltaItemResult result = new ApplyDeltaItemResult(item);
 
-            // Choosing matching algoritm
-            if (isCompleteMatch()) {
                 try {
                     applyCompleteMatch(item, text);
                     result.setResult(true);
                 } catch (Exception e) {
                     result.setResult(false);
-                }
-            } else {
-                throw new PatcherException(PatcherException.MSG_INVALIDMATCH);
             }
 
             // adding result info

@@ -44,6 +44,3 @@ public interface Patcher {
      */
     public OutputStream patch(InputStream input, InputStream patch, Match match) throws PatcherException;
 }
-
-
-//~ Formatted by Jindent --- http://www.jindent.com
