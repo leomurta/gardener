@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-Doxygen</actionName>
+            <displayName>Doxygen</displayName>
+            <goals>
+                <goal>doxygen:report</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-Surefire</actionName>
+            <displayName>Report</displayName>
+            <goals>
+                <goal>surefire-report:report</goal>
+            </goals>
+        </action>
+    </actions>
